@@ -39,6 +39,7 @@ We're building a **smart charging station network** for Nepal that allows users 
 - **[🗄️ Database Schema](PowerBank_ER_Diagram.md)** - Entity Relationship Diagram and database design
 - **[👨‍💻 Development Guide](DEVELOPMENT_GUIDE.md)** - Comprehensive development workflow and best practices
 - **[🔄 Async Workflow Guide](ASYNC_WORKFLOW_GUIDE.md)** - Celery, Redis, and RabbitMQ integration guide
+- **[🐘 PROJECT STRUCTURE](PROJECT_STRUCTURE.md)** - Template Full Guide
 
 ### Quick Reference
 - **High Priority Features**: User management, Station network, Rental system, Payment integration, Notifications, Admin dashboard
