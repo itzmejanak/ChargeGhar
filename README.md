@@ -58,7 +58,7 @@ We're building a **smart charging station network** for Nepal that allows users 
 ```bash
 # Clone the repository
 git clone https://github.com/itzmejanak/ChargeGhar.git
-cd powerbank-backend
+cd ChargeGhar
 
 # Install dependencies
 uv sync --all-extras --dev
