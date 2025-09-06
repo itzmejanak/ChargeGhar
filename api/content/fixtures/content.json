@@ -1,0 +1,56 @@
+[
+  {
+    "model": "content.contentpage",
+    "pk": "550e8400-e29b-41d4-a716-446655441001",
+    "fields": {
+      "page_type": "terms-of-service",
+      "title": "Terms of Service",
+      "content": "Welcome to PowerBank Charging Station service. By using our service, you agree to these terms...",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "content.contentpage",
+    "pk": "550e8400-e29b-41d4-a716-446655441002",
+    "fields": {
+      "page_type": "privacy-policy",
+      "title": "Privacy Policy",
+      "content": "Your privacy is important to us. This policy explains how we collect and use your information...",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "content.faq",
+    "pk": "550e8400-e29b-41d4-a716-446655441101",
+    "fields": {
+      "question": "How do I rent a power bank?",
+      "answer": "Simply scan the QR code on any station, select your rental package, and make payment. The power bank will be dispensed automatically.",
+      "category": "Rental",
+      "sort_order": 1,
+      "is_active": true,
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "content.faq",
+    "pk": "550e8400-e29b-41d4-a716-446655441102",
+    "fields": {
+      "question": "What happens if I don't return the power bank on time?",
+      "answer": "Late fees will be charged according to our pricing policy. After 24 hours, the power bank will be considered lost and full replacement cost will be charged.",
+      "category": "Rental",
+      "sort_order": 2,
+      "is_active": true,
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

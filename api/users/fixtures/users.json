@@ -1,0 +1,100 @@
+[
+  {
+    "model": "users.user",
+    "pk": 2,
+    "fields": {
+      "username": "testuser1",
+      "email": "testuser1@example.com",
+      "phone_number": "+9779841234567",
+      "profile_picture": null,
+      "referral_code": "REF001",
+      "referred_by": null,
+      "status": "ACTIVE",
+      "email_verified": true,
+      "phone_verified": true,
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "date_joined": "2024-01-15T10:00:00Z",
+      "last_login": "2024-09-06T10:00:00Z",
+      "first_name": "Test",
+      "last_name": "User One",
+      "password": "pbkdf2_sha256$600000$test$hash"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 3,
+    "fields": {
+      "username": "testuser2",
+      "email": "testuser2@example.com",
+      "phone_number": "+9779841234568",
+      "profile_picture": null,
+      "referral_code": "REF002",
+      "referred_by": 2,
+      "status": "ACTIVE",
+      "email_verified": true,
+      "phone_verified": false,
+      "is_active": true,
+      "is_staff": false,
+      "is_superuser": false,
+      "date_joined": "2024-02-01T10:00:00Z",
+      "last_login": "2024-09-05T15:30:00Z",
+      "first_name": "Test",
+      "last_name": "User Two",
+      "password": "pbkdf2_sha256$600000$test$hash"
+    }
+  },
+  {
+    "model": "users.userprofile",
+    "pk": "550e8400-e29b-41d4-a716-446655440101",
+    "fields": {
+      "user": 2,
+      "full_name": "Test User One",
+      "date_of_birth": "1990-05-15",
+      "address": "Kathmandu, Nepal",
+      "avatar_url": null,
+      "is_profile_complete": true,
+      "created_at": "2024-01-15T10:30:00Z",
+      "updated_at": "2024-01-15T10:30:00Z"
+    }
+  },
+  {
+    "model": "users.userprofile",
+    "pk": "550e8400-e29b-41d4-a716-446655440102",
+    "fields": {
+      "user": 3,
+      "full_name": "Test User Two",
+      "date_of_birth": "1992-08-22",
+      "address": "Pokhara, Nepal",
+      "avatar_url": null,
+      "is_profile_complete": false,
+      "created_at": "2024-02-01T10:30:00Z",
+      "updated_at": "2024-02-01T10:30:00Z"
+    }
+  },
+  {
+    "model": "users.userpoints",
+    "pk": "550e8400-e29b-41d4-a716-446655440201",
+    "fields": {
+      "user": 2,
+      "current_points": 150,
+      "total_points": 500,
+      "last_updated": "2024-09-06T10:00:00Z",
+      "created_at": "2024-01-15T10:30:00Z",
+      "updated_at": "2024-09-06T10:00:00Z"
+    }
+  },
+  {
+    "model": "users.userpoints",
+    "pk": "550e8400-e29b-41d4-a716-446655440202",
+    "fields": {
+      "user": 3,
+      "current_points": 75,
+      "total_points": 200,
+      "last_updated": "2024-09-05T15:30:00Z",
+      "created_at": "2024-02-01T10:30:00Z",
+      "updated_at": "2024-09-05T15:30:00Z"
+    }
+  }
+]

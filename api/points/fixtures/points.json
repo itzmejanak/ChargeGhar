@@ -1,0 +1,73 @@
+[
+  {
+    "model": "points.pointstransaction",
+    "pk": "550e8400-e29b-41d4-a716-446655440701",
+    "fields": {
+      "user": 2,
+      "transaction_type": "EARNED",
+      "source": "SIGNUP",
+      "points": 100,
+      "balance_before": 0,
+      "balance_after": 100,
+      "description": "Welcome bonus for signing up",
+      "metadata": {"bonus_type": "signup"},
+      "related_rental": null,
+      "related_referral": null,
+      "created_at": "2024-01-15T10:30:00Z",
+      "updated_at": "2024-01-15T10:30:00Z"
+    }
+  },
+  {
+    "model": "points.pointstransaction",
+    "pk": "550e8400-e29b-41d4-a716-446655440702",
+    "fields": {
+      "user": 2,
+      "transaction_type": "EARNED",
+      "source": "REFERRAL_INVITER",
+      "points": 50,
+      "balance_before": 100,
+      "balance_after": 150,
+      "description": "Referral bonus for inviting testuser2",
+      "metadata": {"referred_user": "testuser2"},
+      "related_rental": null,
+      "related_referral": "550e8400-e29b-41d4-a716-446655440801",
+      "created_at": "2024-02-01T11:00:00Z",
+      "updated_at": "2024-02-01T11:00:00Z"
+    }
+  },
+  {
+    "model": "points.pointstransaction",
+    "pk": "550e8400-e29b-41d4-a716-446655440703",
+    "fields": {
+      "user": 3,
+      "transaction_type": "EARNED",
+      "source": "REFERRAL_INVITEE",
+      "points": 75,
+      "balance_before": 0,
+      "balance_after": 75,
+      "description": "Referral bonus for joining through testuser1",
+      "metadata": {"inviter": "testuser1"},
+      "related_rental": null,
+      "related_referral": "550e8400-e29b-41d4-a716-446655440801",
+      "created_at": "2024-02-01T11:00:00Z",
+      "updated_at": "2024-02-01T11:00:00Z"
+    }
+  },
+  {
+    "model": "points.referral",
+    "pk": "550e8400-e29b-41d4-a716-446655440801",
+    "fields": {
+      "inviter": 2,
+      "invitee": 3,
+      "referral_code": "REF001",
+      "status": "COMPLETED",
+      "inviter_points_awarded": 50,
+      "invitee_points_awarded": 75,
+      "first_rental_completed": true,
+      "completed_at": "2024-02-01T11:00:00Z",
+      "expires_at": "2024-03-01T11:00:00Z",
+      "created_at": "2024-02-01T10:30:00Z",
+      "updated_at": "2024-02-01T11:00:00Z"
+    }
+  }
+]

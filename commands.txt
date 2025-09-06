@@ -1,0 +1,24 @@
+
+docker compose logs migrations --follow
+docker compose up -d migrations
+docker compose up -d
+docker compose build migrations
+docker compose run --rm migrations python manage.py makemigrations <appname>
+docker compose up migrations
+docker compose run --rm migrations python manage.py check
+docker compose run --rm migrations python manage.py check --deploy
+docker compose run --rm migrations python manage.py createsuperuser --username admin --email admin@example.com --noinput  
+docker compose up -d api
+docker compose logs api --tail=20
+docker compose ps
+
+docker compose run --rm migrations python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api.config.settings'); import django; django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); user = User.objects.get(username='janak'); user.set_password('5060'); user.save(); print('Password set successfully')"
+docker compose run --rm migrations python manage.py flush --noinput
+
+
+docker compose run --rm migrations python manage.py shell -c "from api.stations.models import Station; print('Existing stations:'); [print(f'- {s.station_name} ({s.serial_number})') for s in Station.objects.all()]"
+docker compose run --rm migrations python manage.py shell -c "from api.stations.models import Station; [print(f'{s.station_name}: {s.id}') for s in Station.objects.all()]"
+docker compose run --rm migrations python manage.py 
+shell -c "from api.stations.models import *; print('Amenities:', [a.name for a in StationAmenity.objects.all()]); print('Slots:', StationSlot.objects.count()); print('PowerBanks:', PowerBank.objects.count())"
+
+docker compose run --rm migrations python manage.py loaddata api/social/fixtures/social.json

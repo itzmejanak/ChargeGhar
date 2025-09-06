@@ -1,0 +1,120 @@
+[
+  {
+    "model": "social.achievement",
+    "pk": "550e8400-e29b-41d4-a716-446655440601",
+    "fields": {
+      "name": "First Rental",
+      "description": "Complete your first power bank rental",
+      "criteria_type": "rental_count",
+      "criteria_value": 1,
+      "reward_type": "points",
+      "reward_value": 50,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "social.achievement",
+    "pk": "550e8400-e29b-41d4-a716-446655440602",
+    "fields": {
+      "name": "Rental Master",
+      "description": "Complete 10 power bank rentals",
+      "criteria_type": "rental_count",
+      "criteria_value": 10,
+      "reward_type": "points",
+      "reward_value": 200,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "social.achievement",
+    "pk": "550e8400-e29b-41d4-a716-446655440603",
+    "fields": {
+      "name": "Punctual User",
+      "description": "Return 5 power banks on time",
+      "criteria_type": "timely_return_count",
+      "criteria_value": 5,
+      "reward_type": "points",
+      "reward_value": 100,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "social.achievement",
+    "pk": "550e8400-e29b-41d4-a716-446655440604",
+    "fields": {
+      "name": "Referral Champion",
+      "description": "Refer 3 friends to PowerBank",
+      "criteria_type": "referral_count",
+      "criteria_value": 3,
+      "reward_type": "points",
+      "reward_value": 300,
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "social.userachievement",
+    "pk": "550e8400-e29b-41d4-a716-446655440701",
+    "fields": {
+      "user": 2,
+      "achievement": "550e8400-e29b-41d4-a716-446655440601",
+      "current_progress": 1,
+      "is_unlocked": true,
+      "points_awarded": 50,
+      "unlocked_at": "2024-01-02T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "social.userachievement",
+    "pk": "550e8400-e29b-41d4-a716-446655440702",
+    "fields": {
+      "user": 2,
+      "achievement": "550e8400-e29b-41d4-a716-446655440602",
+      "current_progress": 3,
+      "is_unlocked": false,
+      "points_awarded": null,
+      "unlocked_at": null,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-03T00:00:00Z"
+    }
+  },
+  {
+    "model": "social.userleaderboard",
+    "pk": "550e8400-e29b-41d4-a716-446655440801",
+    "fields": {
+      "user": 2,
+      "rank": 1,
+      "total_rentals": 3,
+      "total_points_earned": 150,
+      "referrals_count": 1,
+      "timely_returns": 2,
+      "last_updated": "2024-01-03T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-03T00:00:00Z"
+    }
+  },
+  {
+    "model": "social.userleaderboard",
+    "pk": "550e8400-e29b-41d4-a716-446655440802",
+    "fields": {
+      "user": 3,
+      "rank": 2,
+      "total_rentals": 1,
+      "total_points_earned": 100,
+      "referrals_count": 0,
+      "timely_returns": 1,
+      "last_updated": "2024-01-02T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-02T00:00:00Z"
+    }
+  }
+]

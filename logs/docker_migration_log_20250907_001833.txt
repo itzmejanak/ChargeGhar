@@ -1,0 +1,44 @@
+[2025-09-07 00:15:57] INFO: 🚀 Starting PowerBank Docker Migration Process
+[2025-09-07 00:15:57] INFO: ================================================================================
+[2025-09-07 00:15:57] INFO: 🔍 Checking Docker services...
+[2025-09-07 00:15:57] INFO: Running: docker compose ps --services --filter status=running - Check running services
+[2025-09-07 00:15:57] INFO: ✅ Success: Check running services
+[2025-09-07 00:15:57] INFO: ✅ Docker services are running
+[2025-09-07 00:15:57] INFO: ⏳ Waiting for database to be ready...
+[2025-09-07 00:15:57] INFO: Running: docker compose exec -T db pg_isready -U powerbank_user -d powerbank_db - Check database readiness (attempt 1)
+[2025-09-07 00:15:58] INFO: ✅ Success: Check database readiness (attempt 1)
+[2025-09-07 00:15:58] INFO: ✅ Database is ready
+[2025-09-07 00:15:58] INFO: 💾 Creating database backup...
+[2025-09-07 00:15:58] INFO: Running: docker compose exec -T db pg_dump -U powerbank_user -d powerbank_db - Create database backup
+[2025-09-07 00:18:33] ERROR: ❌ Failed: Create database backup
+Error: Password: 
+pg_dump: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  password authentication failed for user "powerbank_user"
+
+[2025-09-07 00:18:33] WARNING: ⚠️  Backup failed or database is empty, continuing...
+[2025-09-07 00:18:33] INFO: 🗑️  Dropping all tables...
+[2025-09-07 00:18:33] INFO: Running: docker compose exec -T db psql -U powerbank_user -d powerbank_db -c 
+        DO $$ DECLARE
+            r RECORD;
+        BEGIN
+            -- Drop all tables
+            FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+                EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
+            END LOOP;
+            
+            -- Drop all sequences
+            FOR r IN (SELECT sequence_name FROM information_schema.sequences WHERE sequence_schema = 'public') LOOP
+                EXECUTE 'DROP SEQUENCE IF EXISTS ' || quote_ident(r.sequence_name) || ' CASCADE';
+            END LOOP;
+            
+            -- Drop all views
+            FOR r IN (SELECT viewname FROM pg_views WHERE schemaname = 'public') LOOP
+                EXECUTE 'DROP VIEW IF EXISTS ' || quote_ident(r.viewname) || ' CASCADE';
+            END LOOP;
+        END $$;
+         - Drop all tables
+[2025-09-07 00:18:33] ERROR: ❌ Failed: Drop all tables
+Error: Password for user powerbank_user: 
+psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  password authentication failed for user "powerbank_user"
+
+[2025-09-07 00:18:33] ERROR: ❌ Failed to drop tables: Password for user powerbank_user: 
+psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  password authentication failed for user "powerbank_user"

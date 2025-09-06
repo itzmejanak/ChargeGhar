@@ -22,7 +22,19 @@ INSTALLED_APPS = [
     "silk",
     "rest_framework",
     "drf_spectacular",
-    "api.user.apps.UserConfig",
+    # PowerBank Apps
+    "api.common.apps.CommonConfig",
+    "api.users.apps.UserConfig",
+    "api.stations.apps.StationsConfig",
+    "api.rentals.apps.RentalsConfig",
+    "api.payments.apps.PaymentsConfig",
+    "api.points.apps.PointsConfig",
+    "api.notifications.apps.NotificationsConfig",
+    "api.social.apps.SocialConfig",
+    "api.promotions.apps.PromotionsConfig",
+    "api.content.apps.ContentConfig",
+    "api.admin_panel.apps.AdminPanelConfig",
+    "api.config.apps.ConfigConfig",
 ]
 
 MIDDLEWARE = [

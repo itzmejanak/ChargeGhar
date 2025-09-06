@@ -44,7 +44,7 @@ urlpatterns = [
     *_swagger_urlpatterns,
     path("", lambda _request: redirect("docs/"), name="home"),
     path("admin/", admin.site.urls),
-    path("", include("api.user.urls")),
+    path("", include("api.users.urls")),
 ]
 
 if USE_SILK:

@@ -1,0 +1,218 @@
+from django.db import models
+from api.common.models import BaseModel
+
+
+class Transaction(BaseModel):
+    """
+    Transaction - All financial transactions in the system
+    """
+    TRANSACTION_TYPE_CHOICES = [
+        ('TOPUP', 'Top Up'),
+        ('RENTAL', 'Rental'),
+        ('RENTAL_DUE', 'Rental Due'),
+        ('REFUND', 'Refund'),
+        ('FINE', 'Fine'),
+    ]
+
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('SUCCESS', 'Success'),
+        ('FAILED', 'Failed'),
+        ('REFUNDED', 'Refunded'),
+    ]
+
+    PAYMENT_METHOD_TYPE_CHOICES = [
+        ('WALLET', 'Wallet'),
+        ('POINTS', 'Points'),
+        ('COMBINATION', 'Combination'),
+        ('GATEWAY', 'Gateway'),
+    ]
+
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='transactions')
+    payment_method = models.ForeignKey('PaymentMethod', on_delete=models.SET_NULL, null=True, blank=True)
+    related_rental = models.ForeignKey('rentals.Rental', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    transaction_id = models.CharField(max_length=255, unique=True)
+    transaction_type = models.CharField(max_length=50, choices=TRANSACTION_TYPE_CHOICES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=10, default='NPR')
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='PENDING')
+    payment_method_type = models.CharField(max_length=50, choices=PAYMENT_METHOD_TYPE_CHOICES)
+    
+    gateway_reference = models.CharField(max_length=255, null=True, blank=True)
+    gateway_response = models.JSONField(default=dict)
+
+    class Meta:
+        db_table = "transactions"
+        verbose_name = "Transaction"
+        verbose_name_plural = "Transactions"
+
+    def __str__(self):
+        return f"{self.transaction_id} - {self.transaction_type}"
+
+
+class Wallet(BaseModel):
+    """
+    Wallet - User's wallet for storing balance
+    """
+    user = models.OneToOneField('users.User', on_delete=models.CASCADE, related_name='wallet')
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    currency = models.CharField(max_length=10, default='NPR')
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "wallets"
+        verbose_name = "Wallet"
+        verbose_name_plural = "Wallets"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.balance} {self.currency}"
+
+
+class WalletTransaction(BaseModel):
+    """
+    WalletTransaction - Individual wallet balance changes
+    """
+    TRANSACTION_TYPE_CHOICES = [
+        ('CREDIT', 'Credit'),
+        ('DEBIT', 'Debit'),
+        ('ADJUSTMENT', 'Adjustment'),
+    ]
+
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='transactions')
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
+    
+    transaction_type = models.CharField(max_length=50, choices=TRANSACTION_TYPE_CHOICES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    balance_before = models.DecimalField(max_digits=10, decimal_places=2)
+    balance_after = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.CharField(max_length=255)
+    metadata = models.JSONField(default=dict)
+
+    class Meta:
+        db_table = "wallet_transactions"
+        verbose_name = "Wallet Transaction"
+        verbose_name_plural = "Wallet Transactions"
+
+    def __str__(self):
+        return f"{self.wallet.user.username} - {self.transaction_type} {self.amount}"
+
+
+class PaymentIntent(BaseModel):
+    """
+    PaymentIntent - Payment intents for gateway transactions
+    """
+    INTENT_TYPE_CHOICES = [
+        ('WALLET_TOPUP', 'Wallet Top Up'),
+        ('RENTAL_PAYMENT', 'Rental Payment'),
+        ('DUE_PAYMENT', 'Due Payment'),
+    ]
+
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('COMPLETED', 'Completed'),
+        ('FAILED', 'Failed'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='payment_intents')
+    payment_method = models.ForeignKey('PaymentMethod', on_delete=models.CASCADE)
+    related_rental = models.ForeignKey('rentals.Rental', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    intent_id = models.CharField(max_length=255, unique=True)
+    intent_type = models.CharField(max_length=50, choices=INTENT_TYPE_CHOICES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=10, default='NPR')
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='PENDING')
+    gateway_url = models.URLField(null=True, blank=True)
+    intent_metadata = models.JSONField(default=dict)
+    expires_at = models.DateTimeField()
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "payment_intents"
+        verbose_name = "Payment Intent"
+        verbose_name_plural = "Payment Intents"
+
+    def __str__(self):
+        return f"{self.intent_id} - {self.intent_type}"
+
+
+class PaymentWebhook(BaseModel):
+    """
+    PaymentWebhook - Webhook events from payment gateways
+    """
+    STATUS_CHOICES = [
+        ('RECEIVED', 'Received'),
+        ('PROCESSED', 'Processed'),
+        ('FAILED', 'Failed'),
+    ]
+
+    gateway = models.CharField(max_length=255)  # khalti, esewa, stripe
+    event_type = models.CharField(max_length=255)
+    payload = models.JSONField(default=dict)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='RECEIVED')
+    processing_result = models.CharField(max_length=255, null=True, blank=True)
+    received_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "payment_webhooks"
+        verbose_name = "Payment Webhook"
+        verbose_name_plural = "Payment Webhooks"
+
+    def __str__(self):
+        return f"{self.gateway} - {self.event_type}"
+
+
+class Refund(BaseModel):
+    """
+    Refund - Refund requests and processing
+    """
+    STATUS_CHOICES = [
+        ('REQUESTED', 'Requested'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+        ('PROCESSED', 'Processed'),
+    ]
+
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='refunds')
+    requested_by = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='requested_refunds')
+    approved_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_refunds')
+    
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    reason = models.CharField(max_length=255)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='REQUESTED')
+    gateway_reference = models.CharField(max_length=255, null=True, blank=True)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "refunds"
+        verbose_name = "Refund"
+        verbose_name_plural = "Refunds"
+
+    def __str__(self):
+        return f"Refund {self.amount} - {self.transaction.transaction_id}"
+
+
+class PaymentMethod(BaseModel):
+    """
+    PaymentMethod - Available payment gateways
+    """
+    name = models.CharField(max_length=100)
+    gateway = models.CharField(max_length=255)
+    is_active = models.BooleanField(default=True)
+    configuration = models.JSONField(default=dict)
+    min_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    max_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    supported_currencies = models.JSONField(default=list)
+
+    class Meta:
+        db_table = "payment_methods"
+        verbose_name = "Payment Method"
+        verbose_name_plural = "Payment Methods"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name

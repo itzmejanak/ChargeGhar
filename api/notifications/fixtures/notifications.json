@@ -1,0 +1,89 @@
+[
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": "550e8400-e29b-41d4-a716-446655441201",
+    "fields": {
+      "name": "Welcome Message",
+      "slug": "welcome-message",
+      "notification_type": "system",
+      "title_template": "Welcome to PowerBank!",
+      "message_template": "Thank you for joining PowerBank. Start renting power banks now!",
+      "description": "Welcome message for new users",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": "550e8400-e29b-41d4-a716-446655441202",
+    "fields": {
+      "name": "Rental Started",
+      "slug": "rental-started",
+      "notification_type": "rental",
+      "title_template": "Rental Started Successfully",
+      "message_template": "Your power bank rental has started. Enjoy your device!",
+      "description": "Notification when rental begins",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": "550e8400-e29b-41d4-a716-446655441203",
+    "fields": {
+      "name": "Payment Success",
+      "slug": "payment-success",
+      "notification_type": "payment",
+      "title_template": "Payment Successful",
+      "message_template": "Your payment of ${amount} has been processed successfully.",
+      "description": "Payment confirmation notification",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationrule",
+    "pk": "550e8400-e29b-41d4-a716-446655441301",
+    "fields": {
+      "notification_type": "system",
+      "send_in_app": true,
+      "send_push": true,
+      "send_sms": false,
+      "send_email": false,
+      "is_critical": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationrule",
+    "pk": "550e8400-e29b-41d4-a716-446655441302",
+    "fields": {
+      "notification_type": "rental",
+      "send_in_app": true,
+      "send_push": true,
+      "send_sms": true,
+      "send_email": false,
+      "is_critical": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationrule",
+    "pk": "550e8400-e29b-41d4-a716-446655441303",
+    "fields": {
+      "notification_type": "payment",
+      "send_in_app": true,
+      "send_push": false,
+      "send_sms": false,
+      "send_email": true,
+      "is_critical": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]
