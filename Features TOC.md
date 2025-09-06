@@ -16,36 +16,36 @@ This is a smart, scalable, and user-friendly ecosystem that solves the everyday 
 | Feature                | Endpoint               | Method | Description                                                                                     |
 |------------------------|------------------------|--------|-------------------------------------------------------------------------------------------------|
 | Check App Version      | `/api/app/version`    | GET    | Returns the latest app version. Triggers an update prompt if the user's version is outdated.   |
-| Health Check           | `/api/health`         | GET    | Verifies backend availability and uptime. Returns `200 OK` if operational.                      |
-| Upload Media | `/api/upload` | POST | Upload media files like images, videos to Cloudinary. Returns secure URLs for storage and CDN access. |
-| Get Banner List        | `/api/banners`        | GET    | Fetches active promotional banners (image URL, title, redirect URL) for the app's homepage.     |
-| Get Country Code       | `/api/countries`      | GET    | Returns a list of countries with dialing codes (e.g., `+977` for Nepal).                      |
-| Get Stations           | `/api/stations`       | GET    | Lists all active stations with real-time status (slots, location, online/offline).              |
-| Station Info           | `/api/stations/<SN>`  | GET    | Returns detailed station data: location, slot availability, battery levels, and online status.  |
-| Google Map Integration| `/api/stations/nearby` | GET    | Fetches stations within a radius (params: `lat`, `lng`, `radius`). Used for map-based discovery.|
+| Health Check           | `/api/app/health`     | GET    | Verifies backend availability and uptime. Returns `200 OK` if operational.                      |
+| Upload Media | `/api/app/upload` | POST | Upload media files like images, videos to Cloudinary. Returns secure URLs for storage and CDN access. |
+| Get Banner List        | `/api/app/banners`    | GET    | Fetches active promotional banners (image URL, title, redirect URL) for the app's homepage.     |
+| Get Country Code       | `/api/app/countries`  | GET    | Returns a list of countries with dialing codes (e.g., `+977` for Nepal).                      |
+| Get Stations           | `/api/app/stations`   | GET    | Lists all active stations with real-time status (slots, location, online/offline).              |
+| Station Info           | `/api/app/stations/<SN>` | GET    | Returns detailed station data: location, slot availability, battery levels, and online status.  |
+| Google Map Integration| `/api/app/stations/nearby` | GET    | Fetches stations within a radius (params: `lat`, `lng`, `radius`). Used for map-based discovery.|
 
 ---
 
 ## **👤 User Features**
 **Purpose**: Authentication, profile management, and user analytics.
 
-| Feature              | Endpoint                     | Method     | Description                                                  |
-| -------------------- | ---------------------------- | ---------- | ------------------------------------------------------------ |
-| Login                | `/api/auth/login`            | POST       | Completes login after OTP verification. Works with both email and phone number authentication. |
-| Logout               | `/api/auth/logout`           | POST       | Invalidates the user's JWT and clears the session.           |
-| Register             | `/api/auth/register`         | POST       | Creates new user account after OTP verification. Works with both email and phone number. Requires username and optional `referral_code`. |
-| Get OTP              | `/api/auth/get-otp`          | POST       | Sends a 6-digit OTP via SMS (phone) or Email based on input. Required for both login and register flows. |
-| Verify OTP           | `/api/auth/verify-otp`       | POST       | Validates the OTP sent to email or phone. Returns verification token for login/register flow. |
-| Device Config        | `/api/user/device`           | POST/PUT   | Update FCM token for push notifications along with device data. |
-| User Info            | `/api/auth/me`               | GET        | Returns the authenticated user's basic data (name, phone, email). Requires JWT. |
-| Profile              | `/api/profile`               | GET        | Fetches the user's full profile, including address and KYC status. |
-| Update Profile       | `/api/profile`               | PUT/PATCH  | Updates user profile. **Required for rental eligibility.**   |
-| Delete Account       | `/api/auth/account`          | DELETE     | Permanently deletes the user's account and data.             |
-| Update KYC           | `/api/auth/kyc`              | POST/PATCH | Uploads Nepali citizenship for KYC verification.             |
-| Get KYC Status       | `/api/auth/kyc-status`       | GET        | Returns the KYC verification status (`pending`, `approved`, `rejected`). |
-| Refresh Token        | `/api/auth/refresh`          | POST       | Refreshes the JWT access token using a valid refresh token.  |
-| Wallet               | `/api/wallet`                | GET        | Displays the user's wallet balance (NPR) and reward points.  |
-| Analytics & Insights | `/api/analytics/usage-stats` | GET        | Provides usage statistics (rentals, top-ups, points earned). |
+| Feature              | Endpoint                          | Method     | Description                                                  |
+| -------------------- | --------------------------------- | ---------- | ------------------------------------------------------------ |
+| Login                | `/api/auth/login`                 | POST       | Completes login after OTP verification. Works with both email and phone number authentication. |
+| Logout               | `/api/auth/logout`                | POST       | Invalidates the user's JWT and clears the session.           |
+| Register             | `/api/auth/register`              | POST       | Creates new user account after OTP verification. Works with both email and phone number. Requires username and optional `referral_code`. |
+| Get OTP              | `/api/auth/get-otp`               | POST       | Sends a 6-digit OTP via SMS (phone) or Email based on input. Required for both login and register flows. |
+| Verify OTP           | `/api/auth/verify-otp`            | POST       | Validates the OTP sent to email or phone. Returns verification token for login/register flow. |
+| Device Config        | `/api/auth/device`                | POST/PUT   | Update FCM token for push notifications along with device data. |
+| User Info            | `/api/auth/me`                    | GET        | Returns the authenticated user's basic data (name, phone, email). Requires JWT. |
+| Profile              | `/api/user/profile`               | GET        | Fetches the user's full profile, including address and KYC status. |
+| Update Profile       | `/api/user/profile`               | PUT/PATCH  | Updates user profile. **Required for rental eligibility.**   |
+| Delete Account       | `/api/auth/account`               | DELETE     | Permanently deletes the user's account and data.             |
+| Update KYC           | `/api/auth/kyc`                   | POST/PATCH | Uploads Nepali citizenship for KYC verification.             |
+| Get KYC Status       | `/api/auth/kyc-status`            | GET        | Returns the KYC verification status (`pending`, `approved`, `rejected`). |
+| Refresh Token        | `/api/auth/refresh`               | POST       | Refreshes the JWT access token using a valid refresh token.  |
+| Wallet               | `/api/user/wallet`                | GET        | Displays the user's wallet balance (NPR) and reward points.  |
+| Analytics & Insights | `/api/user/analytics/usage-stats` | GET        | Provides usage statistics (rentals, top-ups, points earned). |
 
 > **Note**:
 > - **Authentication Flow**: Users can register/login using either email or phone number
@@ -102,79 +102,92 @@ This is a smart, scalable, and user-friendly ecosystem that solves the everyday 
 
 ---
 
-## 💳 Payment Features
+# 💳 Payment Features
 
-**Purpose**: Wallet management, transactions, and payment gateways with support for both pre-payment and post-payment models. Users can pay using points (10 points = NPR 1), wallet balance, or combination of both. **Payment Priority**: Users can pay entirely with points if sufficient, entirely with wallet, or use all available points first and cover remaining amount from wallet.
+## Purpose
+Wallet management, transactions, and payment gateways for both pre-payment and post-payment models. Users can pay with points only, wallet only, or points first + wallet for remainder. All payment decisions are driven by the single `/calculate-options` endpoint using the `scenario` flag.
 
-| Feature             | Endpoint                               | Method | Description                                                                                     |
-|---------------------|----------------------------------------|--------|-------------------------------------------------------------------------------------------------|
-| User History        | `/api/transactions`                    | GET    | Lists all wallet transactions (top-ups, rentals, fines).                                        |
-| Wallet Balance      | `/api/wallet/balance`                  | GET    | Returns current wallet balance and currency.                                                    |
-| Create Top-up Intent| `/api/wallet/topup-intent`             | POST   | Creates a payment intent for wallet top-up via Khalti/eSewa/Stripe. Returns payment URL.        |
-| Verify Top-up       | `/api/payment/verify-topup`            | POST   | Validates top-up payment status with the gateway.                                               |
-| Get Payment Methods | `/api/payment/methods`                 | GET    | Returns active payment gateways (e.g., Khalti, eSewa) with capabilities.                        |
-| Calculate Payment Options | `/api/payment/calculate-options`     | POST   | Shows available payment options: (1) Pay entirely with points if sufficient, (2) Pay entirely with wallet, (3) Use all available points + remaining from wallet. Returns detailed breakdown and recommendations. |
-| Get Packages        | `/api/packages`                        | GET    | Lists rental packages with prices and type (pre-paid/post-paid).                                |
-| Initiate Rental     | `/api/rentals/initiate`                | POST   | Creates rental intent with payment processing for pre-paid packages.                            |
-| Verify Rental Payment| `/api/rentals/verify-payment`          | POST   | Validates rental payment completion.                                                            |
-| Calculate Due Amount| `/api/rentals/{id}/calculate-due`      | GET    | Calculates overdue charges for a rental (for both payment model).                          |
-| Pay Rental Due      | `/api/rentals/{id}/pay-due`            | POST   | Pays outstanding rental dues to unblock account.                                                |
-| Webhook (Khalti)    | `/api/payment/webhook/khalti`          | POST   | Listens for Khalti payment callbacks.                                                           |
-| Webhook (eSewa)     | `/api/payment/webhook/esewa`           | POST   | Listens for eSewa payment callbacks.                                                            |
-| Webhook (Stripe)    | `/api/payment/webhook/stripe`          | POST   | Listens for Stripe payment callbacks.                                                           |
-| Payment Status      | `/api/payment/status/{intent_id}`      | GET    | Returns the status of a payment intent (`pending`, `success`, `failed`).                        |
-| Cancel Payment      | `/api/payment/cancel/{intent_id}`      | POST   | Cancels a pending payment intent.                                                               |
-| Request Refund      | `/api/payment/refund/{transaction_id}` | POST   | Initiates a refund for a failed transaction.                                                    |
-| List Refunds        | `/api/payment/refunds`                 | GET    | Lists all refund requests for the user.                                                         |
-| Pending Refunds     | `/api/admin/refunds/pending`           | GET    | **Admin-only**: Lists all pending refund requests.                                              |
-| Approve Refund      | `/api/admin/refunds/{id}/approve`      | POST   | **Admin-only**: Approves a refund request.                                                      |
+## Payment Endpoints
 
-### **🔄 Payment Flow**
+| Feature | Endpoint | Method | Description |
+|---------|----------|--------|-------------|
+| User History | `/api/user/transactions` | GET | Lists all wallet transactions (top-ups, rentals, fines). |
+| Get Packages | `/api/payment/packages` | GET | Lists rental packages with prices and types. |
+| Get Payment Methods | `/api/payment/methods` | GET | Returns active payment gateways (Khalti, eSewa, Stripe) with min/max limits. |
+| Create Top-up Intent | `/api/payment/wallet/topup-intent` | POST | Creates a payment intent for wallet top-up. Returns payment URL & `intent_id`. |
+| Verify Top-up | `/api/payment/verify-topup` | POST | Validates top-up payment status with gateway and updates wallet balance. |
+| Calculate Payment Options | `/api/payment/calculate-options` | POST | Single endpoint for all scenarios: `wallet_topup`, `pre_payment`, `post_payment`. Returns sufficiency flag, shortfall, and breakdown (points + wallet). |
+| Pay Rental Due | `/api/rentals/{id}/pay-due` | POST | Pays outstanding rental dues using the same body as `/calculate-options`. Unblocks account. |
+| Payment Status | `/api/payment/status/{intent_id}` | GET | Returns status of any payment intent: `pending`, `success`, `failed`. |
+| Cancel Payment | `/api/payment/cancel/{intent_id}` | POST | Cancels a pending top-up intent. |
+| Start Rental | `/api/rentals/start` | POST | Creates rental session. Pre-payment: call after `/calculate-options` shows sufficient funds. Post-payment: call immediately after package selection. |
+| Request Refund | `/api/payment/refund/{transaction_id}` | POST | User-initiated refund for failed transactions. |
+| List Refunds | `/api/payment/refunds` | GET | Lists all refund requests for the user. |
+| Webhook (Khalti) | `/api/payment/webhook/khalti` | POST | Receives Khalti callbacks. |
+| Webhook (eSewa) | `/api/payment/webhook/esewa` | POST | Receives eSewa callbacks. |
+| Webhook (Stripe) | `/api/payment/webhook/stripe` | POST | Receives Stripe callbacks. |
+| Pending Refunds | `/api/admin/refunds/pending` | GET | Admin-only: lists pending refund requests. |
+| Approve Refund | `/api/admin/refunds/{id}/approve` | POST | Admin-only: approves a refund. |
 
-#### **Pre-Payment Flow (For rentals > 1 day)**
-1. User selects package → `GET /api/packages`
-2. User checks payment options → `POST /api/payment/calculate-options`
-3. User selects preferred payment method (points, wallet, or combination)
-4. System creates rental intent → `POST /api/rentals/initiate`
-5. If insufficient wallet/points → User completes top-up → Redirect to payment gateway
-6. System verifies payment → `POST /api/rentals/verify-payment`
-7. Amount deducted from selected method (points/wallet/combination)
-8. Rental begins → `POST /api/rentals/start`
-9. If user returns late → System calculates overdue charges → `GET /api/rentals/{id}/calculate-due`  
-10. User pays overdue amount → `POST /api/rentals/{id}/pay-due`
+## Payment Flow
 
-#### **Post-Payment Flow (For hourly/day packs)**
-1. User selects package → `GET /api/packages`
-2. User checks payment options → `POST /api/payment/calculate-options`
-3. User selects preferred payment method for post-payment
-4. Rental begins without immediate payment → `POST /api/rentals/start`
-5. User returns power bank → System calculates actual usage duration
-6. If exceeded package → System charges next higher package automatically
-7. **Payment deduction priority**: (1) Use all available points first, (2) Remaining amount from wallet
-8. If insufficient balance in both points + wallet → Account blocked until dues cleared
-9. User pays outstanding dues → `POST /api/rentals/{id}/pay-due` to unblock account
-10. Points refund to wallet if overpaid due to combination payment
+### 1. Wallet Top-up Flow
+1. Select package → `GET /api/payment/packages`
+2. Select payment methods → `GET /api/payment/methods`
+3. Pay and update wallet:
+   - `POST /api/payment/wallet/topup-intent`
+   - `POST /api/payment/verify-topup`
 
+### 2. Pre-payment Rental Flow
+1. User scans QR code of station (gets station SN)
+2. Show packages → `GET /api/payment/packages`
+3. Calculate options → `POST /api/payment/calculate-options`
+4. If sufficient balance (points, wallet, or combination):
+   - Start rental → `POST /api/rentals/start`
+5. If insufficient balance:
+   - Redirect to wallet top-up flow (1.3)
+   - After completion, call start rental → `POST /api/rentals/start`
 
+### 3. Post-payment Rental Flow
+#### 3.1 Before Rental
+1. User scans QR code of station (gets station SN)
+2. Show packages → `GET /api/payment/packages`
+3. Start rental → `POST /api/rentals/start`
 
-### PayDue flow
+#### 3.2 After Rental
+1. Calculate options → `POST /api/payment/calculate-options`
+2. If sufficient balance (points, wallet, or combination):
+   - Clear dues → `POST /api/rentals/{id}/pay-due`
+   - Update user in DB
+3. If insufficient balance:
+   - Redirect to wallet top-up flow (1.3)
+   - After completion, clear dues → `POST /api/rentals/{id}/pay-due`
+   - Update user in DB
 
-user will User Calculate Due Amount and checks payment options  and sent its auth token and rental id along with Selected payment options system will process the request and return response.
+### PayDue Flow
+1. Calculate options → `POST /api/payment/calculate-options`
+2. If sufficient balance (points, wallet, or combination):
+   - Clear dues → `POST /api/rentals/{id}/pay-due`
+   - Update user in DB
+3. If insufficient balance:
+   - Redirect to wallet top-up flow (1.3)
+   - After completion, clear dues → `POST /api/rentals/{id}/pay-due`
+   - Update user in DB
 
-#### **Wallet Top-up Flow**
-1. User requests top-up → `POST /api/wallet/topup-intent`
-2. System returns payment URL
-3. User completes payment on gateway
-4. System verifies payment → `POST /api/payment/verify-topup`
-5. Wallet balance updated
+> **Note:** The `calculate-options` endpoint includes a body parameter to identify each scenario.
 
-> **Notes**:
-> - **Wallet Balance** is stored as a `DecimalField` (NPR)
-> - **Transaction Status**: `pending`, `success`, `failed`, `refunded`
-> - **Pre-payment**: User pays before rental starts. Late returns incur overdue charges
-> - **Post-payment**: User pays after return based on actual usage. Accounts are blocked if dues not cleared
-> - **Strict validation**: Block new rentals until all dues are cleared for post-payment model
-> - **Payment Intents**: Use intent-based system for better tracking and idempotency
+## Important Notes
+
+- **One decision endpoint**: `/calculate-options` drives wallet top-up, pre-payment, and post-payment dues
+- **Payment priority**: Points first, then wallet
+- **Insufficient funds**: App redirects user to top-up flow and retries `/rentals/start` or `/pay-due`
+- **Webhooks & status polling**: Keep existing implementation intact
+- **Wallet Balance**: Stored as a `DecimalField` (NPR)
+- **Transaction Status**: `pending`, `success`, `failed`, `refunded`
+- **Pre-payment**: User pays before rental starts. Late returns incur overdue charges
+- **Post-payment**: User pays after return based on actual usage. Accounts are blocked if dues not cleared
+- **Strict validation**: Block new rentals until all dues are cleared for post-payment model
+- **Payment Intents**: Use intent-based system for better tracking and idempotency
 
 ---
 
@@ -360,7 +373,7 @@ user will User Calculate Due Amount and checks payment options  and sent its aut
 ## **✅ Final Notes**
 - **Device Communication**: Uses **Alibaba IoT → MNS → Django Celery** for hardware events.
 - **Authentication**: **JWT** for user sessions.
-- **Background Tasks**: **Celery + Redis** for OTP, notifications, and async processes.
+- **Background Tasks**: **Celery, Redis, RabbitMq** for OTP, notifications, and async processes.
 - **Database**: **PostgreSQL** for data integrity.
 - High priority features (User features, App Features, payments features [wallet, points], notification features, renting features, station features, Admin features, Points & Referral Features)
 - Low priority features (**Content Management**, **Social Features**, **Promotion Features**)

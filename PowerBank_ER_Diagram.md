@@ -312,21 +312,22 @@ erDiagram
         datetime updated_at
     }
 
-    PaymentIntent {
-        uuid id PK
-        uuid user_id FK
-        string intent_id UK
-        enum intent_type "wallet_topup, rental_payment, due_payment"
-        decimal amount
-        string currency
-        enum status "pending, completed, failed, cancelled"
-        uuid payment_method_id FK
-        string gateway_url "nullable"
-        json intent_metadata
-        datetime expires_at
-        datetime created_at
-        datetime completed_at "nullable"
-    }
+PaymentIntent {
+    uuid id PK
+    uuid user_id FK
+    string intent_id UK
+    enum intent_type "wallet_topup, rental_payment, due_payment"
+    decimal amount
+    string currency
+    enum status "pending, completed, failed, cancelled"
+    uuid payment_method_id FK
+    string gateway_url
+    uuid related_rental FK "For rental payments"
+    json intent_metadata
+    datetime expires_at
+    datetime created_at
+    datetime completed_at
+}
 
     PaymentWebhook {
         uuid id PK
@@ -394,12 +395,13 @@ erDiagram
     
     SMS_FCMLog {
         uuid id PK
-        uuid user_id FK
+        uuid user_id FK "nullable"
         string title
         text message
-        String type "sms, fcm"
+        enum type "fcm, sms"
+        string recipient "phone/fcm_token"
         enum status "pending, sent, failed"
-        string fcm_response "nullable"
+        string response "nullable"
         datetime created_at
         datetime sent_at "nullable"
     }
@@ -409,46 +411,39 @@ erDiagram
         uuid id PK
         uuid referrer_id FK
         uuid referred_user_id FK
-        enum status "pending, completed, expired"
-        integer referrer_points_awarded
-        integer referred_points_awarded
+        enum status "pending, completed"
+        integer referrer_points_awarded "default 0"
+        integer referred_points_awarded "default 0"
         datetime signed_up_at
         datetime first_rental_at "nullable"
         datetime points_awarded_at "nullable"
         uuid triggering_rental FK "nullable"
         datetime created_at
     }
+
    %% ===== SOCIAL ENTITIES =====
-    UserLeaderboard {
+ UserLeaderboard {
         uuid id PK
         uuid user_id FK
         integer rank
-        integer score
-        integer total_rentals
-        integer total_points_earned
-        integer referrals_count
-        integer timely_returns
-        integer late_returns
-        float return_rate
-        integer achievements_count
-        string latest_achievement "nullable"
-        string badge "nullable"
+        integer total_rentals "default 0"
+        integer total_points_earned "default 0"
+        integer referrals_count "default 0"
+        integer timely_returns "default 0"
         datetime last_updated
+        datetime created_at
     }
+
 
     Achievement {
         uuid id PK
         string name
         text description
-        string icon
-        enum criteria_type "rental_count, timely_return_count, referral_count, points_earned"
+        enum criteria_type "rental_count, timely_return_count, referral_count"
         integer criteria_value
-        json criteria_config
-        enum reward_type "points, badge"
+        enum reward_type "points"
         integer reward_value
-        string reward_description
-        boolean is_active
-        boolean is_repeatable
+        boolean is_active "default true"
         datetime created_at
         datetime updated_at
     }
@@ -457,14 +452,10 @@ erDiagram
         uuid id PK
         uuid user_id FK
         uuid achievement_id FK
-        integer current_progress
-        integer target_progress
-        boolean is_unlocked
-        boolean reward_claimed
+        integer current_progress "default 0"
+        boolean is_unlocked "default false"
         integer points_awarded "nullable"
-        uuid reward_transaction FK "nullable"
         datetime unlocked_at "nullable"
-        datetime reward_claimed_at "nullable"
         datetime created_at
     }
 
@@ -474,8 +465,7 @@ erDiagram
         string code UK
         string name
         integer points_value
-        integer max_uses_total "nullable"
-        integer max_uses_per_user
+        integer max_uses_per_user "default 1"
         datetime valid_from
         datetime valid_until
         enum status "active, inactive, expired"
@@ -488,22 +478,17 @@ erDiagram
         uuid coupon_id FK
         uuid user_id FK
         integer points_received
-        uuid points_transaction_id FK
         datetime used_at
+        datetime created_at
     }
 
   %% ===== CONTENT ENTITIES =====
     ContentPage {
         uuid id PK
-        string slug UK "terms-of-service, privacy-policy, about, contact"
+        string slug UK "terms-of-service, privacy-policy, about, contact, faq"
         string title
         text content
-        enum content_type "legal, informational, help"
-        boolean is_published
-        json metadata
-        uuid created_by FK "admin who created"
-        uuid updated_by FK "admin who last updated"
-        datetime published_at "nullable"
+        boolean is_published "default true"
         datetime created_at
         datetime updated_at
     }
@@ -606,11 +591,9 @@ erDiagram
     AdminProfile {
         uuid id PK
         uuid user_id FK
-        enum role "super_admin, admin"
-        json permissions
-        boolean is_active
+        enum role "super_admin, admin, moderator"
+        boolean is_active "default true"
         uuid created_by FK "nullable"
-        uuid updated_by FK "admin who last updated"
         datetime created_at
         datetime updated_at
     }
