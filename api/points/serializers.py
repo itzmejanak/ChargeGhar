@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from rest_framework import serializers
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_field
 
 from api.points.models import PointsTransaction, Referral
 from api.users.models import UserPoints, User
@@ -23,11 +24,13 @@ class PointsTransactionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at']
     
-    def get_points_value(self, obj):
+    @extend_schema_field(serializers.FloatField)
+    def get_points_value(self, obj) -> float:
         """Get monetary value of points"""
         return float(convert_points_to_amount(abs(obj.points)))
     
-    def get_formatted_points(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_points(self, obj) -> str:
         """Get formatted points display"""
         sign = "+" if obj.transaction_type == 'EARNED' else "-"
         return f"{sign}{abs(obj.points)} points"

@@ -3,6 +3,7 @@ from __future__ import annotations
 from rest_framework import serializers
 from django.utils import timezone
 from decimal import Decimal
+from drf_spectacular.utils import extend_schema_field
 
 from api.rentals.models import (
     Rental, RentalExtension, RentalIssue, RentalLocation, RentalPackage
@@ -11,8 +12,8 @@ from api.stations.models import Station, PowerBank
 from api.common.utils.helpers import calculate_distance
 
 
-class RentalPackageSerializer(serializers.ModelSerializer):
-    """Serializer for rental packages"""
+class RentalPackageDetailSerializer(serializers.ModelSerializer):
+    """Serializer for rental packages (detailed view)"""
     duration_display = serializers.SerializerMethodField()
     formatted_price = serializers.SerializerMethodField()
     
@@ -24,7 +25,8 @@ class RentalPackageSerializer(serializers.ModelSerializer):
             'formatted_price'
         ]
     
-    def get_duration_display(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_duration_display(self, obj) -> str:
         """Get human-readable duration"""
         minutes = obj.duration_minutes
         if minutes < 60:
@@ -40,7 +42,8 @@ class RentalPackageSerializer(serializers.ModelSerializer):
             days = minutes // 1440
             return f"{days} day{'s' if days > 1 else ''}"
     
-    def get_formatted_price(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_price(self, obj) -> str:
         return f"NPR {obj.price:,.2f}"
 
 
@@ -97,13 +100,16 @@ class RentalSerializer(serializers.ModelSerializer):
             'timely_return_bonus_awarded', 'created_at', 'updated_at'
         ]
     
-    def get_formatted_amount_paid(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_amount_paid(self, obj) -> str:
         return f"NPR {obj.amount_paid:,.2f}"
     
-    def get_formatted_overdue_amount(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_overdue_amount(self, obj) -> str:
         return f"NPR {obj.overdue_amount:,.2f}"
     
-    def get_duration_used(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_duration_used(self, obj) -> str:
         """Get duration used in human-readable format"""
         if not obj.started_at:
             return "Not started"
@@ -120,7 +126,8 @@ class RentalSerializer(serializers.ModelSerializer):
         else:
             return f"{minutes}m"
     
-    def get_time_remaining(self, obj):
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_time_remaining(self, obj) -> str | None:
         """Get time remaining until due"""
         if obj.status not in ['ACTIVE', 'PENDING']:
             return None
@@ -142,7 +149,8 @@ class RentalSerializer(serializers.ModelSerializer):
             minutes = total_minutes % 60
             return f"{hours}h {minutes}m remaining"
     
-    def get_is_overdue(self, obj):
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_overdue(self, obj) -> bool:
         """Check if rental is overdue"""
         if obj.status not in ['ACTIVE', 'OVERDUE']:
             return False
@@ -164,10 +172,12 @@ class RentalListSerializer(serializers.ModelSerializer):
             'package_name', 'formatted_amount_paid', 'duration_display'
         ]
     
-    def get_formatted_amount_paid(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_amount_paid(self, obj) -> str:
         return f"NPR {obj.amount_paid:,.2f}"
     
-    def get_duration_display(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_duration_display(self, obj) -> str:
         if not obj.started_at:
             return "Not started"
         
@@ -196,7 +206,8 @@ class RentalExtensionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'extended_at']
     
-    def get_formatted_extension_cost(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_extension_cost(self, obj) -> str:
         return f"NPR {obj.extension_cost:,.2f}"
 
 

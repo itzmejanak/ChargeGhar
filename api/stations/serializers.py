@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from typing import Optional
 from rest_framework import serializers
 from django.db.models import Count, Avg
 from decimal import Decimal
+from drf_spectacular.utils import extend_schema_field
 
 from api.stations.models import (
     Station, StationSlot, StationAmenity, StationAmenityMapping,
@@ -54,7 +56,8 @@ class StationMediaSerializer(serializers.ModelSerializer):
             'is_primary', 'media_url'
         ]
     
-    def get_media_url(self, obj):
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_media_url(self, obj) -> Optional[str]:
         return obj.media_upload.file_url if obj.media_upload else None
 
 
@@ -83,11 +86,13 @@ class StationListSerializer(serializers.ModelSerializer):
             'distance', 'is_favorite', 'primary_image', 'last_heartbeat'
         ]
     
-    def get_available_slots(self, obj):
+    @extend_schema_field(serializers.IntegerField)
+    def get_available_slots(self, obj) -> int:
         """Get count of available slots"""
         return obj.slots.filter(status='AVAILABLE').count()
     
-    def get_distance(self, obj):
+    @extend_schema_field(serializers.FloatField(allow_null=True))
+    def get_distance(self, obj) -> Optional[float]:
         """Calculate distance from user location if provided"""
         request = self.context.get('request')
         if not request:
@@ -110,7 +115,8 @@ class StationListSerializer(serializers.ModelSerializer):
         
         return None
     
-    def get_is_favorite(self, obj):
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_favorite(self, obj) -> bool:
         """Check if station is user's favorite"""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
@@ -119,7 +125,8 @@ class StationListSerializer(serializers.ModelSerializer):
             ).exists()
         return False
     
-    def get_primary_image(self, obj):
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_primary_image(self, obj) -> Optional[str]:
         """Get primary image URL"""
         primary_media = obj.media.filter(is_primary=True, media_type='IMAGE').first()
         return primary_media.media_upload.file_url if primary_media else None
@@ -149,16 +156,20 @@ class StationDetailSerializer(serializers.ModelSerializer):
             'total_reviews'
         ]
     
-    def get_available_slots(self, obj):
+    @extend_schema_field(serializers.IntegerField)
+    def get_available_slots(self, obj) -> int:
         return obj.slots.filter(status='AVAILABLE').count()
     
-    def get_occupied_slots(self, obj):
+    @extend_schema_field(serializers.IntegerField)
+    def get_occupied_slots(self, obj) -> int:
         return obj.slots.filter(status='OCCUPIED').count()
     
-    def get_maintenance_slots(self, obj):
+    @extend_schema_field(serializers.IntegerField)
+    def get_maintenance_slots(self, obj) -> int:
         return obj.slots.filter(status='MAINTENANCE').count()
     
-    def get_is_favorite(self, obj):
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_favorite(self, obj) -> bool:
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return UserStationFavorite.objects.filter(
@@ -166,7 +177,8 @@ class StationDetailSerializer(serializers.ModelSerializer):
             ).exists()
         return False
     
-    def get_distance(self, obj):
+    @extend_schema_field(serializers.FloatField)
+    def get_distance(self, obj) -> Optional[float]:
         request = self.context.get('request')
         if not request:
             return None
@@ -185,11 +197,13 @@ class StationDetailSerializer(serializers.ModelSerializer):
                 pass
         return None
     
-    def get_average_rating(self, obj):
+    @extend_schema_field(serializers.FloatField)
+    def get_average_rating(self, obj) -> float:
         # Placeholder for future rating system
         return 4.5
     
-    def get_total_reviews(self, obj):
+    @extend_schema_field(serializers.IntegerField)
+    def get_total_reviews(self, obj) -> int:
         # Placeholder for future review system
         return 0
 

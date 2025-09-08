@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from typing import Dict, Any, Optional
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from drf_spectacular.utils import extend_schema_field
 
 from api.users.models import User, UserProfile, UserKYC, UserDevice, UserPoints
 from api.common.utils.helpers import validate_phone_number, mask_sensitive_data
@@ -196,7 +198,8 @@ class UserSerializer(serializers.ModelSerializer):
             'date_joined', 'last_login'
         ]
     
-    def get_points(self, obj):
+    @extend_schema_field(serializers.DictField)
+    def get_points(self, obj) -> Dict[str, int]:
         """Get user points"""
         try:
             return {
@@ -206,7 +209,8 @@ class UserSerializer(serializers.ModelSerializer):
         except UserPoints.DoesNotExist:
             return {'current_points': 0, 'total_points': 0}
     
-    def get_wallet_balance(self, obj):
+    @extend_schema_field(serializers.DictField)
+    def get_wallet_balance(self, obj) -> Dict[str, str]:
         """Get user wallet balance"""
         try:
             return {
@@ -216,13 +220,15 @@ class UserSerializer(serializers.ModelSerializer):
         except:
             return {'balance': '0.00', 'currency': 'NPR'}
     
-    def get_masked_phone(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_masked_phone(self, obj) -> Optional[str]:
         """Get masked phone number"""
         if obj.phone_number:
             return mask_sensitive_data(obj.phone_number, visible_chars=3)
         return None
     
-    def get_masked_email(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_masked_email(self, obj) -> Optional[str]:
         """Get masked email"""
         if obj.email:
             return mask_sensitive_data(obj.email, visible_chars=3)
@@ -248,6 +254,13 @@ class UserAnalyticsSerializer(serializers.Serializer):
     favorite_stations_count = serializers.IntegerField()
     last_rental_date = serializers.DateTimeField(allow_null=True)
     member_since = serializers.DateTimeField()
+
+
+class UserWalletResponseSerializer(serializers.Serializer):
+    """Serializer for user wallet response"""
+    balance = serializers.CharField()
+    currency = serializers.CharField()
+    points = serializers.DictField()
 
 
 class PasswordChangeSerializer(serializers.Serializer):

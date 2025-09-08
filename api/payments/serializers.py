@@ -3,6 +3,7 @@ from __future__ import annotations
 from rest_framework import serializers
 from decimal import Decimal
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_field
 
 from api.payments.models import (
     Transaction, Wallet, WalletTransaction, PaymentIntent, 
@@ -34,7 +35,8 @@ class RentalPackageSerializer(serializers.ModelSerializer):
             'package_type', 'payment_model', 'is_active', 'duration_display'
         ]
     
-    def get_duration_display(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_duration_display(self, obj) -> str:
         """Get human-readable duration"""
         minutes = obj.duration_minutes
         if minutes < 60:
@@ -60,15 +62,16 @@ class WalletSerializer(serializers.ModelSerializer):
         fields = ['id', 'balance', 'currency', 'formatted_balance', 'is_active', 'updated_at']
         read_only_fields = ['id', 'updated_at']
     
-    def get_formatted_balance(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_balance(self, obj) -> str:
         return f"{obj.currency} {obj.balance:,.2f}"
 
 
 class TransactionSerializer(serializers.ModelSerializer):
     """Serializer for transactions"""
     formatted_amount = serializers.SerializerMethodField()
-    payment_method_name = serializers.CharField(source='payment_method.name', read_only=True)
-    rental_code = serializers.CharField(source='related_rental.rental_code', read_only=True)
+    payment_method_name = serializers.SerializerMethodField()
+    rental_code = serializers.SerializerMethodField()
     
     class Meta:
         model = Transaction
@@ -79,8 +82,17 @@ class TransactionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'transaction_id', 'created_at']
     
-    def get_formatted_amount(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_amount(self, obj) -> str:
         return f"{obj.currency} {obj.amount:,.2f}"
+    
+    @extend_schema_field(serializers.CharField)
+    def get_payment_method_name(self, obj) -> str:
+        return obj.payment_method.name if obj.payment_method else "N/A"
+    
+    @extend_schema_field(serializers.CharField)
+    def get_rental_code(self, obj) -> str:
+        return obj.related_rental.rental_code if obj.related_rental else "N/A"
 
 
 class WalletTransactionSerializer(serializers.ModelSerializer):
@@ -98,13 +110,16 @@ class WalletTransactionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at']
     
-    def get_formatted_amount(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_amount(self, obj) -> str:
         return f"NPR {obj.amount:,.2f}"
     
-    def get_formatted_balance_before(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_balance_before(self, obj) -> str:
         return f"NPR {obj.balance_before:,.2f}"
     
-    def get_formatted_balance_after(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_balance_after(self, obj) -> str:
         return f"NPR {obj.balance_after:,.2f}"
 
 
@@ -123,10 +138,12 @@ class PaymentIntentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'intent_id', 'gateway_url', 'completed_at', 'created_at']
     
-    def get_formatted_amount(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_amount(self, obj) -> str:
         return f"{obj.currency} {obj.amount:,.2f}"
     
-    def get_is_expired(self, obj):
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_expired(self, obj) -> bool:
         return timezone.now() > obj.expires_at
 
 
@@ -207,7 +224,8 @@ class RefundSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'requested_at', 'processed_at']
     
-    def get_formatted_amount(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_amount(self, obj) -> str:
         return f"NPR {obj.amount:,.2f}"
 
 

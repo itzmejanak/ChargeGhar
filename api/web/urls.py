@@ -44,7 +44,20 @@ urlpatterns = [
     *_swagger_urlpatterns,
     path("", lambda _request: redirect("docs/"), name="home"),
     path("admin/", admin.site.urls),
-    path("", include("api.users.urls")),
+    
+    # API app includes
+    path("api/", include("api.users.urls")),
+    path("api/", include("api.stations.urls")),
+    path("api/", include("api.notifications.urls")),
+    path("api/", include("api.payments.urls")),
+    path("api/", include("api.points.urls")),
+    path("api/", include("api.rentals.urls")),
+    path("api/", include("api.social.urls")),
+    path("api/", include("api.promotions.urls")),
+    path("api/", include("api.content.urls")),
+    path("api/", include("api.admin_panel.urls")),
+    path("api/", include("api.common.urls")),
+    path("api/", include("api.config.urls")),
 ]
 
 if USE_SILK:

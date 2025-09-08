@@ -181,6 +181,24 @@ class NotificationService(CRUDService):
             
         except Exception as e:
             self.handle_service_error(e, "Failed to get notification stats")
+            # Return empty stats on error
+            return {
+                'total_notifications': 0,
+                'unread_count': 0,
+                'read_count': 0,
+                'notifications_today': 0,
+                'notifications_this_week': 0,
+                'notifications_this_month': 0,
+                'rental_notifications': 0,
+                'payment_notifications': 0,
+                'promotion_notifications': 0,
+                'system_notifications': 0,
+                'achievement_notifications': 0,
+                'in_app_notifications': 0,
+                'push_notifications': 0,
+                'sms_notifications': 0,
+                'email_notifications': 0,
+            }
 
 
 class NotificationTemplateService(CRUDService):

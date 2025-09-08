@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from rest_framework import serializers
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_field
 
 from api.promotions.models import Coupon, CouponUsage
 
@@ -21,12 +22,14 @@ class CouponSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at']
     
-    def get_is_currently_valid(self, obj):
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_currently_valid(self, obj) -> bool:
         now = timezone.now()
         return (obj.status == 'ACTIVE' and 
                 obj.valid_from <= now <= obj.valid_until)
     
-    def get_days_remaining(self, obj):
+    @extend_schema_field(serializers.IntegerField)
+    def get_days_remaining(self, obj) -> int:
         if obj.status != 'ACTIVE':
             return 0
         
@@ -37,7 +40,8 @@ class CouponSerializer(serializers.ModelSerializer):
         remaining = obj.valid_until - now
         return remaining.days
     
-    def get_total_uses(self, obj):
+    @extend_schema_field(serializers.IntegerField)
+    def get_total_uses(self, obj) -> int:
         return obj.usages.count()
     
     def validate(self, attrs):

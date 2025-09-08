@@ -59,6 +59,10 @@ def convert_points_to_amount(points: int, points_per_unit: int = 10, unit_amount
 
 def paginate_queryset(queryset, page: int = 1, page_size: int = 20) -> Dict[str, Any]:
     """Paginate queryset and return pagination info"""
+    # Ensure queryset is ordered to avoid pagination warnings
+    if not queryset.ordered:
+        queryset = queryset.order_by('id')
+    
     paginator = Paginator(queryset, page_size)
     page_obj = paginator.get_page(page)
     

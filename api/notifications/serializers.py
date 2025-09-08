@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from rest_framework import serializers
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_field
 
 from api.notifications.models import (
     Notification, NotificationTemplate, NotificationRule, SMS_FCMLog
@@ -22,7 +23,8 @@ class NotificationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at']
     
-    def get_time_ago(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_time_ago(self, obj) -> str:
         """Get human-readable time ago"""
         now = timezone.now()
         diff = now - obj.created_at
@@ -38,7 +40,8 @@ class NotificationSerializer(serializers.ModelSerializer):
         else:
             return "Just now"
     
-    def get_is_recent(self, obj):
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_recent(self, obj) -> bool:
         """Check if notification is recent (within 24 hours)"""
         return (timezone.now() - obj.created_at).days == 0
 
@@ -54,7 +57,8 @@ class NotificationListSerializer(serializers.ModelSerializer):
             'created_at', 'time_ago'
         ]
     
-    def get_time_ago(self, obj):
+    @extend_schema_field(serializers.CharField)
+    def get_time_ago(self, obj) -> str:
         now = timezone.now()
         diff = now - obj.created_at
         
@@ -221,7 +225,7 @@ class BulkNotificationSerializer(serializers.Serializer):
         required=False
     )
     title = serializers.CharField(max_length=255)
-    message = serializers.TextField()
+    message = serializers.CharField(max_length=1000)
     notification_type = serializers.ChoiceField(choices=Notification.NotificationTypeChoices.choices)
     data = serializers.JSONField(default=dict, required=False)
     send_push = serializers.BooleanField(default=False)

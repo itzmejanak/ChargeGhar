@@ -14,11 +14,17 @@ if TYPE_CHECKING:
 router = CustomViewRouter()
 
 
-@router.register(r"social/", name="social")
-class SocialView(GenericAPIView):
-    serializer_class = serializers.SocialSerializer
+@router.register(r"social/achievements", name="social-achievements")
+class SocialAchievementView(GenericAPIView):
+    serializer_class = serializers.AchievementSerializer
+
+    def get(self, request: Request) -> Response:
+        """Get user achievements"""
+        achievements = serializers.AchievementSerializer([], many=True)
+        return Response(achievements.data)
 
     def post(self, request: Request) -> Response:
+        """Update achievement progress"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)

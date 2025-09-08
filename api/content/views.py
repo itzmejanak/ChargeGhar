@@ -14,11 +14,17 @@ if TYPE_CHECKING:
 router = CustomViewRouter()
 
 
-@router.register(r"content/", name="content")
-class ContentView(GenericAPIView):
-    serializer_class = serializers.ContentSerializer
+@router.register(r"content/pages", name="content-pages")
+class ContentPageView(GenericAPIView):
+    serializer_class = serializers.ContentPageSerializer
+
+    def get(self, request: Request) -> Response:
+        """Get content pages"""
+        pages = serializers.ContentPageSerializer([], many=True)
+        return Response(pages.data)
 
     def post(self, request: Request) -> Response:
+        """Create content page"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)

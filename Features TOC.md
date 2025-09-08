@@ -17,12 +17,9 @@ This is a smart, scalable, and user-friendly ecosystem that solves the everyday 
 |------------------------|------------------------|--------|-------------------------------------------------------------------------------------------------|
 | Check App Version      | `/api/app/version`    | GET    | Returns the latest app version. Triggers an update prompt if the user's version is outdated.   |
 | Health Check           | `/api/app/health`     | GET    | Verifies backend availability and uptime. Returns `200 OK` if operational.                      |
-| Upload Media | `/api/app/upload` | POST | Upload media files like images, videos to Cloudinary. Returns secure URLs for storage and CDN access. |
+| Upload Media | `/api/app/media/upload` | POST | Upload media files like images, videos to Cloudinary. Returns secure URLs for storage and CDN access. |
 | Get Banner List        | `/api/app/banners`    | GET    | Fetches active promotional banners (image URL, title, redirect URL) for the app's homepage.     |
 | Get Country Code       | `/api/app/countries`  | GET    | Returns a list of countries with dialing codes (e.g., `+977` for Nepal).                      |
-| Get Stations           | `/api/app/stations`   | GET    | Lists all active stations with real-time status (slots, location, online/offline).              |
-| Station Info           | `/api/app/stations/<SN>` | GET    | Returns detailed station data: location, slot availability, battery levels, and online status.  |
-| Google Map Integration| `/api/app/stations/nearby` | GET    | Fetches stations within a radius (params: `lat`, `lng`, `radius`). Used for map-based discovery.|
 
 ---
 
@@ -34,18 +31,18 @@ This is a smart, scalable, and user-friendly ecosystem that solves the everyday 
 | Login                | `/api/auth/login`                 | POST       | Completes login after OTP verification. Works with both email and phone number authentication. |
 | Logout               | `/api/auth/logout`                | POST       | Invalidates the user's JWT and clears the session.           |
 | Register             | `/api/auth/register`              | POST       | Creates new user account after OTP verification. Works with both email and phone number. Requires username and optional `referral_code`. |
-| Get OTP              | `/api/auth/get-otp`               | POST       | Sends a 6-digit OTP via SMS (phone) or Email based on input. Required for both login and register flows. |
-| Verify OTP           | `/api/auth/verify-otp`            | POST       | Validates the OTP sent to email or phone. Returns verification token for login/register flow. |
+| Get OTP              | `/api/auth/otp/request`           | POST       | Sends a 6-digit OTP via SMS (phone) or Email based on input. Required for both login and register flows. |
+| Verify OTP           | `/api/auth/otp/verify`            | POST       | Validates the OTP sent to email or phone. Returns verification token for login/register flow. |
 | Device Config        | `/api/auth/device`                | POST/PUT   | Update FCM token for push notifications along with device data. |
 | User Info            | `/api/auth/me`                    | GET        | Returns the authenticated user's basic data (name, phone, email). Requires JWT. |
-| Profile              | `/api/user/profile`               | GET        | Fetches the user's full profile, including address and KYC status. |
-| Update Profile       | `/api/user/profile`               | PUT/PATCH  | Updates user profile. **Required for rental eligibility.**   |
+| Profile              | `/api/users/profile`              | GET        | Fetches the user's full profile, including address and KYC status. |
+| Update Profile       | `/api/users/profile`              | PUT/PATCH  | Updates user profile. **Required for rental eligibility.**   |
 | Delete Account       | `/api/auth/account`               | DELETE     | Permanently deletes the user's account and data.             |
-| Update KYC           | `/api/auth/kyc`                   | POST/PATCH | Uploads Nepali citizenship for KYC verification.             |
-| Get KYC Status       | `/api/auth/kyc-status`            | GET        | Returns the KYC verification status (`pending`, `approved`, `rejected`). |
+| Update KYC           | `/api/users/kyc`                  | POST/PATCH | Uploads Nepali citizenship for KYC verification.             |
+| Get KYC Status       | `/api/users/kyc/status`           | GET        | Returns the KYC verification status (`pending`, `approved`, `rejected`). |
 | Refresh Token        | `/api/auth/refresh`               | POST       | Refreshes the JWT access token using a valid refresh token.  |
-| Wallet               | `/api/user/wallet`                | GET        | Displays the user's wallet balance (NPR) and reward points.  |
-| Analytics & Insights | `/api/user/analytics/usage-stats` | GET        | Provides usage statistics (rentals, top-ups, points earned). |
+| Wallet               | `/api/users/wallet`               | GET        | Displays the user's wallet balance (NPR) and reward points.  |
+| Analytics & Insights | `/api/users/analytics/usage-stats` | GET        | Provides usage statistics (rentals, top-ups, points earned). |
 
 > **Note**:
 > - **Authentication Flow**: Users can register/login using either email or phone number
@@ -71,6 +68,9 @@ This is a smart, scalable, and user-friendly ecosystem that solves the everyday 
 | Report Issue         | `/api/stations/{sn}/report-issue` | POST | Allows users to report issues with a station (e.g., offline, damaged, dirty, location_wrong). |
 | My Reported Issues | `/api/stations/my-reports` | GET | Returns all issues reported by the authenticated user |
 | Get Station Issues | `/api/stations/{sn}/issues` | GET | Returns reported issues for a specific station |
+| Get Stations           | `/api/stations`   | GET    | Lists all active stations with real-time status (slots, location, online/offline).              |
+| Station Info           | `/api/stations/{sn}` | GET    | Returns detailed station data: location, slot availability, battery levels, and online status.  |
+| Google Map Integration| `/api/stations/nearby` | GET    | Fetches stations within a radius (params: `lat`, `lng`, `radius`). Used for map-based discovery.|
 
 ---
 
@@ -79,10 +79,10 @@ This is a smart, scalable, and user-friendly ecosystem that solves the everyday 
 
 | Feature                        | Endpoint                                | Method | Description                                          |
 | ------------------------------ | --------------------------------------- | ------ | ---------------------------------------------------- |
-| Get Notification               | `api/user/notifications`                | GET    | User will get inApp notification from this endpoints |
-| Update Notification            | `api/user/notification/<id>`            | POST   | User will mark as read                               |
-| Mark All Notifications as Read | `/api/user/notifications/mark-all-read` | POST   | Marks all notifications as read for the user         |
-| Delete Notification            | `/api/user/notification/<id>`           | POST   | Deletes a specific notification                      |
+| Get Notification               | `/api/notifications`                | GET    | User will get inApp notification from this endpoints |
+| Update Notification            | `/api/notifications/{id}`            | PATCH   | User will mark as read                               |
+| Mark All Notifications as Read | `/api/notifications/mark-all-read` | POST   | Marks all notifications as read for the user         |
+| Delete Notification            | `/api/notifications/{id}`           | DELETE   | Deletes a specific notification                      |
 
 | Feature          | Trigger                  | Delivery      | Description                                                                                     |
 |------------------|--------------------------|---------------|-------------------------------------------------------------------------------------------------|
@@ -111,23 +111,23 @@ Wallet management, transactions, and payment gateways for both pre-payment and p
 
 | Feature | Endpoint | Method | Description |
 |---------|----------|--------|-------------|
-| User History | `/api/user/transactions` | GET | Lists all wallet transactions (top-ups, rentals, fines). |
-| Get Packages | `/api/payment/packages` | GET | Lists rental packages with prices and types. |
-| Get Payment Methods | `/api/payment/methods` | GET | Returns active payment gateways (Khalti, eSewa, Stripe) with min/max limits. |
-| Create Top-up Intent | `/api/payment/wallet/topup-intent` | POST | Creates a payment intent for wallet top-up. Returns payment URL & `intent_id`. |
-| Verify Top-up | `/api/payment/verify-topup` | POST | Validates top-up payment status with gateway and updates wallet balance. |
-| Calculate Payment Options | `/api/payment/calculate-options` | POST | Single endpoint for all scenarios: `wallet_topup`, `pre_payment`, `post_payment`. Returns sufficiency flag, shortfall, and breakdown (points + wallet). |
+| User History | `/api/payments/transactions` | GET | Lists all wallet transactions (top-ups, rentals, fines). |
+| Get Packages | `/api/payments/packages` | GET | Lists rental packages with prices and types. |
+| Get Payment Methods | `/api/payments/methods` | GET | Returns active payment gateways (Khalti, eSewa, Stripe) with min/max limits. |
+| Create Top-up Intent | `/api/payments/wallet/topup-intent` | POST | Creates a payment intent for wallet top-up. Returns payment URL & `intent_id`. |
+| Verify Top-up | `/api/payments/verify-topup` | POST | Validates top-up payment status with gateway and updates wallet balance. |
+| Calculate Payment Options | `/api/payments/calculate-options` | POST | Single endpoint for all scenarios: `wallet_topup`, `pre_payment`, `post_payment`. Returns sufficiency flag, shortfall, and breakdown (points + wallet). |
 | Pay Rental Due | `/api/rentals/{id}/pay-due` | POST | Pays outstanding rental dues using the same body as `/calculate-options`. Unblocks account. |
-| Payment Status | `/api/payment/status/{intent_id}` | GET | Returns status of any payment intent: `pending`, `success`, `failed`. |
-| Cancel Payment | `/api/payment/cancel/{intent_id}` | POST | Cancels a pending top-up intent. |
+| Payment Status | `/api/payments/status/{intent_id}` | GET | Returns status of any payment intent: `pending`, `success`, `failed`. |
+| Cancel Payment | `/api/payments/cancel/{intent_id}` | POST | Cancels a pending top-up intent. |
 | Start Rental | `/api/rentals/start` | POST | Creates rental session. Pre-payment: call after `/calculate-options` shows sufficient funds. Post-payment: call immediately after package selection. |
-| Request Refund | `/api/payment/refund/{transaction_id}` | POST | User-initiated refund for failed transactions. |
-| List Refunds | `/api/payment/refunds` | GET | Lists all refund requests for the user. |
-| Webhook (Khalti) | `/api/payment/webhook/khalti` | POST | Receives Khalti callbacks. |
-| Webhook (eSewa) | `/api/payment/webhook/esewa` | POST | Receives eSewa callbacks. |
-| Webhook (Stripe) | `/api/payment/webhook/stripe` | POST | Receives Stripe callbacks. |
-| Pending Refunds | `/api/admin/refunds/pending` | GET | Admin-only: lists pending refund requests. |
-| Approve Refund | `/api/admin/refunds/{id}/approve` | POST | Admin-only: approves a refund. |
+| Request Refund | `/api/payments/refunds/{transaction_id}` | POST | User-initiated refund for failed transactions. |
+| List Refunds | `/api/payments/refunds` | GET | Lists all refund requests for the user. |
+| Webhook (Khalti) | `/api/payments/webhooks/khalti` | POST | Receives Khalti callbacks. |
+| Webhook (eSewa) | `/api/payments/webhooks/esewa` | POST | Receives eSewa callbacks. |
+| Webhook (Stripe) | `/api/payments/webhooks/stripe` | POST | Receives Stripe callbacks. |
+| Pending Refunds | `/api/admin/payments/refunds/pending` | GET | Admin-only: lists pending refund requests. |
+| Approve Refund | `/api/admin/payments/refunds/{id}/approve` | POST | Admin-only: approves a refund. |
 
 ## Payment Flow
 
@@ -197,9 +197,9 @@ Wallet management, transactions, and payment gateways for both pre-payment and p
 | Feature           | Endpoint                 | Method | Description                                           |
 | ----------------- | ------------------------ | ------ | ----------------------------------------------------- |
 | Points History    | `/api/points/history`    | GET    | Lists all points transactions (earned/spent).         |
-| Get Referral Code | `/api/referral/my-code`  | GET    | Returns the user's unique `inviter_code`.             |
-| Validate Code     | `/api/referral/validate` | GET    | Checks if an `invite_code` is valid.                  |
-| Claim Referral    | `/api/referral/claim`    | POST   | Awards points after the referred user's first rental. |
+| Get Referral Code | `/api/referrals/my-code`  | GET    | Returns the user's unique `inviter_code`.             |
+| Validate Code     | `/api/referrals/validate` | GET    | Checks if an `invite_code` is valid.                  |
+| Claim Referral    | `/api/referrals/claim`    | POST   | Awards points after the referred user's first rental. |
 | Points Summary    | `/api/points/summary`    | GET    | Returns comprehensive points overview                 |
 
 | Action               | Points |
@@ -242,7 +242,7 @@ Wallet management, transactions, and payment gateways for both pre-payment and p
 
 | Endpoint               | Method | Description                                                                                     |
 |------------------------|--------|-------------------------------------------------------------------------------------------------|
-| Rental History         | `/api/rentals/history` | GET    |
+| Rental History         | `/api/rentals/history` | GET    | Returns user's rental history with timestamps, costs, and statuses.                            |
 
 > **Access Control**:
 >
@@ -257,8 +257,8 @@ Wallet management, transactions, and payment gateways for both pre-payment and p
 
 | Endpoint                        | Method | Description                                                                                     |
 |---------------------------------|--------|-------------------------------------------------------------------------------------------------|
-| User Leaderboard                | `/api/users/leaderboard`        | GET    | Returns top 10 users with their ranking based on rentals, points, referrals, and timely returns. Include `?me=true` to get user's own position.       |
-| User Achievements               | `/api/users/achievements`       | GET    | Returns user's unlocked achievements and progress towards locked achievements.                  |
+| User Leaderboard                | `/api/social/leaderboard`        | GET    | Returns top 10 users with their ranking based on rentals, points, referrals, and timely returns. Include `?me=true` to get user's own position.       |
+| User Achievements               | `/api/social/achievements`       | GET    | Returns user's unlocked achievements and progress towards locked achievements.                  |
 
 > **Note**: 
 > - Leaderboard includes timely return tracking and achievement counts
@@ -273,8 +273,8 @@ Wallet management, transactions, and payment gateways for both pre-payment and p
 
 | Endpoint                        | Method | Description                                                                                     |
 |---------------------------------|--------|-------------------------------------------------------------------------------------------------|
-| Apply Coupon                    | `/api/promotions/apply-coupon`  | POST   | Applies a coupon code to increase user points. Validates coupon and awards points.             |
-| List My Coupons                 | `/api/promotions/my-coupons`    | GET    | Returns all coupons used by the user with their status.                                        |
+| Apply Coupon                    | `/api/promotions/coupons/apply`  | POST   | Applies a coupon code to increase user points. Validates coupon and awards points.             |
+| List My Coupons                 | `/api/promotions/coupons/my`    | GET    | Returns all coupons used by the user with their status.                                        |
 
 > **Note**: Coupons are issued by super admin and can only increase points for now.
 
@@ -341,11 +341,11 @@ Wallet management, transactions, and payment gateways for both pre-payment and p
 
 | Endpoint                      | Method | Description                                                                                     |
 |-------------------------------|--------|-------------------------------------------------------------------------------------------------|
-| Admin Leaderboard             | `/api/admin/leaderboard`      | GET    | Get all users leaderboard data for admin management.                                           |
-| Create Achievement            | `/api/admin/achievements`     | POST   | Creates new achievement with criteria and rewards.                                              |
-| List Achievements             | `/api/admin/achievements`     | GET    | Lists all achievements with usage statistics.                                                   |
-| Update Achievement            | `/api/admin/achievements/{id}` | PUT   | Updates achievement details or deactivates achievements.                                        |
-| Achievement Analytics         | `/api/admin/achievements/analytics` | GET | Shows achievement unlock rates and user engagement metrics.                                     |
+| Admin Leaderboard             | `/api/admin/social/leaderboard`      | GET    | Get all users leaderboard data for admin management.                                           |
+| Create Achievement            | `/api/admin/social/achievements`     | POST   | Creates new achievement with criteria and rewards.                                              |
+| List Achievements             | `/api/admin/social/achievements`     | GET    | Lists all achievements with usage statistics.                                                   |
+| Update Achievement            | `/api/admin/social/achievements/{id}` | PUT   | Updates achievement details or deactivates achievements.                                        |
+| Achievement Analytics         | `/api/admin/social/achievements/analytics` | GET | Shows achievement unlock rates and user engagement metrics.                                     |
 
 ### **Promotion Management**
 

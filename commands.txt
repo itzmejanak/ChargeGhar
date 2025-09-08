@@ -11,6 +11,7 @@ docker compose run --rm migrations python manage.py createsuperuser --username a
 docker compose up -d api
 docker compose logs api --tail=20
 docker compose ps
+docker compose restart api
 
 docker compose run --rm migrations python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api.config.settings'); import django; django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); user = User.objects.get(username='janak'); user.set_password('5060'); user.save(); print('Password set successfully')"
 docker compose run --rm migrations python manage.py flush --noinput

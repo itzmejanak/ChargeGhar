@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema_field
 
 from api.social.models import Achievement, UserAchievement, UserLeaderboard
 
@@ -23,7 +24,8 @@ class AchievementSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id']
     
-    def get_progress_percentage(self, obj):
+    @extend_schema_field(serializers.FloatField)
+    def get_progress_percentage(self, obj) -> float:
         """Get user's progress percentage for this achievement"""
         user = self.context.get('user')
         if not user or not user.is_authenticated:
@@ -35,7 +37,8 @@ class AchievementSerializer(serializers.ModelSerializer):
         except UserAchievement.DoesNotExist:
             return 0
     
-    def get_user_progress(self, obj):
+    @extend_schema_field(serializers.IntegerField)
+    def get_user_progress(self, obj) -> int:
         """Get user's current progress for this achievement"""
         user = self.context.get('user')
         if not user or not user.is_authenticated:
@@ -47,7 +50,8 @@ class AchievementSerializer(serializers.ModelSerializer):
         except UserAchievement.DoesNotExist:
             return 0
     
-    def get_is_user_unlocked(self, obj):
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_user_unlocked(self, obj) -> bool:
         """Check if user has unlocked this achievement"""
         user = self.context.get('user')
         if not user or not user.is_authenticated:

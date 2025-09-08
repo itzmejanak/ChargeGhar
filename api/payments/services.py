@@ -356,6 +356,40 @@ class PaymentIntentService(CRUDService):
             )
         except Exception as e:
             self.handle_service_error(e, "Failed to get payment status")
+    
+    @transaction.atomic
+    def cancel_payment_intent(self, intent_id: str, user) -> Dict[str, Any]:
+        """Cancel a pending payment intent"""
+        try:
+            intent = PaymentIntent.objects.get(intent_id=intent_id, user=user)
+            
+            if intent.status != 'PENDING':
+                raise ServiceException(
+                    detail="Only pending payment intents can be cancelled",
+                    code="invalid_intent_status"
+                )
+            
+            # Update intent status
+            intent.status = 'CANCELLED'
+            intent.intent_metadata['cancelled_at'] = timezone.now().isoformat()
+            intent.intent_metadata['cancelled_by'] = 'user'
+            intent.save(update_fields=['status', 'intent_metadata'])
+            
+            self.log_info(f"Payment intent cancelled: {intent_id} by user {user.username}")
+            
+            return {
+                'status': 'CANCELLED',
+                'intent_id': intent_id,
+                'message': 'Payment intent cancelled successfully'
+            }
+            
+        except PaymentIntent.DoesNotExist:
+            raise ServiceException(
+                detail="Payment intent not found",
+                code="intent_not_found"
+            )
+        except Exception as e:
+            self.handle_service_error(e, "Failed to cancel payment intent")
 
 
 class RentalPaymentService(BaseService):
