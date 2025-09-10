@@ -69,13 +69,43 @@ DOCUMENTED_ENDPOINTS = [
     
     # Points & Referral Features
     '/api/points/history',
+    '/api/points/summary',
+    '/api/points/leaderboard',
     '/api/referrals/my-code',
+    '/api/referrals/validate',
+    '/api/referrals/claim',
+    '/api/referrals/my-referrals',
+    
+    # Admin Points Features
+    '/api/admin/points/adjust',
+    '/api/admin/points/bulk-award',
+    '/api/admin/referrals/analytics',
     
     # Social Features
     '/api/social/achievements',
+    '/api/social/leaderboard',
+    '/api/social/stats',
     
     # Content Features
-    '/api/content/pages',
+    '/api/content/terms-of-service',
+    '/api/content/privacy-policy',
+    '/api/content/about',
+    '/api/content/contact',
+    '/api/content/faq',
+    '/api/content/banners',
+    '/api/content/search',
+    
+    # App Features
+    '/api/app/version',
+    '/api/app/health',
+    
+    # Admin Social Features
+    '/api/admin/social/achievements',
+    '/api/admin/social/analytics',
+    
+    # Admin Content Features
+    '/api/admin/content/pages',
+    '/api/admin/content/analytics',
     
     # Admin Features
     '/api/admin/users',

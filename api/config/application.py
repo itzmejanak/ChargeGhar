@@ -11,6 +11,8 @@ ENVIRONMENT = getenv("ENVIRONMENT", "local")
 HOST = getenv("HOST", "localhost")
 
 INSTALLED_APPS = [
+    "admin_interface",
+    "colorfield",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
