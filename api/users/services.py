@@ -31,9 +31,41 @@ class AuthService(BaseService):
         self.otp_expiry_minutes = 5
         self.max_otp_attempts = 3
     
+    def _validate_otp_purpose(self, identifier: str, purpose: str) -> None:
+        """Validate OTP request based on purpose and user existence"""
+        # Check if user exists
+        user_exists = False
+        if '@' in identifier:
+            user_exists = User.objects.filter(email=identifier).exists()
+        else:
+            user_exists = User.objects.filter(phone_number=identifier).exists()
+        
+        # Validate based on purpose
+        if purpose == 'REGISTER':
+            if user_exists:
+                raise ServiceException(
+                    detail="User already exists. Use login instead.",
+                    code="user_already_exists"
+                )
+        elif purpose == 'RESET_PASSWORD':
+            if not user_exists:
+                raise ServiceException(
+                    detail="User not found. Please register first.",
+                    code="user_not_found"
+                )
+        else:
+            # For any other purpose (like LOGIN), reject the request
+            raise ServiceException(
+                detail="OTP is only available for registration and password reset.",
+                code="invalid_purpose"
+            )
+    
     def generate_otp(self, identifier: str, purpose: str) -> Dict[str, Any]:
         """Generate and send OTP"""
         try:
+            # Validate purpose-based user existence
+            self._validate_otp_purpose(identifier, purpose)
+            
             # Generate 6-digit OTP
             otp = generate_random_code(6, include_letters=False, include_numbers=True)
             

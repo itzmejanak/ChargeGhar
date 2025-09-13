@@ -96,7 +96,7 @@ class UserLoginSerializer(serializers.Serializer):
 class OTPRequestSerializer(serializers.Serializer):
     """Serializer for OTP request"""
     identifier = serializers.CharField()  # email or phone
-    purpose = serializers.ChoiceField(choices=['LOGIN', 'REGISTER', 'RESET_PASSWORD'])
+    purpose = serializers.ChoiceField(choices=['REGISTER', 'RESET_PASSWORD'])
     
     def validate_identifier(self, value):
         # Basic validation for email or phone format
@@ -118,7 +118,7 @@ class OTPVerificationSerializer(serializers.Serializer):
     """Serializer for OTP verification"""
     identifier = serializers.CharField()
     otp = serializers.CharField(max_length=6, min_length=6)
-    purpose = serializers.ChoiceField(choices=['LOGIN', 'REGISTER', 'RESET_PASSWORD'])
+    purpose = serializers.ChoiceField(choices=['REGISTER', 'RESET_PASSWORD'])
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

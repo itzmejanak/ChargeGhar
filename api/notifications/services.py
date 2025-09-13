@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import os
+import json
+import base64
 from typing import Dict, Any, List, Optional
 from django.db import transaction
 from django.utils import timezone
 from django.db.models import Count, Q
 from django.contrib.auth import get_user_model
 from django.template import Template, Context
+from django.conf import settings
 
 from api.common.services.base import BaseService, CRUDService, ServiceException
 from api.common.utils.helpers import paginate_queryset
@@ -57,10 +61,11 @@ class NotificationService(CRUDService):
     @transaction.atomic
     def create_notification(self, user, title: str, message: str, notification_type: str, 
                           data: Dict[str, Any] = None, channel: str = 'in_app',
-                          template_slug: str = None) -> Notification:
+                          template_slug: str = None, auto_send: bool = True) -> Notification:
         """Create notification for user"""
         try:
             # Use template if provided
+            template = None
             if template_slug:
                 try:
                     template = NotificationTemplate.objects.get(slug=template_slug, is_active=True)
@@ -70,20 +75,65 @@ class NotificationService(CRUDService):
                 except NotificationTemplate.DoesNotExist:
                     self.log_warning(f"Template not found: {template_slug}")
             
+            # Create in-app notification (always created for record keeping)
             notification = Notification.objects.create(
                 user=user,
+                template=template,
                 title=title,
                 message=message,
                 notification_type=notification_type,
                 data=data or {},
-                channel=channel
+                channel='in_app'
             )
+            
+            # Auto-send via other channels based on notification rules
+            if auto_send:
+                self._send_via_channels(user, title, message, notification_type, data or {})
             
             self.log_info(f"Notification created: {user.username} - {title}")
             return notification
             
         except Exception as e:
             self.handle_service_error(e, "Failed to create notification")
+    
+    def _send_via_channels(self, user, title: str, message: str, notification_type: str, data: Dict[str, Any]):
+        """Send notification via appropriate channels based on rules"""
+        try:
+            # Get notification rule for this type
+            try:
+                rule = NotificationRule.objects.get(notification_type=notification_type)
+            except NotificationRule.DoesNotExist:
+                self.log_warning(f"No notification rule found for type: {notification_type}")
+                return
+            
+            # Send push notification if enabled
+            if rule.send_push:
+                try:
+                    from api.notifications.services import FCMService
+                    fcm_service = FCMService()
+                    fcm_service.send_push_notification(user, title, message, data)
+                except Exception as e:
+                    self.log_error(f"Failed to send push notification: {str(e)}")
+            
+            # Send SMS if enabled (for critical notifications)
+            if rule.send_sms and user.phone_number:
+                try:
+                    from api.notifications.services import SMSService
+                    sms_service = SMSService()
+                    sms_service.send_sms(user.phone_number, f"{title}\n{message}", user)
+                except Exception as e:
+                    self.log_error(f"Failed to send SMS: {str(e)}")
+            
+            # Send email if enabled (future implementation)
+            if rule.send_email and user.email:
+                try:
+                    # TODO: Implement email service
+                    self.log_info(f"Email notification would be sent to: {user.email}")
+                except Exception as e:
+                    self.log_error(f"Failed to send email: {str(e)}")
+            
+        except Exception as e:
+            self.log_error(f"Failed to send via channels: {str(e)}")
     
     def _render_template(self, template_str: str, context_data: Dict[str, Any]) -> str:
         """Render template with context data"""
@@ -319,6 +369,50 @@ class BulkNotificationService(BaseService):
 class FCMService(BaseService):
     """Service for FCM (Firebase Cloud Messaging) operations"""
     
+    def __init__(self):
+        super().__init__()
+        self._firebase_app = None
+        self._initialize_firebase()
+    
+    def _initialize_firebase(self):
+        """Initialize Firebase Admin SDK"""
+        try:
+            import firebase_admin
+            from firebase_admin import credentials
+            
+            # Check if Firebase is already initialized
+            if firebase_admin._apps:
+                self._firebase_app = firebase_admin.get_app()
+                return
+            
+            # Initialize from credentials file
+            if hasattr(settings, 'FIREBASE_CREDENTIALS_PATH') and settings.FIREBASE_CREDENTIALS_PATH:
+                if os.path.exists(settings.FIREBASE_CREDENTIALS_PATH):
+                    cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_PATH)
+                    self._firebase_app = firebase_admin.initialize_app(cred)
+                    self.log_info("Firebase initialized from credentials file")
+                    return
+            
+            # Initialize from base64 encoded credentials
+            if hasattr(settings, 'FIREBASE_CREDENTIALS_BASE64') and settings.FIREBASE_CREDENTIALS_BASE64:
+                try:
+                    decoded_creds = base64.b64decode(settings.FIREBASE_CREDENTIALS_BASE64)
+                    cred_dict = json.loads(decoded_creds)
+                    cred = credentials.Certificate(cred_dict)
+                    self._firebase_app = firebase_admin.initialize_app(cred)
+                    self.log_info("Firebase initialized from base64 credentials")
+                    return
+                except Exception as e:
+                    self.log_error(f"Failed to initialize Firebase from base64: {str(e)}")
+            
+            # Fallback: Log warning if no credentials found
+            self.log_warning("No Firebase credentials found, FCM will not work in production")
+            
+        except ImportError:
+            self.log_error("firebase-admin package not installed. Run: pip install firebase-admin")
+        except Exception as e:
+            self.log_error(f"Failed to initialize Firebase: {str(e)}")
+    
     def send_push_notification(self, user, title: str, message: str, 
                              data: Dict[str, Any] = None) -> Dict[str, Any]:
         """Send push notification to user"""
@@ -353,12 +447,13 @@ class FCMService(BaseService):
                         status='pending'
                     )
                     
-                    # Send FCM notification (integrate with actual FCM service)
+                    # Send FCM notification
                     success = self._send_fcm_message(device.fcm_token, title, message, data)
                     
                     if success:
                         fcm_log.status = 'sent'
                         fcm_log.sent_at = timezone.now()
+                        fcm_log.response = 'FCM delivered successfully'
                         sent_count += 1
                     else:
                         fcm_log.status = 'failed'
@@ -385,25 +480,48 @@ class FCMService(BaseService):
                          data: Dict[str, Any] = None) -> bool:
         """Send FCM message to specific token"""
         try:
-            # This would integrate with Firebase Admin SDK
-            # For now, return True as mock implementation
+            if not self._firebase_app:
+                self.log_warning("Firebase not initialized, using mock FCM response")
+                return True  # Mock success for development
             
-            # Example integration:
-            # from firebase_admin import messaging
-            # 
-            # message = messaging.Message(
-            #     notification=messaging.Notification(
-            #         title=title,
-            #         body=message,
-            #     ),
-            #     data=data or {},
-            #     token=fcm_token,
-            # )
-            # 
-            # response = messaging.send(message)
-            # return bool(response)
+            from firebase_admin import messaging
             
-            return True  # Mock success
+            # Prepare data payload (FCM requires string values)
+            string_data = {}
+            if data:
+                for key, value in data.items():
+                    string_data[key] = str(value)
+            
+            # Create FCM message
+            fcm_message = messaging.Message(
+                notification=messaging.Notification(
+                    title=title,
+                    body=message,
+                ),
+                data=string_data,
+                token=fcm_token,
+                android=messaging.AndroidConfig(
+                    priority='high',
+                    notification=messaging.AndroidNotification(
+                        icon='ic_notification',
+                        color='#FF5722',
+                        sound='default'
+                    )
+                ),
+                apns=messaging.APNSConfig(
+                    payload=messaging.APNSPayload(
+                        aps=messaging.Aps(
+                            sound='default',
+                            badge=1
+                        )
+                    )
+                )
+            )
+            
+            # Send message
+            response = messaging.send(fcm_message)
+            self.log_info(f"FCM sent successfully: {response}")
+            return True
             
         except Exception as e:
             self.log_error(f"FCM message send failed: {str(e)}")
@@ -416,63 +534,113 @@ class SMSService(BaseService):
     def send_sms(self, phone_number: str, message: str, user=None) -> Dict[str, Any]:
         """Send SMS to phone number"""
         try:
+            # Format phone number (remove spaces, ensure country code)
+            formatted_phone = self._format_phone_number(phone_number)
+            
             # Log SMS attempt
             sms_log = SMS_FCMLog.objects.create(
                 user=user,
                 title="SMS",
                 message=message,
                 notification_type='sms',
-                recipient=phone_number,
+                recipient=formatted_phone,
                 status='pending'
             )
             
-            # Send SMS (integrate with SMS provider like Sparrow SMS)
-            success = self._send_sms_message(phone_number, message)
+            # Send SMS via Sparrow SMS
+            success, response_text = self._send_sms_message(formatted_phone, message)
             
             if success:
                 sms_log.status = 'sent'
                 sms_log.sent_at = timezone.now()
-                sms_log.response = 'SMS sent successfully'
+                sms_log.response = response_text or 'SMS sent successfully'
             else:
                 sms_log.status = 'failed'
-                sms_log.response = 'SMS delivery failed'
+                sms_log.response = response_text or 'SMS delivery failed'
             
             sms_log.save(update_fields=['status', 'sent_at', 'response'])
             
             return {
                 'status': 'sent' if success else 'failed',
-                'sms_log_id': str(sms_log.id)
+                'sms_log_id': str(sms_log.id),
+                'formatted_phone': formatted_phone,
+                'response': response_text
             }
             
         except Exception as e:
             self.handle_service_error(e, "Failed to send SMS")
     
-    def _send_sms_message(self, phone_number: str, message: str) -> bool:
-        """Send SMS message via provider"""
+    def _format_phone_number(self, phone_number: str) -> str:
+        """Format phone number for Nepal (add +977 if needed)"""
+        # Remove all non-digit characters
+        digits_only = ''.join(filter(str.isdigit, phone_number))
+        
+        # Handle Nepal phone numbers
+        if digits_only.startswith('977'):
+            return f"+{digits_only}"
+        elif digits_only.startswith('98') and len(digits_only) == 10:
+            return f"+977{digits_only}"
+        elif len(digits_only) == 10 and digits_only.startswith('9'):
+            return f"+977{digits_only}"
+        else:
+            # Return as is for international numbers
+            return f"+{digits_only}" if not digits_only.startswith('+') else digits_only
+    
+    def _send_sms_message(self, phone_number: str, message: str) -> tuple[bool, str]:
+        """Send SMS message via Sparrow SMS provider"""
         try:
-            # This would integrate with SMS provider API (e.g., Sparrow SMS for Nepal)
-            # For now, return True as mock implementation
+            import requests
             
-            # Example integration:
-            # import requests
-            # 
-            # response = requests.post(
-            #     'https://sms.sparrowsms.com/v2/sms/',
-            #     data={
-            #         'token': settings.SPARROW_SMS_TOKEN,
-            #         'from': settings.SPARROW_SMS_FROM,
-            #         'to': phone_number,
-            #         'text': message
-            #     }
-            # )
-            # 
-            # return response.status_code == 200
+            # Check if Sparrow SMS is configured
+            if not hasattr(settings, 'SPARROW_SMS_TOKEN') or not settings.SPARROW_SMS_TOKEN:
+                self.log_warning("Sparrow SMS not configured, using mock SMS response")
+                return True, "Mock SMS sent (no token configured)"
             
-            return True  # Mock success
+            # Prepare Sparrow SMS API request
+            url = getattr(settings, 'SPARROW_SMS_BASE_URL', 'https://sms.sparrowsms.com/v2/sms/')
             
+            payload = {
+                'token': settings.SPARROW_SMS_TOKEN,
+                'from': getattr(settings, 'SPARROW_SMS_FROM', 'ChargeGhar'),
+                'to': phone_number,
+                'text': message
+            }
+            
+            # Send SMS request
+            response = requests.post(
+                url,
+                data=payload,
+                timeout=30,
+                headers={'Content-Type': 'application/x-www-form-urlencoded'}
+            )
+            
+            # Check response
+            if response.status_code == 200:
+                response_json = response.json()
+                if response_json.get('response_code') == 200:
+                    self.log_info(f"SMS sent successfully to {phone_number}")
+                    return True, f"SMS sent: {response_json.get('message', 'Success')}"
+                else:
+                    error_msg = response_json.get('message', 'Unknown error')
+                    self.log_error(f"SMS failed for {phone_number}: {error_msg}")
+                    return False, f"SMS failed: {error_msg}"
+            else:
+                error_msg = f"HTTP {response.status_code}: {response.text}"
+                self.log_error(f"SMS API error for {phone_number}: {error_msg}")
+                return False, error_msg
+            
+        except requests.exceptions.Timeout:
+            error_msg = "SMS request timeout"
+            self.log_error(f"SMS timeout for {phone_number}")
+            return False, error_msg
+        except requests.exceptions.RequestException as e:
+            error_msg = f"SMS request failed: {str(e)}"
+            self.log_error(f"SMS request error for {phone_number}: {error_msg}")
+            return False, error_msg
         except Exception as e:
-            self.log_error(f"SMS send failed: {str(e)}")
-            return False
+            error_msg = f"SMS send failed: {str(e)}"
+            self.log_error(f"SMS error for {phone_number}: {error_msg}")
+            return False, error_msg
 
 
 class NotificationAnalyticsService(BaseService):

@@ -33,31 +33,25 @@ def check_overdue_rentals(self):
             from api.notifications.services import NotificationService
             notification_service = NotificationService()
             
+            overdue_hours = int((now - rental.due_at).total_seconds() / 3600)
+            penalty_amount = float(rental.overdue_amount)
+            
             notification_service.create_notification(
                 user=rental.user,
-                title="⚠️ Rental Overdue",
-                message=f"Your power bank rental is overdue. Please return it immediately to avoid additional charges.",
+                title="",  # Will be overridden by template
+                message="",  # Will be overridden by template
                 notification_type='rental',
+                template_slug='rental_overdue',
                 data={
+                    'powerbank_id': rental.powerbank.serial_number,
+                    'overdue_hours': overdue_hours,
+                    'penalty_amount': penalty_amount,
                     'rental_id': str(rental.id),
                     'rental_code': rental.rental_code,
                     'overdue_minutes': int((now - rental.due_at).total_seconds() / 60),
                     'action': 'find_station'
-                }
-            )
-            
-            # Send push notification
-            from api.notifications.services import FCMService
-            fcm_service = FCMService()
-            fcm_service.send_push_notification(
-                user=rental.user,
-                title="⚠️ Rental Overdue",
-                message="Your power bank rental is overdue. Return it now!",
-                data={
-                    'type': 'rental_overdue',
-                    'rental_id': str(rental.id),
-                    'rental_code': rental.rental_code
-                }
+                },
+                auto_send=True  # This handles all channels including push notifications
             )
         
         self.logger.info(f"Updated {updated_count} overdue rentals")
@@ -106,16 +100,19 @@ def calculate_overdue_charges(self):
                 
                 notification_service.create_notification(
                     user=rental.user,
-                    title="💰 Overdue Charges Applied",
-                    message=f"Overdue charges of NPR {overdue_amount:.2f} have been applied to your rental.",
+                    title="",  # Will be overridden by template
+                    message="",  # Will be overridden by template
                     notification_type='payment',
+                    template_slug='payment_overdue_charges',
                     data={
+                        'amount': float(overdue_amount),
                         'rental_id': str(rental.id),
                         'rental_code': rental.rental_code,
                         'overdue_amount': float(overdue_amount),
                         'overdue_minutes': overdue_minutes,
                         'action': 'pay_due'
-                    }
+                    },
+                    auto_send=True
                 )
                 
             except Exception as e:
@@ -183,16 +180,20 @@ def auto_complete_abandoned_rentals(self):
                 
                 notification_service.create_notification(
                     user=rental.user,
-                    title="🚨 Rental Auto-Completed",
-                    message=f"Your rental has been auto-completed due to extended overdue period. Total charges: NPR {rental.overdue_amount:.2f}",
+                    title="",  # Will be overridden by template
+                    message="",  # Will be overridden by template
                     notification_type='rental',
+                    template_slug='rental_auto_completed',
                     data={
+                        'powerbank_id': rental.powerbank.serial_number,
+                        'total_cost': float(rental.overdue_amount),
                         'rental_id': str(rental.id),
                         'rental_code': rental.rental_code,
                         'total_charges': float(rental.overdue_amount),
                         'lost_penalty': lost_penalty,
                         'action': 'pay_due'
-                    }
+                    },
+                    auto_send=True
                 )
                 
             except Exception as e:
@@ -469,13 +470,16 @@ def detect_rental_anomalies(self):
             for admin in admin_users:
                 notification_service.create_notification(
                     user=admin,
-                    title="🚨 Rental Anomalies Detected",
-                    message=f"{len(anomalies)} rental anomalies detected. Please review immediately.",
+                    title="",  # Will be overridden by template
+                    message="",  # Will be overridden by template
                     notification_type='system',
+                    template_slug='rental_anomalies_alert',
                     data={
+                        'anomaly_count': len(anomalies),
                         'anomalies': anomalies,
                         'action': 'review_anomalies'
-                    }
+                    },
+                    auto_send=True
                 )
         
         self.logger.info(f"Detected {len(anomalies)} rental anomalies")

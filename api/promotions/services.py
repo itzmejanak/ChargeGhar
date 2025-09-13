@@ -153,15 +153,18 @@ class CouponService(CRUDService):
             
             notification_service.create_notification(
                 user=user,
-                title="🎉 Coupon Applied!",
-                message=f"You've successfully applied coupon '{coupon.code}' and received {coupon.points_value} points!",
+                title="",  # Will be overridden by template
+                message="",  # Will be overridden by template
                 notification_type='promotion',
+                template_slug='coupon_applied',
                 data={
                     'coupon_code': coupon.code,
                     'coupon_name': coupon.name,
                     'points_awarded': coupon.points_value,
+                    'points': coupon.points_value,
                     'action': 'view_points'
-                }
+                },
+                auto_send=True
             )
             
             self.log_info(f"Coupon applied: {coupon.code} by {user.username}")

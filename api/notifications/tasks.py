@@ -85,29 +85,18 @@ def send_points_notification(self, user_id: str, points: int, source: str, descr
         # Create in-app notification
         service.create_notification(
             user=user,
-            title=f"🎉 {points} Points Earned!",
-            message=description,
+            title="",  # Will be overridden by template
+            message="",  # Will be overridden by template
             notification_type='achievement',
+            template_slug='points_earned',
             data={
                 'points': points,
+                'total_points': user.total_points if hasattr(user, 'total_points') else points,
                 'source': source,
+                'description': description,
                 'action': 'view_points'
             },
-            channel='in_app'
-        )
-        
-        # Send push notification if user has devices
-        from api.notifications.services import FCMService
-        fcm_service = FCMService()
-        fcm_service.send_push_notification(
-            user=user,
-            title=f"🎉 {points} Points Earned!",
-            message=description,
-            data={
-                'type': 'points_earned',
-                'points': points,
-                'source': source
-            }
+            auto_send=True  # This handles all channels including push notifications
         )
         
         self.logger.info(f"Points notification sent to user: {user.username}")
@@ -138,29 +127,18 @@ def send_rental_reminder_notification(self, rental_id: str):
         # Create in-app notification
         service.create_notification(
             user=rental.user,
-            title="⏰ Return Reminder",
-            message=f"Your power bank rental expires in 15 minutes. Please return it to avoid extra charges.",
+            title="",  # Will be overridden by template
+            message="",  # Will be overridden by template
             notification_type='rental',
+            template_slug='rental_ending_soon',
             data={
+                'powerbank_id': rental.powerbank.serial_number,
+                'remaining_hours': 0.25,  # 15 minutes = 0.25 hours
                 'rental_id': str(rental.id),
                 'rental_code': rental.rental_code,
                 'action': 'find_station'
             },
-            channel='in_app'
-        )
-        
-        # Send push notification
-        from api.notifications.services import FCMService
-        fcm_service = FCMService()
-        fcm_service.send_push_notification(
-            user=rental.user,
-            title="⏰ Return Reminder",
-            message=f"Your power bank rental expires in 15 minutes.",
-            data={
-                'type': 'rental_reminder',
-                'rental_id': str(rental.id),
-                'rental_code': rental.rental_code
-            }
+            auto_send=True  # This handles all channels including push notifications
         )
         
         self.logger.info(f"Rental reminder sent for: {rental.rental_code}")
@@ -192,18 +170,26 @@ def send_payment_status_notification(self, user_id: str, transaction_id: str, st
             message = f"Your payment of NPR {amount} could not be processed. Please try again."
         
         # Create in-app notification
+        if status == 'SUCCESS':
+            template_slug = 'payment_success'
+        else:
+            template_slug = 'payment_failed'
+            
         service.create_notification(
             user=user,
-            title=title,
-            message=message,
+            title="",  # Will be overridden by template
+            message="",  # Will be overridden by template
             notification_type='payment',
+            template_slug=template_slug,
             data={
+                'amount': amount,
                 'transaction_id': transaction_id,
                 'status': status,
-                'amount': amount,
+                'gateway': 'Unknown',  # Could be enhanced to pass actual gateway
+                'failure_reason': 'Unknown' if status != 'SUCCESS' else None,
                 'action': 'view_transaction'
             },
-            channel='in_app'
+            auto_send=True
         )
         
         self.logger.info(f"Payment status notification sent to user: {user.username}")
@@ -425,30 +411,19 @@ def send_points_milestone_notification(self, user_id: str, milestone: int):
         from api.notifications.services import NotificationService
         service = NotificationService()
         
-        # Create in-app notification
+        # Create notification with auto-send
         service.create_notification(
             user=user,
-            title=f"🏆 Milestone Achieved!",
-            message=f"Congratulations! You've reached {milestone:,} points!",
+            title="",  # Will be overridden by template
+            message="",  # Will be overridden by template
             notification_type='achievement',
+            template_slug='points_milestone',
             data={
                 'milestone': milestone,
+                'points': milestone,
                 'action': 'view_achievements'
             },
-            channel='in_app'
-        )
-        
-        # Send push notification
-        from api.notifications.services import FCMService
-        fcm_service = FCMService()
-        fcm_service.send_push_notification(
-            user=user,
-            title=f"🏆 Milestone Achieved!",
-            message=f"You've reached {milestone:,} points!",
-            data={
-                'type': 'milestone',
-                'milestone': milestone
-            }
+            auto_send=True  # This handles all channels including push notifications
         )
         
         self.logger.info(f"Points milestone notification sent to user: {user.username}")

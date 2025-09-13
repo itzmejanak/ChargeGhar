@@ -77,15 +77,20 @@ class RentalService(CRUDService):
             notification_service = NotificationService()
             notification_service.create_notification(
                 user=user,
-                title="🔋 Rental Started",
-                message=f"Power bank {power_bank.serial_number} is ready to use!",
+                title="",  # Will be overridden by template
+                message="",  # Will be overridden by template
                 notification_type='rental',
+                template_slug='rental_started',
                 data={
+                    'powerbank_id': power_bank.serial_number,
+                    'station_name': pickup_station.name,
+                    'max_hours': 24,  # Default rental duration
                     'rental_id': str(rental.id),
                     'rental_code': rental.rental_code,
                     'due_at': rental.due_at.isoformat(),
                     'action': 'view_rental'
-                }
+                },
+                auto_send=True
             )
             
             self.log_info(f"Rental started: {rental.rental_code} by {user.username}")
@@ -359,23 +364,22 @@ class RentalService(CRUDService):
             from api.notifications.services import NotificationService
             notification_service = NotificationService()
             
-            if rental.payment_status == 'PENDING':
-                message = f"Rental completed. Please pay NPR {rental.overdue_amount} to continue using the service."
-            else:
-                message = "Rental completed successfully. Thank you for using our service!"
-            
             notification_service.create_notification(
                 user=rental.user,
-                title="🔋 Rental Completed",
-                message=message,
+                title="",  # Will be overridden by template
+                message="",  # Will be overridden by template
                 notification_type='rental',
+                template_slug='rental_completed',
                 data={
+                    'powerbank_id': rental.powerbank.serial_number,
+                    'total_cost': float(rental.overdue_amount) if rental.payment_status == 'PENDING' else float(rental.cost),
                     'rental_id': str(rental.id),
                     'rental_code': rental.rental_code,
                     'is_returned_on_time': rental.is_returned_on_time,
                     'overdue_amount': float(rental.overdue_amount),
                     'action': 'view_rental' if rental.payment_status == 'PAID' else 'pay_due'
-                }
+                },
+                auto_send=True
             )
             
             self.log_info(f"Power bank returned: {rental.rental_code}")

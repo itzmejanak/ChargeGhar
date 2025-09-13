@@ -1,89 +1,436 @@
 [
   {
     "model": "notifications.notificationtemplate",
-    "pk": "550e8400-e29b-41d4-a716-446655441201",
-    "fields": {
-      "name": "Welcome Message",
-      "slug": "welcome-message",
-      "notification_type": "system",
-      "title_template": "Welcome to PowerBank!",
-      "message_template": "Thank you for joining PowerBank. Start renting power banks now!",
-      "description": "Welcome message for new users",
-      "is_active": true,
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
-    }
-  },
-  {
-    "model": "notifications.notificationtemplate",
-    "pk": "550e8400-e29b-41d4-a716-446655441202",
+    "pk": 1,
     "fields": {
       "name": "Rental Started",
-      "slug": "rental-started",
+      "slug": "rental_started",
       "notification_type": "rental",
-      "title_template": "Rental Started Successfully",
-      "message_template": "Your power bank rental has started. Enjoy your device!",
-      "description": "Notification when rental begins",
+      "title_template": "Rental Started - {{powerbank_id}}",
+      "message_template": "Your powerbank {{powerbank_id}} rental has started at {{station_name}}. Return within {{max_hours}} hours.",
       "is_active": true,
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
     }
   },
   {
     "model": "notifications.notificationtemplate",
-    "pk": "550e8400-e29b-41d4-a716-446655441203",
+    "pk": 2,
+    "fields": {
+      "name": "Rental Ending Soon",
+      "slug": "rental_ending_soon",
+      "notification_type": "rental",
+      "title_template": "Rental Ending Soon",
+      "message_template": "Your powerbank {{powerbank_id}} rental expires in {{remaining_hours}} hours. Find a ChargeGhar station to return.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 3,
+    "fields": {
+      "name": "Rental Completed",
+      "slug": "rental_completed",
+      "notification_type": "rental",
+      "title_template": "Rental Completed",
+      "message_template": "Thank you! Your powerbank {{powerbank_id}} has been returned. Total cost: Rs. {{total_cost}}",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 4,
+    "fields": {
+      "name": "Rental Overdue",
+      "slug": "rental_overdue",
+      "notification_type": "rental",
+      "title_template": "Rental Overdue - Additional Charges",
+      "message_template": "Your powerbank {{powerbank_id}} is {{overdue_hours}} hours overdue. Additional charges of Rs. {{penalty_amount}} apply.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 5,
+    "fields": {
+      "name": "Rental Auto-Completed",
+      "slug": "rental_auto_completed",
+      "notification_type": "rental",
+      "title_template": "🚨 Rental Auto-Completed",
+      "message_template": "Your powerbank {{powerbank_id}} rental has been auto-completed due to extended overdue period. Total charges: Rs. {{total_cost}}",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 6,
     "fields": {
       "name": "Payment Success",
-      "slug": "payment-success",
+      "slug": "payment_success",
       "notification_type": "payment",
       "title_template": "Payment Successful",
-      "message_template": "Your payment of ${amount} has been processed successfully.",
-      "description": "Payment confirmation notification",
+      "message_template": "Rs. {{amount}} payment via {{gateway}} was successful. Transaction ID: {{transaction_id}}",
       "is_active": true,
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 7,
+    "fields": {
+      "name": "Payment Failed",
+      "slug": "payment_failed",
+      "notification_type": "payment",
+      "title_template": "Payment Failed",
+      "message_template": "Your payment of Rs. {{amount}} via {{gateway}} failed. Reason: {{failure_reason}}",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 8,
+    "fields": {
+      "name": "Wallet Recharged",
+      "slug": "wallet_recharged",
+      "notification_type": "payment",
+      "title_template": "Wallet Recharged",
+      "message_template": "Your wallet has been recharged with Rs. {{amount}}. New balance: Rs. {{new_balance}}",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 9,
+    "fields": {
+      "name": "Payment Overdue Charges",
+      "slug": "payment_overdue_charges",
+      "notification_type": "payment",
+      "title_template": "💰 Overdue Charges Applied",
+      "message_template": "Overdue charges of Rs. {{amount}} have been applied to your rental.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 10,
+    "fields": {
+      "name": "Admin Balance Added",
+      "slug": "admin_balance_added",
+      "notification_type": "payment",
+      "title_template": "💰 Balance Added",
+      "message_template": "Rs. {{amount}} has been added to your wallet. New balance: Rs. {{new_balance}}. Reason: {{reason}}",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 11,
+    "fields": {
+      "name": "Refund Approved",
+      "slug": "refund_approved",
+      "notification_type": "payment",
+      "title_template": "💰 Refund Approved",
+      "message_template": "Your refund request for Rs. {{amount}} has been approved. The amount will be credited to your wallet.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 12,
+    "fields": {
+      "name": "Refund Rejected",
+      "slug": "refund_rejected",
+      "notification_type": "payment",
+      "title_template": "❌ Refund Rejected",
+      "message_template": "Your refund request for Rs. {{amount}} has been rejected. Reason: {{admin_notes}}",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 13,
+    "fields": {
+      "name": "Welcome New User",
+      "slug": "welcome_user",
+      "notification_type": "system",
+      "title_template": "Welcome to ChargeGhar!",
+      "message_template": "Hi {{user_name}}, welcome to Nepal's largest powerbank network! Your account is verified and ready to use.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 14,
+    "fields": {
+      "name": "KYC Approved",
+      "slug": "kyc_approved",
+      "notification_type": "system",
+      "title_template": "KYC Verification Complete",
+      "message_template": "Your KYC verification is complete! You can now rent powerbanks and enjoy all ChargeGhar benefits.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 15,
+    "fields": {
+      "name": "Maintenance Notice",
+      "slug": "maintenance_notice",
+      "notification_type": "system",
+      "title_template": "System Maintenance",
+      "message_template": "ChargeGhar will undergo maintenance on {{maintenance_date}} from {{start_time}} to {{end_time}}. Service may be temporarily unavailable.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 16,
+    "fields": {
+      "name": "Rental Anomalies Alert",
+      "slug": "rental_anomalies_alert",
+      "notification_type": "system",
+      "title_template": "🚨 Rental Anomalies Detected",
+      "message_template": "{{anomaly_count}} rental anomalies detected. Please review immediately.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 17,
+    "fields": {
+      "name": "Account Status Updated",
+      "slug": "account_status_updated",
+      "notification_type": "system",
+      "title_template": "Account Status Updated",
+      "message_template": "Hi {{user_name}}, your account status has been updated to {{status}}. {{reason}}",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 18,
+    "fields": {
+      "name": "Coupon Performance Alert",
+      "slug": "coupon_performance_alert",
+      "notification_type": "system",
+      "title_template": "📊 Coupon Performance Insights",
+      "message_template": "{{underperforming_count}} coupons are underperforming. Consider reviewing their terms or promotion strategy.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 19,
+    "fields": {
+      "name": "Special Offer",
+      "slug": "special_offer",
+      "notification_type": "promotion",
+      "title_template": "{{offer_title}}",
+      "message_template": "{{offer_description}} Valid until {{expiry_date}}. Use code: {{promo_code}}",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 20,
+    "fields": {
+      "name": "Coupon Applied",
+      "slug": "coupon_applied",
+      "notification_type": "promotion",
+      "title_template": "🎉 Coupon Applied!",
+      "message_template": "You've successfully applied coupon '{{coupon_code}}' and received {{points}} points!",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 21,
+    "fields": {
+      "name": "Coupon Expiring Soon",
+      "slug": "coupon_expiring_soon",
+      "notification_type": "promotion",
+      "title_template": "⏰ Coupon Expiring Soon!",
+      "message_template": "Don't miss out! Coupon '{{coupon_code}}' expires in {{days_until_expiry}} days. Use it now to get {{points_value}} points!",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 22,
+    "fields": {
+      "name": "New Coupon Available",
+      "slug": "new_coupon_available",
+      "notification_type": "promotion",
+      "title_template": "🎁 New Coupon Available!",
+      "message_template": "Use coupon '{{coupon_code}}' to get {{points_value}} points! Valid until {{expiry_date}}.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 23,
+    "fields": {
+      "name": "Points Earned",
+      "slug": "points_earned",
+      "notification_type": "achievement",
+      "title_template": "Points Earned!",
+      "message_template": "You earned {{points}} points! Total points: {{total_points}}. Redeem rewards in the app.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 24,
+    "fields": {
+      "name": "Achievement Unlocked",
+      "slug": "achievement_unlocked",
+      "notification_type": "achievement",
+      "title_template": "🏆 Achievement Unlocked!",
+      "message_template": "Congratulations! You've unlocked '{{achievement_name}}' and earned {{points}} points!",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 25,
+    "fields": {
+      "name": "Leaderboard Update",
+      "slug": "leaderboard_update",
+      "notification_type": "achievement",
+      "title_template": "📊 Leaderboard Update",
+      "message_template": "You're currently ranked #{{rank}} on the leaderboard! Keep up the great work!",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 26,
+    "fields": {
+      "name": "Points Milestone",
+      "slug": "points_milestone",
+      "notification_type": "achievement",
+      "title_template": "🏆 Milestone Achieved!",
+      "message_template": "Congratulations! You've reached {{milestone}} points!",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
     }
   },
   {
     "model": "notifications.notificationrule",
-    "pk": "550e8400-e29b-41d4-a716-446655441301",
+    "pk": 1,
     "fields": {
-      "notification_type": "system",
+      "notification_type": "rental",
       "send_in_app": true,
       "send_push": true,
       "send_sms": false,
       "send_email": false,
       "is_critical": false,
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
     }
   },
   {
     "model": "notifications.notificationrule",
-    "pk": "550e8400-e29b-41d4-a716-446655441302",
+    "pk": 2,
     "fields": {
-      "notification_type": "rental",
+      "notification_type": "payment",
       "send_in_app": true,
       "send_push": true,
       "send_sms": true,
       "send_email": false,
       "is_critical": true,
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
     }
   },
   {
     "model": "notifications.notificationrule",
-    "pk": "550e8400-e29b-41d4-a716-446655441303",
+    "pk": 3,
     "fields": {
-      "notification_type": "payment",
+      "notification_type": "system",
       "send_in_app": true,
-      "send_push": false,
+      "send_push": true,
+      "send_sms": true,
+      "send_email": false,
+      "is_critical": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationrule",
+    "pk": 4,
+    "fields": {
+      "notification_type": "promotion",
+      "send_in_app": true,
+      "send_push": true,
       "send_sms": false,
-      "send_email": true,
+      "send_email": false,
       "is_critical": false,
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationrule",
+    "pk": 5,
+    "fields": {
+      "notification_type": "achievement",
+      "send_in_app": true,
+      "send_push": true,
+      "send_sms": false,
+      "send_email": false,
+      "is_critical": false,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
     }
   }
 ]

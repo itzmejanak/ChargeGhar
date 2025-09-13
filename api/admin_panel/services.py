@@ -106,10 +106,16 @@ class AdminUserService(CRUDService):
                 
                 notification_service.create_notification(
                     user=user,
-                    title="Account Status Updated",
-                    message=f"Your account status has been updated to {status}. {reason}",
+                    title="",  # Will be overridden by template
+                    message="",  # Will be overridden by template
                     notification_type='system',
-                    data={'status': status, 'reason': reason}
+                    template_slug='account_status_updated',
+                    data={
+                        'status': status,
+                        'reason': reason,
+                        'user_name': user.first_name or user.username
+                    },
+                    auto_send=True
                 )
             
             self.log_info(f"User status updated: {user.username} -> {status}")
@@ -165,13 +171,16 @@ class AdminUserService(CRUDService):
             
             notification_service.create_notification(
                 user=user,
-                title="💰 Balance Added",
-                message=f"NPR {amount} has been added to your wallet. Reason: {reason}",
+                title="",  # Will be overridden by template
+                message="",  # Will be overridden by template
                 notification_type='payment',
+                template_slug='admin_balance_added',
                 data={
                     'amount': str(amount),
                     'new_balance': str(new_balance),
                     'reason': reason
+                },
+                auto_send=True
                 }
             )
             
@@ -554,17 +563,21 @@ class AdminRefundService(CRUDService):
             from api.notifications.services import NotificationService
             notification_service = NotificationService()
             
+            template_slug = 'refund_approved' if action == 'APPROVED' else 'refund_rejected'
+            
             notification_service.create_notification(
                 user=refund.requested_by,
-                title=f"💰 Refund {action.title()}",
-                message=message,
+                title="",  # Will be overridden by template
+                message="",  # Will be overridden by template
                 notification_type='payment',
+                template_slug=template_slug,
                 data={
                     'refund_id': str(refund.id),
                     'action': action,
                     'amount': str(refund.amount),
                     'admin_notes': admin_notes
-                }
+                },
+                auto_send=True
             )
             
             self.log_info(f"Refund {action.lower()}ed: {refund.id} by {admin_user.username}")

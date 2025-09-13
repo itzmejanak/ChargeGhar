@@ -124,32 +124,21 @@ def send_achievement_unlock_notifications(self, user_id: str, user_achievement_i
         notification_service = NotificationService()
         
         for user_achievement in user_achievements:
-            # Send in-app notification
+            # Send notification (auto-send will handle push via rules)
             notification_service.create_notification(
                 user=user,
-                title="🏆 Achievement Unlocked!",
-                message=f"Congratulations! You've unlocked '{user_achievement.achievement.name}' and earned {user_achievement.points_awarded} points!",
+                title="",  # Will be overridden by template
+                message="",  # Will be overridden by template
                 notification_type='achievement',
+                template_slug='achievement_unlocked',
                 data={
-                    'achievement_id': str(user_achievement.achievement.id),
                     'achievement_name': user_achievement.achievement.name,
+                    'points': user_achievement.points_awarded,
+                    'achievement_id': str(user_achievement.achievement.id),
                     'points_awarded': user_achievement.points_awarded,
                     'action': 'view_achievements'
-                }
-            )
-            
-            # Send push notification
-            from api.notifications.services import FCMService
-            fcm_service = FCMService()
-            fcm_service.send_push_notification(
-                user=user,
-                title="🏆 Achievement Unlocked!",
-                message=f"You've unlocked '{user_achievement.achievement.name}'!",
-                data={
-                    'type': 'achievement_unlock',
-                    'achievement_id': str(user_achievement.achievement.id),
-                    'points_awarded': user_achievement.points_awarded
-                }
+                },
+                auto_send=True  # This handles all channels via notification rules
             )
         
         self.logger.info(f"Sent achievement notifications for {len(user_achievements)} achievements to user {user.username}")
@@ -236,15 +225,17 @@ def send_leaderboard_position_updates(self):
             try:
                 notification_service.create_notification(
                     user=leaderboard.user,
-                    title="📊 Leaderboard Update",
-                    message=f"You're currently ranked #{leaderboard.rank} on the leaderboard! Keep up the great work!",
+                    title="",  # Will be overridden by template
+                    message="",  # Will be overridden by template
                     notification_type='achievement',
+                    template_slug='leaderboard_update',
                     data={
                         'rank': leaderboard.rank,
                         'total_points': leaderboard.total_points_earned,
                         'total_rentals': leaderboard.total_rentals,
                         'action': 'view_leaderboard'
-                    }
+                    },
+                    auto_send=True
                 )
                 notifications_sent += 1
                 

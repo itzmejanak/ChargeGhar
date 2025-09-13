@@ -111,18 +111,22 @@ def send_coupon_expiry_reminders(self):
             
             for user in eligible_users:
                 try:
+                    days_until_expiry = (coupon.valid_until - timezone.now()).days
                     notification_service.create_notification(
                         user=user,
-                        title="⏰ Coupon Expiring Soon!",
-                        message=f"Don't miss out! Coupon '{coupon.code}' expires in {(coupon.valid_until - timezone.now()).days} days. Use it now to get {coupon.points_value} points!",
+                        title="",  # Will be overridden by template
+                        message="",  # Will be overridden by template
                         notification_type='promotion',
+                        template_slug='coupon_expiring_soon',
                         data={
                             'coupon_code': coupon.code,
                             'coupon_name': coupon.name,
                             'points_value': coupon.points_value,
+                            'days_until_expiry': days_until_expiry,
                             'expires_at': coupon.valid_until.isoformat(),
                             'action': 'apply_coupon'
-                        }
+                        },
+                        auto_send=True
                     )
                     notifications_sent += 1
                     
@@ -225,14 +229,17 @@ def analyze_coupon_performance(self):
             for admin in admin_users:
                 notification_service.create_notification(
                     user=admin,
-                    title="📊 Coupon Performance Insights",
-                    message=f"{len(underperforming_coupons)} coupons are underperforming. Consider reviewing their terms or promotion strategy.",
+                    title="",  # Will be overridden by template
+                    message="",  # Will be overridden by template
                     notification_type='system',
+                    template_slug='coupon_performance_alert',
                     data={
+                        'underperforming_count': len(underperforming_coupons),
                         'underperforming_coupons': underperforming_coupons,
                         'total_analytics': analytics,
                         'action': 'review_coupons'
-                    }
+                    },
+                    auto_send=True
                 )
         
         self.logger.info(f"Analyzed coupon performance. {len(underperforming_coupons)} underperforming coupons found")
@@ -302,13 +309,15 @@ def send_new_coupon_notifications(self, coupon_id: str):
             try:
                 notification_service.create_notification(
                     user=user,
-                    title="🎁 New Coupon Available!",
-                    message=f"Use coupon '{coupon.code}' to get {coupon.points_value} points! Valid until {coupon.valid_until.strftime('%B %d, %Y')}.",
+                    title="",  # Will be overridden by template
+                    message="",  # Will be overridden by template
                     notification_type='promotion',
+                    template_slug='new_coupon_available',
                     data={
                         'coupon_code': coupon.code,
                         'coupon_name': coupon.name,
                         'points_value': coupon.points_value,
+                        'expiry_date': coupon.valid_until.strftime('%B %d, %Y'),
                         'expires_at': coupon.valid_until.isoformat(),
                         'action': 'apply_coupon'
                     }
