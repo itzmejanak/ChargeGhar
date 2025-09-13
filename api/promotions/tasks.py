@@ -16,11 +16,11 @@ def expire_old_coupons(self):
         
         # Find coupons that have passed their expiry date
         expired_coupons = Coupon.objects.filter(
-            status='ACTIVE',
+            status=Coupon.StatusChoices.ACTIVE,
             valid_until__lt=now
         )
         
-        updated_count = expired_coupons.update(status='EXPIRED')
+        updated_count = expired_coupons.update(status=Coupon.StatusChoices.EXPIRED)
         
         # Clear active coupons cache
         cache.delete("active_coupons")
@@ -41,7 +41,7 @@ def cleanup_old_coupon_data(self):
         one_year_ago = timezone.now() - timezone.timedelta(days=365)
         
         old_usages = CouponUsage.objects.filter(
-            coupon__status='EXPIRED',
+            coupon__status=Coupon.StatusChoices.EXPIRED,
             used_at__lt=one_year_ago
         )
         
@@ -84,7 +84,7 @@ def send_coupon_expiry_reminders(self):
         tomorrow = timezone.now() + timezone.timedelta(days=1)
         
         expiring_coupons = Coupon.objects.filter(
-            status='ACTIVE',
+            status=Coupon.StatusChoices.ACTIVE,
             valid_until__gte=tomorrow,
             valid_until__lte=three_days_from_now
         )
@@ -166,7 +166,7 @@ def create_seasonal_coupons(self):
             max_uses_per_user=1,
             valid_from=timezone.now(),
             valid_until=timezone.now() + timezone.timedelta(days=30),
-            status='ACTIVE'
+            status=Coupon.StatusChoices.ACTIVE
         )
         
         # Clear cache
@@ -196,7 +196,7 @@ def analyze_coupon_performance(self):
         # Identify underperforming coupons
         underperforming_coupons = []
         
-        active_coupons = Coupon.objects.filter(status='ACTIVE')
+        active_coupons = Coupon.objects.filter(status=Coupon.StatusChoices.ACTIVE)
         
         for coupon in active_coupons:
             usage_count = CouponUsage.objects.filter(coupon=coupon).count()

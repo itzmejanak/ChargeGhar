@@ -25,12 +25,12 @@ class CouponSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.BooleanField)
     def get_is_currently_valid(self, obj) -> bool:
         now = timezone.now()
-        return (obj.status == 'ACTIVE' and 
+        return (obj.status == Coupon.StatusChoices.ACTIVE and 
                 obj.valid_from <= now <= obj.valid_until)
     
     @extend_schema_field(serializers.IntegerField)
     def get_days_remaining(self, obj) -> int:
-        if obj.status != 'ACTIVE':
+        if obj.status != Coupon.StatusChoices.ACTIVE:
             return 0
         
         now = timezone.now()
@@ -66,11 +66,13 @@ class CouponPublicSerializer(serializers.ModelSerializer):
             'valid_until', 'is_currently_valid', 'days_remaining'
         ]
     
+    @extend_schema_field(serializers.BooleanField)
     def get_is_currently_valid(self, obj):
         now = timezone.now()
-        return (obj.status == 'ACTIVE' and 
+        return (obj.status == Coupon.StatusChoices.ACTIVE and 
                 obj.valid_from <= now <= obj.valid_until)
     
+    @extend_schema_field(serializers.IntegerField)
     def get_days_remaining(self, obj):
         now = timezone.now()
         if now > obj.valid_until:

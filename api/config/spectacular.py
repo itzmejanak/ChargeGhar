@@ -81,6 +81,20 @@ DOCUMENTED_ENDPOINTS = [
     '/api/admin/points/bulk-award',
     '/api/admin/referrals/analytics',
     
+    # Promotion Features
+    '/api/promotions/coupons/apply',
+    '/api/promotions/coupons/validate',
+    '/api/promotions/coupons/my',
+    '/api/promotions/coupons/active',
+    
+    # Admin Promotion Features
+    '/api/admin/promotions/coupons',
+    '/api/admin/promotions/coupons/{id}',
+    '/api/admin/promotions/coupons/bulk-create',
+    '/api/admin/promotions/coupons/{id}/performance',
+    '/api/admin/promotions/analytics',
+    '/api/admin/promotions/coupons/filter',
+    
     # Social Features
     '/api/social/achievements',
     '/api/social/leaderboard',
@@ -94,10 +108,6 @@ DOCUMENTED_ENDPOINTS = [
     '/api/content/faq',
     '/api/content/banners',
     '/api/content/search',
-    
-    # App Features
-    '/api/app/version',
-    '/api/app/health',
     
     # Admin Social Features
     '/api/admin/social/achievements',
@@ -114,48 +124,25 @@ DOCUMENTED_ENDPOINTS = [
 ]
 
 
-def preprocessing_filter_spec(endpoints):
+def _normalize_path(path: str) -> str:
     """
-    Filter OpenAPI spec to only include documented endpoints from Features TOC.
-    This is the production-ready approach using DRF Spectacular's built-in filtering.
+    Normalize Django URL path to standard format.
+    Converts (?P<param_name>[^/.]+) to {param_name} and removes trailing slashes.
     """
-    filtered = []
+    normalized = path
     
-    for (path, path_regex, method, callback) in endpoints:
-        # Normalize path by removing regex patterns and trailing slashes
-        normalized_path = path
-        
-        # Convert Django URL patterns to standard format
-        if '(?P<' in normalized_path:
-            # Convert (?P<param_name>[^/.]+) to {param_name} format
-            normalized_path = re.sub(r'\(\?P<([^>]+)>[^)]+\)', r'{\1}', normalized_path)
-        
-        # Remove trailing slashes for consistent comparison
-        normalized_path = normalized_path.rstrip('/')
-        
-        # Check if this endpoint matches any documented endpoint
-        is_documented = False
-        for doc_endpoint in DOCUMENTED_ENDPOINTS:
-            doc_path = doc_endpoint.rstrip('/')
-            
-            # Exact match or parameterized match
-            if (normalized_path == doc_path or 
-                _is_parameterized_match(normalized_path, doc_path)):
-                is_documented = True
-                break
-        
-        if is_documented:
-            filtered.append((path, path_regex, method, callback))
+    # Convert Django URL patterns to OpenAPI format
+    if '(?P<' in normalized:
+        normalized = re.sub(r'\(\?P<([^>]+)>[^)]+\)', r'{\1}', normalized)
     
-    return filtered
+    return normalized.rstrip('/')
 
 
 def _is_parameterized_match(actual_path: str, doc_path: str) -> bool:
     """
     Check if an actual path matches a documented path with parameters.
-    e.g., '/api/stations/ABC123' matches '/api/stations/{sn}'
+    Example: '/api/stations/ABC123' matches '/api/stations/{sn}'
     """
-    # Split paths into segments
     actual_segments = actual_path.split('/')
     doc_segments = doc_path.split('/')
     
@@ -167,15 +154,43 @@ def _is_parameterized_match(actual_path: str, doc_path: str) -> bool:
         if not actual and not doc:
             continue
             
-        # If doc segment is a parameter (contains {}), it matches any actual segment
+        # Parameter segments (containing {}) match any actual segment
         if '{' in doc and '}' in doc:
             continue
             
-        # Otherwise, segments must match exactly
+        # Otherwise segments must match exactly
         if actual != doc:
             return False
     
     return True
+
+
+def _is_endpoint_documented(path: str) -> bool:
+    """
+    Check if the given path matches any documented endpoint.
+    """
+    normalized_path = _normalize_path(path)
+    
+    for doc_endpoint in DOCUMENTED_ENDPOINTS:
+        doc_path = doc_endpoint.rstrip('/')
+        
+        if (normalized_path == doc_path or 
+            _is_parameterized_match(normalized_path, doc_path)):
+            return True
+    
+    return False
+
+
+def preprocessing_filter_spec(endpoints):
+    """
+    Filter OpenAPI spec to only include documented endpoints from Features TOC.
+    This is the production-ready approach using DRF Spectacular's built-in filtering.
+    """
+    return [
+        (path, path_regex, method, callback)
+        for (path, path_regex, method, callback) in endpoints
+        if _is_endpoint_documented(path)
+    ]
 
 
 def fix_operation_ids(result, generator, request, public):
@@ -185,15 +200,20 @@ def fix_operation_ids(result, generator, request, public):
     paths = result.get('paths', {})
     
     # Fix notifications operation ID collision
-    if '/api/notifications/' in paths:
-        notifications_path = paths['/api/notifications/']
-        if 'get' in notifications_path:
-            notifications_path['get']['operationId'] = 'api_notifications_list'
+    notifications_fixes = {
+        '/api/notifications/': {
+            'get': 'api_notifications_list'
+        },
+        '/api/notifications/{notification_id}': {
+            'get': 'api_notifications_detail'
+        }
+    }
     
-    if '/api/notifications/{notification_id}' in paths:
-        notification_detail_path = paths['/api/notifications/{notification_id}']
-        if 'get' in notification_detail_path:
-            notification_detail_path['get']['operationId'] = 'api_notifications_detail'
+    for path, methods in notifications_fixes.items():
+        if path in paths:
+            for method, operation_id in methods.items():
+                if method in paths[path]:
+                    paths[path][method]['operationId'] = operation_id
     
     return result
 
@@ -205,7 +225,7 @@ SPECTACULAR_SETTINGS = {
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
     "COMPONENT_SPLIT_REQUEST": True,
     
-    # Apply our custom filtering
+    # Apply custom filtering
     "PREPROCESSING_FILTERS": [
         "api.config.spectacular.preprocessing_filter_spec",
     ],
@@ -229,6 +249,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Payments", "description": "Wallet management, transactions, and payment gateways"},
         {"name": "Rentals", "description": "Power bank rental operations and history"},
         {"name": "Points", "description": "Reward points and referral system"},
+        {"name": "Promotions", "description": "Coupon management and promotional campaigns"},
         {"name": "Social", "description": "Social features, achievements, and leaderboards"},
         {"name": "Content", "description": "App content and information pages"},
         {"name": "Admin", "description": "Administrative operations and analytics"},

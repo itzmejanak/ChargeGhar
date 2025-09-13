@@ -100,12 +100,12 @@ class NotificationListView(GenericAPIView):
             return Response({
                 'notifications': serializer.data,
                 'pagination': {
-                    'count': result['count'],
-                    'page': result['page'],
-                    'page_size': result['page_size'],
-                    'total_pages': result['total_pages'],
-                    'has_next': result['has_next'],
-                    'has_previous': result['has_previous']
+                    'count': result['pagination']['total_count'],
+                    'page': result['pagination']['current_page'],
+                    'page_size': result['pagination']['page_size'],
+                    'total_pages': result['pagination']['total_pages'],
+                    'has_next': result['pagination']['has_next'],
+                    'has_previous': result['pagination']['has_previous']
                 }
             })
             

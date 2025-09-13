@@ -29,7 +29,7 @@ class CouponService(CRUDService):
             
             now = timezone.now()
             coupons = Coupon.objects.filter(
-                status='ACTIVE',
+                status=Coupon.StatusChoices.ACTIVE,
                 valid_from__lte=now,
                 valid_until__gte=now
             ).order_by('-points_value')
@@ -50,7 +50,7 @@ class CouponService(CRUDService):
             now = timezone.now()
             
             # Check if coupon is active
-            if coupon.status != 'ACTIVE':
+            if coupon.status != Coupon.StatusChoices.ACTIVE:
                 return {
                     'valid': False,
                     'coupon_code': coupon_code,
@@ -206,7 +206,7 @@ class CouponService(CRUDService):
                 max_uses_per_user=max_uses_per_user,
                 valid_from=valid_from,
                 valid_until=valid_until,
-                status='ACTIVE'
+                status=Coupon.StatusChoices.ACTIVE
             )
             
             # Clear active coupons cache
@@ -258,7 +258,7 @@ class CouponService(CRUDService):
                     max_uses_per_user=max_uses_per_user,
                     valid_from=valid_from,
                     valid_until=valid_until,
-                    status='ACTIVE'
+                    status=Coupon.StatusChoices.ACTIVE
                 )
                 created_coupons.append(coupon)
             
@@ -342,8 +342,8 @@ class PromotionAnalyticsService(BaseService):
         try:
             # Basic counts
             total_coupons = Coupon.objects.count()
-            active_coupons = Coupon.objects.filter(status='ACTIVE').count()
-            expired_coupons = Coupon.objects.filter(status='EXPIRED').count()
+            active_coupons = Coupon.objects.filter(status=Coupon.StatusChoices.ACTIVE).count()
+            expired_coupons = Coupon.objects.filter(status=Coupon.StatusChoices.EXPIRED).count()
             
             # Usage statistics
             total_uses = CouponUsage.objects.count()

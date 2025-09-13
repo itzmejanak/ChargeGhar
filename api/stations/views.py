@@ -83,9 +83,9 @@ class StationListView(GenericAPIView):
             )
             
             return Response({
-                'count': result.get('count', 0),
-                'next': result.get('next'),
-                'previous': result.get('previous'),
+                'count': result['pagination']['total_count'],
+                'next': result['pagination']['has_next'],
+                'previous': result['pagination']['has_previous'],
                 'results': serializer.data
             }, status=status.HTTP_200_OK)
             
@@ -319,9 +319,9 @@ class UserFavoriteStationsView(GenericAPIView):
             )
             
             return Response({
-                'count': result.get('count', 0),
-                'next': result.get('next'),
-                'previous': result.get('previous'),
+                'count': result['pagination']['total_count'],
+                'next': result['pagination']['has_next'],
+                'previous': result['pagination']['has_previous'],
                 'results': serializer.data
             }, status=status.HTTP_200_OK)
             
@@ -414,9 +414,9 @@ class UserStationReportsView(GenericAPIView):
             )
             
             return Response({
-                'count': result.get('count', 0),
-                'next': result.get('next'),
-                'previous': result.get('previous'),
+                'count': result['pagination']['total_count'],
+                'next': result['pagination']['has_next'],
+                'previous': result['pagination']['has_previous'],
                 'results': serializer.data
             }, status=status.HTTP_200_OK)
             
