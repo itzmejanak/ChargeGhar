@@ -48,6 +48,11 @@ class MediaUpload(BaseModel):
     original_name = models.CharField(max_length=255)
     file_size = models.IntegerField()
     uploaded_by = models.ForeignKey('users.User', on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Cloud storage metadata
+    cloud_provider = models.CharField(max_length=50, default='cloudinary')
+    public_id = models.CharField(max_length=255, null=True, blank=True)
+    metadata = models.JSONField(default=dict)
 
     class Meta:
         db_table = "media_uploads"

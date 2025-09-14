@@ -293,6 +293,17 @@ wheels = [
 ]
 
 [[package]]
+name = "cloudinary"
+version = "1.41.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "six" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/df/ca/2e47a67a08ef44860d0c69d4b4126c281333979c169645f4ebb08fa6631a/cloudinary-1.41.0.tar.gz", hash = "sha256:e189739a796a7d2ad15c19971741d33a9300816b16c0282b4b14ccf1dd2948c0", size = 177501, upload-time = "2024-08-01T21:15:41.328Z" }
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -1261,6 +1272,7 @@ dependencies = [
     { name = "cachetools" },
     { name = "celery" },
     { name = "celery-types" },
+    { name = "cloudinary" },
     { name = "colorlog" },
     { name = "dj-database-url" },
     { name = "django" },
@@ -1302,6 +1314,7 @@ requires-dist = [
     { name = "cachetools", specifier = "==5.5.0" },
     { name = "celery", specifier = "==5.5.3" },
     { name = "celery-types", specifier = "==0.23.0" },
+    { name = "cloudinary", specifier = "==1.41.0" },
     { name = "colorlog", specifier = "==6.9.0" },
     { name = "dj-database-url", specifier = "==3.0.1" },
     { name = "django", specifier = "==5.2.5" },

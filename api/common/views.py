@@ -13,7 +13,8 @@ from drf_spectacular.types import OpenApiTypes
 from api.common.routers import CustomViewRouter
 from api.common import serializers
 from api.common.models import Country, MediaUpload
-from api.common.services import CountryService, MediaUploadService, AppDataService
+from api.common.services import CountryService, AppDataService
+from api.common.services.media import MediaUploadService
 
 if TYPE_CHECKING:
     from rest_framework.request import Request

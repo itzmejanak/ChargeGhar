@@ -10,10 +10,24 @@ from api.config.models import (
 
 @admin.register(AppConfig)
 class AppConfigAdmin(ModelAdmin):
-    list_display = ['key', 'value', 'is_active']
+    list_display = ['key', 'value', 'is_active', 'description']
     list_filter = ['is_active']
     search_fields = ['key', 'description']
     ordering = ['key']
+    
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # Clear cache when cloud storage provider is changed
+        if obj.key == 'cloud_storage_provider':
+            from django.core.cache import cache
+            cache.clear()
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # Add help text for cloud storage provider
+        if obj and obj.key == 'cloud_storage_provider':
+            form.base_fields['value'].help_text = "Options: 'cloudinary' or 's3'"
+        return form
 
 
 @admin.register(AppVersion)

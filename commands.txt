@@ -30,3 +30,5 @@ docker-compose exec api python manage.py spectacular --color --file schema.yml
 docker-compose exec api uv sync
 
 uv run manage.py loaddata api/notifications/fixtures/notifications.json
+
+docker compose exec api python manage.py migrate

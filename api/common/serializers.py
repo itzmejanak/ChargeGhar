@@ -26,9 +26,10 @@ class MediaUploadSerializer(serializers.ModelSerializer):
         model = MediaUpload
         fields = [
             'id', 'file_url', 'file_type', 'original_name', 
-            'file_size', 'uploaded_by', 'created_at', 'updated_at'
+            'file_size', 'uploaded_by', 'cloud_provider', 'public_id',
+            'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'uploaded_by', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'uploaded_by', 'cloud_provider', 'public_id', 'created_at', 'updated_at']
 
 
 class MediaUploadCreateSerializer(serializers.Serializer):
@@ -68,7 +69,7 @@ class MediaUploadResponseSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = MediaUpload
-        fields = ['id', 'file_url', 'file_type', 'original_name', 'file_size']
+        fields = ['id', 'file_url', 'file_type', 'original_name', 'file_size', 'cloud_provider', 'public_id']
 
 
 class AppInitDataSerializer(serializers.Serializer):
