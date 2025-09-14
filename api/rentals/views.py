@@ -48,7 +48,8 @@ class RentalStartView(GenericAPIView):
             rental = service.start_rental(
                 user=request.user,
                 station_sn=serializer.validated_data['station_sn'],
-                package_id=serializer.validated_data['package_id']
+                package_id=serializer.validated_data['package_id'],
+                payment_scenario=serializer.validated_data.get('payment_scenario')
             )
             
             response_serializer = serializers.RentalSerializer(rental)
@@ -259,53 +260,99 @@ class RentalHistoryView(GenericAPIView):
 @router.register(r"rentals/<str:rental_id>/pay-due", name="rental-pay-due")
 @extend_schema(
     tags=["Rentals"],
-    summary="Pay Rental Due",
-    description="Pay outstanding rental dues"
+    summary="Settle Rental Dues",
+    description="Settle outstanding rental dues"
 )
 class RentalPayDueView(GenericAPIView):
     serializer_class = serializers.RentalPayDueSerializer
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
-        summary="Pay Rental Due",
-        description="Pay outstanding rental dues using wallet and/or points",
+        summary="Settle Rental Dues",
+        description="Settle outstanding rental dues using points and wallet combination",
         request=serializers.RentalPayDueSerializer,
-        responses={200: {'type': 'object', 'properties': {'payment_status': {'type': 'string'}}}}
+        responses={200: {'type': 'object', 'properties': {'success': {'type': 'boolean'}, 'data': {'type': 'object'}}}}
     )
     def post(self, request: Request, rental_id: str) -> Response:
-        """Pay rental due"""
+        """Settle rental dues"""
         try:
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            
+
             # Get rental
             rental = Rental.objects.get(id=rental_id, user=request.user)
-            
-            # Process payment using payments app service
+
+            # Calculate payment options first
+            from api.payments.services import PaymentCalculationService
+            calc_service = PaymentCalculationService()
+            payment_options = calc_service.calculate_payment_options(
+                user=request.user,
+                scenario='settle_dues',
+                package_id=serializer.validated_data['package_id'],
+                rental_id=serializer.validated_data['rental_id']
+            )
+
+            if not payment_options['is_sufficient']:
+                return Response({
+                    'success': False,
+                    'error': {
+                        'code': 'INSUFFICIENT_FUNDS',
+                        'message': f"Insufficient balance to pay dues. Need NPR {payment_options['shortfall']} more."
+                    }
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Process payment using rental payment service
             from api.payments.services import RentalPaymentService
             payment_service = RentalPaymentService()
-            
-            result = payment_service.pay_rental_due(
+            transaction = payment_service.pay_rental_due(
                 user=request.user,
                 rental=rental,
                 payment_breakdown={
-                    'use_points': serializer.validated_data['use_points'],
-                    'use_wallet': serializer.validated_data['use_wallet']
+                    'points_to_use': payment_options['payment_breakdown']['points_used'],
+                    'points_amount': payment_options['payment_breakdown']['points_amount'],
+                    'wallet_amount': payment_options['payment_breakdown']['wallet_used'],
+                    'total_amount': payment_options['total_amount']
                 }
             )
-            
-            return Response({'payment_status': result['status']})
-            
+
+            # Update rental status
+            rental.payment_status = 'PAID'
+            rental.save(update_fields=['payment_status'])
+
+            response_data = {
+                'success': True,
+                'data': {
+                    'transaction_id': transaction.transaction_id,
+                    'rental_id': str(rental.id),
+                    'amount_paid': float(payment_options['total_amount']),
+                    'payment_breakdown': {
+                        'points_used': payment_options['payment_breakdown']['points_used'],
+                        'points_amount': float(payment_options['payment_breakdown']['points_amount']),
+                        'wallet_used': float(payment_options['payment_breakdown']['wallet_used'])
+                    },
+                    'rental_status': rental.status,
+                    'account_unblocked': True
+                }
+            }
+
+            return Response(response_data)
+
         except Rental.DoesNotExist:
-            return Response(
-                {'error': 'Rental not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'RENTAL_NOT_FOUND',
+                    'message': 'Rental not found'
+                }
+            }, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response(
-                {'error': f'Failed to pay rental due: {str(e)}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'PAYMENT_FAILED',
+                    'message': str(e)
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @router.register(r"rentals/<str:rental_id>/issues", name="rental-issues")

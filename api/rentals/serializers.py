@@ -51,6 +51,7 @@ class RentalStartSerializer(serializers.Serializer):
     """Serializer for starting a rental"""
     station_sn = serializers.CharField(max_length=255)
     package_id = serializers.UUIDField()
+    payment_scenario = serializers.ChoiceField(choices=['pre_payment', 'post_payment'])
     
     def validate_station_sn(self, value):
         try:
@@ -399,11 +400,12 @@ class RentalCancelSerializer(serializers.Serializer):
 
 
 class RentalPayDueSerializer(serializers.Serializer):
-    """Serializer for paying rental dues"""
-    use_points = serializers.BooleanField(default=True)
-    use_wallet = serializers.BooleanField(default=True)
-    
-    def validate(self, attrs):
-        if not attrs.get('use_points') and not attrs.get('use_wallet'):
-            raise serializers.ValidationError("At least one payment method must be selected")
-        return attrs
+    """Serializer for paying rental dues - Same as calculate-options for settle_dues"""
+    scenario = serializers.ChoiceField(choices=['settle_dues'], required=True)
+    package_id = serializers.UUIDField()
+    rental_id = serializers.UUIDField()
+
+    def validate_scenario(self, value):
+        if value != 'settle_dues':
+            raise serializers.ValidationError("Only settle_dues scenario is allowed for paying dues")
+        return value

@@ -178,14 +178,14 @@ Wallet management, transactions, and payment gateways for both pre-payment and p
 
 ## Important Notes
 
-- **One decision endpoint**: `/calculate-options` drives wallet top-up, pre-payment, and post-payment dues
+- **One decision endpoint**: `/calculate-options` drives rental process pre-payment, and post-payment dues by returning the what gonna deduct before (`/rentals/start` or `/pay-due`).
 - **Payment priority**: Points first, then wallet
 - **Insufficient funds**: App redirects user to top-up flow and retries `/rentals/start` or `/pay-due`
 - **Webhooks & status polling**: Keep existing implementation intact
 - **Wallet Balance**: Stored as a `DecimalField` (NPR)
 - **Transaction Status**: `pending`, `success`, `failed`, `refunded`
-- **Pre-payment**: User pays before rental starts. Late returns incur overdue charges
-- **Post-payment**: User pays after return based on actual usage. Accounts are blocked if dues not cleared
+- **Pre-payment**: User pays before rental starts. Late returns incur overdue charges (packages which are less then one day)
+- **Post-payment**: User pays after return based on actual usage. Accounts are blocked if dues not cleared (packages which are more then one day)
 - **Strict validation**: Block new rentals until all dues are cleared for post-payment model
 - **Payment Intents**: Use intent-based system for better tracking and idempotency
 

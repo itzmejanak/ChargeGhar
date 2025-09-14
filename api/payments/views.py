@@ -141,7 +141,7 @@ class RentalPackageListView(GenericAPIView):
     def get(self, request: Request) -> Response:
         """Get available rental packages"""
         try:
-            packages = RentalPackage.objects.filter(is_active=True).order_by('duration_hours')
+            packages = RentalPackage.objects.filter(is_active=True).order_by('duration_minutes')
             serializer = self.get_serializer(packages, many=True)
             
             return Response({
@@ -282,22 +282,27 @@ class CalculatePaymentOptionsView(GenericAPIView):
         try:
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            
+
             service = PaymentCalculationService()
             options = service.calculate_payment_options(
                 user=request.user,
                 scenario=serializer.validated_data['scenario'],
-                amount=serializer.validated_data['amount'],
-                **serializer.validated_data.get('metadata', {})
+                package_id=serializer.validated_data.get('package_id'),
+                rental_id=serializer.validated_data.get('rental_id'),
+                amount=serializer.validated_data.get('amount')
             )
-            
-            response_serializer = serializers.PaymentOptionsResponseSerializer(options)
-            return Response(response_serializer.data)
-            
+
+            # Format response to match requirements
+            response_data = {
+                "success": True,
+                "data": options
+            }
+            return Response(response_data)
+
         except Exception as e:
             return Response(
-                {'error': f'Failed to calculate payment options: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {'success': False, 'error': {'code': 'CALCULATION_ERROR', 'message': str(e)}},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
 

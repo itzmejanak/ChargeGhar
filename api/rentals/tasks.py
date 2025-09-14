@@ -81,11 +81,10 @@ def calculate_overdue_charges(self):
                 overdue_duration = now - rental.due_at
                 overdue_minutes = int(overdue_duration.total_seconds() / 60)
                 
-                # Calculate overdue charges (2x the normal rate)
-                package_rate_per_minute = rental.package.price / rental.package.duration_minutes
-                overdue_rate = package_rate_per_minute * 2
-                
-                overdue_amount = overdue_rate * overdue_minutes
+                # Calculate overdue charges using configurable rates
+                from api.common.utils.helpers import calculate_late_fee_amount, get_package_rate_per_minute
+                package_rate_per_minute = get_package_rate_per_minute(rental.package)
+                overdue_amount = calculate_late_fee_amount(package_rate_per_minute, overdue_minutes)
                 
                 # Update rental with overdue charges
                 rental.overdue_amount = overdue_amount
@@ -185,7 +184,7 @@ def auto_complete_abandoned_rentals(self):
                     notification_type='rental',
                     template_slug='rental_auto_completed',
                     data={
-                        'powerbank_id': rental.powerbank.serial_number,
+                        'powerbank_id': rental.power_bank.serial_number,
                         'total_cost': float(rental.overdue_amount),
                         'rental_id': str(rental.id),
                         'rental_code': rental.rental_code,

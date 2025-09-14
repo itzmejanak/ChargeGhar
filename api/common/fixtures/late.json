@@ -1,0 +1,78 @@
+[
+  {
+    "model": "common.latefeeconfiguration",
+    "pk": "0191e624-d6f8-75f7-9c8e-f3c3a2a1b0d9",
+    "fields": {
+      "name": "Standard Double Rate (Active)",
+      "fee_type": "MULTIPLIER",
+      "multiplier": "2.0000",
+      "flat_rate_per_hour": "0.0000",
+      "grace_period_minutes": 15,
+      "max_daily_rate": "1000.0000",
+      "is_active": true,
+      "applicable_package_types": [],
+      "metadata": {
+        "description": "Current active configuration: 2x normal rate for late returns, 15-minute grace period, max NPR 1,000/day",
+        "examples": [
+          "Hourly rental at NPR 2/minute becomes NPR 4/minute when late",
+          "15-minute grace period - first 15 minutes late are free",
+          "Maximum charge of NPR 1,000 even if very late"
+        ],
+        "created_by_system": true,
+        "last_reviewed": "2025-01-01"
+      },
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "common.latefeeconfiguration",
+    "pk": "0191e624-d6f8-75f7-9c8e-f3c3a2a1b0da",
+    "fields": {
+      "name": "Flat Rate Example (NPR 50/hour)",
+      "fee_type": "FLAT_RATE",
+      "multiplier": "1.0000",
+      "flat_rate_per_hour": "50.0000",
+      "grace_period_minutes": 30,
+      "max_daily_rate": "300.0000",
+      "is_active": false,
+      "applicable_package_types": [],
+      "metadata": {
+        "description": "Example alternative: Fixed NPR 50 per overdue hour, 30-minute grace period",
+        "examples": [
+          "All rentals charge NPR 50 for each hour late (same for cheap and expensive packages)",
+          "30-minute grace period - first 30 minutes late are free",
+          "Maximum charge of NPR 300/day for fairness"
+        ],
+        "use_case": "When you want predictable, fair charges regardless of rental cost"
+      },
+      "created_at": "2025-01-02T00:00:00Z",
+      "updated_at": "2025-01-02T00:00:00Z"
+    }
+  },
+  {
+    "model": "common.latefeeconfiguration",
+    "pk": "0191e624-d6f8-75f7-9c8e-f3c3a2a1b0db",
+    "fields": {
+      "name": "Holiday Triple Rate Example",
+      "fee_type": "MULTIPLIER",
+      "multiplier": "3.0000",
+      "flat_rate_per_hour": "0.0000",
+      "grace_period_minutes": 0,
+      "max_daily_rate": "2000.0000",
+      "is_active": false,
+      "applicable_package_types": [],
+      "metadata": {
+        "description": "Example for busy periods: 3x normal rate, no grace period, higher daily cap",
+        "examples": [
+          "Hourly rental at NPR 2/minute becomes NPR 6/minute when late",
+          "No grace period - charges start immediately",
+          "Higher cap of NPR 2,000/day for busy peak seasons"
+        ],
+        "use_case": "When demand is high and you want to discourage lateness strongly"
+      },
+      "created_at": "2025-01-03T00:00:00Z",
+      "updated_at": "2025-01-03T00:00:00Z"
+    }
+  }
+]

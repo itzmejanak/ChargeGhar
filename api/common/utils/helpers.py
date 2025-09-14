@@ -159,3 +159,82 @@ def get_client_ip(request) -> str:
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip or '127.0.0.1'
+
+
+def get_late_fee_configuration():
+    """Get the currently active late fee configuration"""
+    from api.common.models import LateFeeConfiguration
+    try:
+        return LateFeeConfiguration.objects.filter(is_active=True).first()
+    except Exception:
+        # Fallback to default 2x multiplier if configuration not found
+        return None
+
+
+def calculate_late_fee_amount(normal_rate_per_minute: Decimal, overdue_minutes: int,
+                             package_type: str = None) -> Decimal:
+    """Calculate late fee amount using active configuration
+
+    Args:
+        normal_rate_per_minute: The normal package rate per minute
+        overdue_minutes: Total minutes the rental was overdue
+        package_type: Package type (optional, for future package-specific rules)
+
+    Returns:
+        Decimal: The calculated late fee amount
+    """
+    from decimal import Decimal
+    from django.core.cache import cache
+
+    # Try cache first for better performance
+    cache_key = f"late_fee_config_{package_type or 'default'}"
+    config = cache.get(cache_key)
+
+    if config is None:
+        # Get active configuration from database
+        config = get_late_fee_configuration()
+
+        if config is None:
+            # Fallback to default 2x multiplier if no configuration exists
+            return normal_rate_per_minute * Decimal('2') * Decimal(str(overdue_minutes))
+
+        # Cache configuration for 1 hour
+        cache.set(cache_key, config, timeout=3600)
+
+    # Calculate using the configuration
+    return config.calculate_late_fee(normal_rate_per_minute, overdue_minutes)
+
+
+def calculate_overdue_minutes(rental) -> int:
+    """Calculate overdue minutes for a rental
+
+    Args:
+        rental: Rental instance with ended_at and due_at fields
+
+    Returns:
+        int: Minutes overdue, or 0 if not overdue
+    """
+    if not rental.ended_at or not rental.due_at:
+        return 0
+
+    if rental.ended_at <= rental.due_at:
+        return 0
+
+    # Calculate overdue duration
+    overdue_duration = rental.ended_at - rental.due_at
+    overdue_minutes = int(overdue_duration.total_seconds() / 60)
+
+    return max(0, overdue_minutes)
+
+
+def get_package_rate_per_minute(package) -> Decimal:
+    """Get package rate per minute
+
+    Args:
+        package: RentalPackage instance
+
+    Returns:
+        Decimal: Rate per minute
+    """
+    from decimal import Decimal
+    return package.price / Decimal(str(package.duration_minutes))

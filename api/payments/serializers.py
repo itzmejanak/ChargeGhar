@@ -166,34 +166,38 @@ class CalculatePaymentOptionsSerializer(serializers.Serializer):
         ('pre_payment', 'Pre-payment'),
         ('post_payment', 'Post-payment'),
     ]
-    
+
     scenario = serializers.ChoiceField(choices=SCENARIO_CHOICES)
-    amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('0'))
     package_id = serializers.UUIDField(required=False, allow_null=True)
     rental_id = serializers.UUIDField(required=False, allow_null=True)
-    
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('0'), required=False)
+
     def validate(self, attrs):
         scenario = attrs.get('scenario')
-        
-        if scenario in ['pre_payment', 'post_payment'] and not attrs.get('package_id'):
-            raise serializers.ValidationError("package_id is required for rental scenarios")
-        
-        if scenario == 'post_payment' and not attrs.get('rental_id'):
-            raise serializers.ValidationError("rental_id is required for post-payment scenario")
-        
+
+        if scenario == 'wallet_topup' and not attrs.get('amount'):
+            raise serializers.ValidationError("amount is required for wallet_topup scenario")
+
+        if scenario == 'pre_payment' and not attrs.get('package_id'):
+            raise serializers.ValidationError("package_id is required for pre_payment scenario")
+
+        if scenario == 'post_payment':
+            if not attrs.get('package_id'):
+                raise serializers.ValidationError("package_id is required for post-payment scenario")
+            if not attrs.get('rental_id'):
+                raise serializers.ValidationError("rental_id is required for post-payment scenario")
+
         return attrs
 
 
 class PaymentOptionsResponseSerializer(serializers.Serializer):
     """Serializer for payment options response"""
     scenario = serializers.CharField()
-    amount_required = serializers.DecimalField(max_digits=10, decimal_places=2)
-    user_points = serializers.IntegerField()
-    user_wallet_balance = serializers.DecimalField(max_digits=10, decimal_places=2)
-    points_value = serializers.DecimalField(max_digits=10, decimal_places=2)
+    total_amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    user_balances = serializers.DictField()
+    payment_breakdown = serializers.DictField()
     is_sufficient = serializers.BooleanField()
     shortfall = serializers.DecimalField(max_digits=10, decimal_places=2)
-    payment_breakdown = serializers.DictField()
     suggested_topup = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True)
 
 

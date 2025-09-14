@@ -20,7 +20,7 @@ class RentalService(CRUDService):
     model = Rental
     
     @transaction.atomic
-    def start_rental(self, user, station_sn: str, package_id: str) -> Rental:
+    def start_rental(self, user, station_sn: str, package_id: str, payment_scenario: str = None) -> Rental:
         """Start a new rental session"""
         try:
             # Validate prerequisites
@@ -83,7 +83,7 @@ class RentalService(CRUDService):
                 template_slug='rental_started',
                 data={
                     'powerbank_id': power_bank.serial_number,
-                    'station_name': pickup_station.name,
+                    'station_name': station.station_name,
                     'max_hours': 24,  # Default rental duration
                     'rental_id': str(rental.id),
                     'rental_code': rental.rental_code,
@@ -371,8 +371,8 @@ class RentalService(CRUDService):
                 notification_type='rental',
                 template_slug='rental_completed',
                 data={
-                    'powerbank_id': rental.powerbank.serial_number,
-                    'total_cost': float(rental.overdue_amount) if rental.payment_status == 'PENDING' else float(rental.cost),
+                    'powerbank_id': rental.power_bank.serial_number,
+                    'total_cost': float(rental.amount_paid),
                     'rental_id': str(rental.id),
                     'rental_code': rental.rental_code,
                     'is_returned_on_time': rental.is_returned_on_time,
@@ -409,15 +409,11 @@ class RentalService(CRUDService):
         if rental.is_returned_on_time or not rental.ended_at:
             return
         
-        # Calculate overdue time
-        overdue_duration = rental.ended_at - rental.due_at
-        overdue_minutes = int(overdue_duration.total_seconds() / 60)
-        
-        # Overdue rate: 2x the package rate per minute
-        package_rate_per_minute = rental.package.price / rental.package.duration_minutes
-        overdue_rate = package_rate_per_minute * 2
-        
-        rental.overdue_amount = Decimal(str(overdue_minutes)) * overdue_rate
+        # Calculate overdue time using configurable rates
+        from api.common.utils.helpers import calculate_overdue_minutes, calculate_late_fee_amount, get_package_rate_per_minute
+        overdue_minutes = calculate_overdue_minutes(rental)
+        package_rate_per_minute = get_package_rate_per_minute(rental.package)
+        rental.overdue_amount = calculate_late_fee_amount(package_rate_per_minute, overdue_minutes)
         
         if rental.overdue_amount > 0:
             rental.payment_status = 'PENDING'
