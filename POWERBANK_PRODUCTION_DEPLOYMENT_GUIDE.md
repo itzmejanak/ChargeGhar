@@ -57,7 +57,9 @@ chmod +x deploy-server-setup.sh
 # 1. Download and run deployment script
 curl -O https://raw.githubusercontent.com/itzmejanak/ChargeGhar/main/deploy-production.sh
 chmod +x deploy-production.sh
+chmod +x load-fixtures.sh
 ./deploy-production.sh
+./load-fixtures.sh
 ```
 
 **That's it!** Your PowerBank Django application will be running at:
