@@ -460,7 +460,7 @@ class ViewsDocumentationGenerator:
         if method.get('query_params'):
             content.extend(["**Query Parameters:**"])
             for param in method['query_params']:
-                content.append(f"- `{param}`"
+                content.append(f"- `{param}`")
             content.append("")
         
         if method.get('status_codes'):
