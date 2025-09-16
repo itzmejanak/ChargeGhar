@@ -46,3 +46,73 @@ git branch --show-current
 git branch -a
 git pull origin rohan
 git push origin main
+
+
+
+
+
+
+
+cd /opt/powerbank
+
+# Stash local changes and pull latest
+git stash
+git pull origin main
+
+# The script will now work perfectly
+./deploy-production.sh
+
+
+
+
+
+
+
+
+
+
+
+
+# Stop and remove the old container using port 8010
+cd /opt/powerbank
+docker stop powerbank_local-powerbank_api-1
+docker rm powerbank_local-powerbank_api-1
+
+# Clean up old networks and volumes
+docker network rm powerbank_local_powerbank_main
+docker volume rm powerbank_local_powerbank_postgres_data
+docker volume rm powerbank_local_powerbank_redis_data
+docker volume rm powerbank_local_powerbank_rabbitmq_data
+docker volume rm powerbank_local_powerbank_pgbouncer_data
+
+# Clean up any failed containers
+docker container prune -f
+
+
+# Stop all containers
+cd /opt/powerbank
+docker-compose -f docker-compose.prod.yml down
+
+# Remove all containers and networks
+docker-compose -f docker-compose.prod.yml down --volumes --remove-orphans
+
+# Clean up any orphaned containers
+docker container prune -f
+
+
+
+# Now start the production deployment
+cd /opt/powerbank
+docker-compose -f docker-compose.prod.yml up -d
+
+
+
+# Check container status
+docker-compose -f docker-compose.prod.yml ps
+
+# Test both applications
+curl http://213.210.21.113:8080/health
+curl http://213.210.21.113:8010/api/app/health/
+
+# Check logs if needed
+docker-compose -f docker-compose.prod.yml logs powerbank_api
