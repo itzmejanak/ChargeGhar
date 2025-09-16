@@ -111,7 +111,7 @@ class UserAuditLog(BaseModel):
     UserAuditLog - Audit trail for user actions
     """
     ACTION_CHOICES = [
-        ('CREATE', 'Create'),
+        ('CREATE', 'Create'), 
         ('UPDATE', 'Update'),
         ('DELETE', 'Delete'),
         ('LOGIN', 'Login'),
