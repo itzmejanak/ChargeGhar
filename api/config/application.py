@@ -82,3 +82,7 @@ USE_TZ = True
 TIME_ZONE = getenv("TIME_ZONE", "UTC")
 
 USE_I18N = True
+
+SPARROW_SMS_TOKEN = getenv("SPARROW_SMS_TOKEN")
+SPARROW_SMS_FROM = getenv("SPARROW_SMS_FROM", "Demo")
+SPARROW_SMS_BASE_URL = getenv("SPARROW_SMS_BASE_URL", "https://sms.sparrowsms.com/v2/sms/")

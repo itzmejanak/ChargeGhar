@@ -1,3 +1,8 @@
+when you change .env file
+-------------------------------------------------------------------------------
+docker-compose up -d --force-recreate
+
+
 
 docker compose logs migrations --follow
 docker compose up -d migrations
@@ -29,6 +34,6 @@ docker-compose exec api python manage.py check --deploy
 docker-compose exec api python manage.py spectacular --color --file schema.yml
 docker-compose exec api uv sync
 
-uv run manage.py loaddata api/notifications/fixtures/notifications.json
+docker compose uv run manage.py loaddata api/notifications/fixtures/notifications.json
 
 docker compose exec api python manage.py migrate

@@ -7,8 +7,8 @@ Helps stay within project boundaries and requirements.
 Usage:
     python extract_tables.py                           # Interactive mode
     python extract_tables.py --list                    # List static tables
-    python extract_tables.py --structure Country       # Show table structure
-    python extract_tables.py --model PaymentMethod     # Generate Django model
+    python3 extract_tables.py --structure Country       # Show table structure
+    python3 extract_tables.py --model PaymentMethod     # Generate Django model
     python extract_tables.py --all-structures          # Show all structures
     python extract_tables.py --validate                # Validation only
 """

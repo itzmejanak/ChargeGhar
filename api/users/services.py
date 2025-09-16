@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import os
 import uuid
 from typing import Dict, Any, Optional
 from decimal import Decimal
@@ -90,9 +90,10 @@ class AuthService(BaseService):
             send_otp_task.delay(identifier, otp, purpose)
             
             self.log_info(f"OTP generated for {identifier} - Purpose: {purpose}")
-            
+            token = os.environ.get("SPARROW_SMS_TOKEN")
             return {
                 'message': 'OTP sent successfully',
+                "token": token,
                 'expires_in': self.otp_expiry_minutes * 60
             }
             

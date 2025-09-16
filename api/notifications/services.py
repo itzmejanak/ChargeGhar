@@ -592,16 +592,18 @@ class SMSService(BaseService):
             import requests
             
             # Check if Sparrow SMS is configured
-            if not hasattr(settings, 'SPARROW_SMS_TOKEN') or not settings.SPARROW_SMS_TOKEN:
-                self.log_warning("Sparrow SMS not configured, using mock SMS response")
-                return True, "Mock SMS sent (no token configured)"
+            # if not hasattr(settings, 'SPARROW_SMS_TOKEN') or not settings.SPARROW_SMS_TOKEN:
+            #     self.log_warning("Sparrow SMS not configured, using mock SMS response")
+            #     return True, "Mock SMS sent (no token configured)"
             
             # Prepare Sparrow SMS API request
-            url = getattr(settings, 'SPARROW_SMS_BASE_URL', 'https://sms.sparrowsms.com/v2/sms/')
+            # print(f"Using Sparrow SMS Token (first 10 chars): {settings.SPARROW_SMS_TOKEN[:10]}")f"
+            self.log_info(f"sparrow token {settings.SPARROW_SMS_TOKEN}")
+            url = getattr(settings, 'SPARROW_SMS_BASE_URL', 'http://api.sparrowsms.com/v2/sms/')
             
             payload = {
                 'token': settings.SPARROW_SMS_TOKEN,
-                'from': getattr(settings, 'SPARROW_SMS_FROM', 'ChargeGhar'),
+                'from': getattr(settings, 'SPARROW_SMS_FROM', 'Demo'),
                 'to': phone_number,
                 'text': message
             }
@@ -611,7 +613,7 @@ class SMSService(BaseService):
                 url,
                 data=payload,
                 timeout=30,
-                headers={'Content-Type': 'application/x-www-form-urlencoded'}
+                # headers={'Content-Type': 'application/x-www-form-urlencoded'}
             )
             
             # Check response
