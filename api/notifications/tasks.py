@@ -29,7 +29,7 @@ def send_otp_task(self, identifier: str, otp: str, purpose: str):
             
             result = sms_service.send_sms(identifier, message)
             
-            self.logger.info(f"OTP SMS sent to: {identifier}")
+            self.logger.info(f"OTP SMS sent to: {identifier}, response: {result}")
             return {
                 'status': 'sent',
                 'identifier': identifier,
