@@ -72,38 +72,30 @@ netstat -tlnp | grep :8010
 # Kill the docker-proxy processes using the port
 kill -9 209593 209601
 
-# Check if there are any containers still running
-docker ps -a
-
-# Stop all old local containers
-docker stop powerbank_local-powerbank_api-1
-docker stop powerbank_local-powerbank_celery-1
-docker stop powerbank_local-powerbank_collectstatic-1
-docker stop powerbank_local-powerbank_migrations-1
-docker stop powerbank_local-powerbank_pgbouncer-1
-docker stop powerbank_local-powerbank_db-1
-docker stop powerbank_local-powerbank_redis-1
-docker stop powerbank_local-powerbank_rabbitmq-1
-
-# Remove the old containers
-docker rm powerbank_local-powerbank_api-1
-docker rm powerbank_local-powerbank_celery-1
-docker rm powerbank_local-powerbank_collectstatic-1
-docker rm powerbank_local-powerbank_migrations-1
-docker rm powerbank_local-powerbank_pgbouncer-1
-docker rm powerbank_local-powerbank_db-1
-docker rm powerbank_local-powerbank_redis-1
-docker rm powerbank_local-powerbank_rabbitmq-1
-
-# Clean up networks and volumes from the old deployment
-docker network prune -f
-docker volume prune -f
-
-# Verify port 8010 is free
-netstat -tlnp | grep :8010 || echo "Port 8010 is free"
 
 
+# Stop all containers except iotdemo ones
+docker ps -q | grep -v "$(docker ps -qf name=iotdemo-app-prod)" | grep -v "$(docker ps -qf name=iotdemo-redis-prod)" | xargs -r docker stop
+
+# Remove all stopped containers
+docker ps -a -q | grep -v "$(docker ps -qf name=iotdemo-app-prod)" | grep -v "$(docker ps -qf name=iotdemo-redis-prod)" | xargs -r docker rm
+
+
+docker image prune -a
+docker ps
+docker images
+
+
+cd /opt/powerbank
+
+# Stash local changes and pull latest
+git stash
+git pull origin main
+
+# The script will now work perfectly
+chmod +x deploy-production.sh
 ./deploy-production.sh
+
 
 
 
