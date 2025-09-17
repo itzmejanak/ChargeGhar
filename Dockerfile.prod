@@ -1,6 +1,12 @@
 # Stage 1: Builder
 FROM python:3.12 as builder
 
+# Install system dependencies needed for building Python packages
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
@@ -45,9 +51,6 @@ COPY --from=builder /application/.venv ./.venv
 
 # Copy the application code from the builder stage
 COPY --from=builder --chown=appuser:appuser /application .
-
-# Install psycopg2-binary for PostgreSQL connectivity
-RUN /application/.venv/bin/pip install psycopg2-binary
 
 # Set the PATH to use the virtual environment and include uv
 ENV PATH="/application/.venv/bin:/bin:$PATH"
