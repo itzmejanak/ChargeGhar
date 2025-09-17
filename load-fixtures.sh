@@ -39,13 +39,53 @@ if [[ ! -f "manage.py" ]]; then
 fi
 
 # Check if Docker containers are running
-if ! docker-compose -f docker-compose.prod.yml ps | grep -q "Up"; then
-    print_error "Docker containers are not running! Please start them first with:"
-    echo "docker-compose -f docker-compose.prod.yml up -d"
+DOCKER_COMPOSE_FILE="docker-compose.prod.yml"
+if ! docker-compose -f "$DOCKER_COMPOSE_FILE" ps powerbank_api | grep -q "Up"; then
+    print_error "PowerBank API container is not running! Please start it first with:"
+    echo "docker-compose -f $DOCKER_COMPOSE_FILE up -d"
     exit 1
 fi
 
 print_status "Docker containers are running ✓"
+
+# Wait for API to be ready
+print_status "Waiting for API to be ready..."
+sleep 10
+
+# Function to create superuser if it doesn't exist
+create_superuser() {
+    print_step "Creating superuser..."
+    
+    # Check if superuser already exists
+    if docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T powerbank_api python manage.py shell -c "
+from django.contrib.auth import get_user_model
+User = get_user_model()
+if User.objects.filter(is_superuser=True).exists():
+    print('Superuser already exists')
+    exit()
+else:
+    print('No superuser found')
+    exit(1)
+" 2>/dev/null; then
+        print_status "Superuser already exists ✓"
+    else
+        print_status "Creating superuser..."
+        docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T powerbank_api python manage.py shell -c "
+from django.contrib.auth import get_user_model
+import os
+User = get_user_model()
+username = os.getenv('DJANGO_ADMIN_USERNAME', 'admin')
+email = os.getenv('DJANGO_ADMIN_EMAIL', 'admin@powerbank.com')
+password = os.getenv('DJANGO_ADMIN_PASSWORD', 'admin123')
+if not User.objects.filter(username=username).exists():
+    User.objects.create_superuser(username=username, email=email, password=password)
+    print(f'Superuser {username} created successfully')
+else:
+    print(f'User {username} already exists')
+"
+        print_status "✓ Superuser created successfully"
+    fi
+}
 
 # Function to load fixtures for an app
 load_fixtures() {
@@ -69,7 +109,7 @@ load_fixtures() {
             print_status "Loading $fixture_name..."
 
             # Use docker-compose exec to run the loaddata command
-            if docker-compose -f docker-compose.prod.yml exec -T powerbank_api python manage.py loaddata "$fixture" 2>/dev/null; then
+            if docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T powerbank_api python manage.py loaddata "$fixture" 2>/dev/null; then
                 print_status "✓ Successfully loaded $fixture_name"
             else
                 print_warning "⚠ Failed to load $fixture_name (might already exist or have dependencies)"
@@ -79,6 +119,9 @@ load_fixtures() {
         print_warning "Fixtures directory not found: $fixtures_dir"
     fi
 }
+
+# Create superuser first
+create_superuser
 
 # Load fixtures in dependency order
 print_step "Loading fixtures in dependency order..."
@@ -117,7 +160,13 @@ load_fixtures "notifications"
 echo ""
 print_status "🎉 Fixtures loading completed!"
 print_status "========================================="
+
+# Get API port from .env
+API_PORT=$(grep "API_PORT" .env | cut -d '=' -f2 | tr -d ' ')
+SERVER_IP=$(hostname -I | awk '{print $1}')
+
 print_status "Summary:"
+print_status "- Superuser created (check .env for credentials)"
 print_status "- Config fixtures loaded"
 print_status "- User fixtures loaded"
 print_status "- Content fixtures loaded"
@@ -129,12 +178,13 @@ print_status "- Promotions fixtures loaded"
 print_status "- Social fixtures loaded"
 print_status "- Notifications fixtures loaded"
 echo ""
-print_status "You can now test your API endpoints!"
-print_status "API Documentation: http://localhost:8010/docs/"
-print_status "Health Check: http://localhost:8010/api/app/health/"
+print_status "🌐 Your PowerBank API is ready!"
+print_status "API Base URL: http://$SERVER_IP:${API_PORT:-8010}"
+print_status "API Documentation: http://$SERVER_IP:${API_PORT:-8010}/docs/"
+print_status "Admin Panel: http://$SERVER_IP:${API_PORT:-8010}/admin/"
+print_status "Health Check: http://$SERVER_IP:${API_PORT:-8010}/api/app/health/"
 echo ""
-print_status "To check loaded data, you can use Django shell:"
-print_status "docker-compose -f docker-compose.prod.yml exec powerbank_api python manage.py shell"
-echo ""
-print_status "Or view logs:"
-print_status "docker-compose -f docker-compose.prod.yml logs -f powerbank_api"
+print_status "🔧 Useful commands:"
+print_status "Django shell: docker-compose -f $DOCKER_COMPOSE_FILE exec powerbank_api python manage.py shell"
+print_status "View logs: docker-compose -f $DOCKER_COMPOSE_FILE logs -f powerbank_api"
+print_status "Restart API: docker-compose -f $DOCKER_COMPOSE_FILE restart powerbank_api"

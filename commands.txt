@@ -60,6 +60,7 @@ git stash
 git pull origin main
 
 # The script will now work perfectly
+chmod +x deploy-production.sh
 ./deploy-production.sh
 
 
