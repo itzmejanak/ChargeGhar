@@ -7,6 +7,10 @@ from api.config.silk import SILKY_MIDDLEWARE_CLASS, USE_SILK
 PROJECT_NAME = getenv("PROJECT_NAME", "django_template")
 PROJECT_VERBOSE_NAME = getenv("PROJECT_VERBOSE_NAME", "Django Template").strip("'\"")
 
+#Stripe API keys
+STRIPE_PUBLIC_KEY = getenv("STRIPE_PUBLIC_KEY", "")
+STRIPE_SECRET_KEY = getenv("STRIPE_SECRET_KEY", "")
+
 ENVIRONMENT = getenv("ENVIRONMENT", "local")
 HOST = getenv("HOST", "localhost")
 

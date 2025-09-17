@@ -30,63 +30,16 @@
     }
   },
   {
-    "model": "payments.wallet",
-    "pk": "550e8400-e29b-41d4-a716-446655440401",
+    "model": "payments.paymentmethod",
+    "pk": "550e8400-e29b-41d4-a716-446655440303",
     "fields": {
-      "user": 2,
-      "balance": "500.00",
-      "currency": "NPR",
+      "name": "Stripe",
+      "gateway": "stripe",
       "is_active": true,
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
-    }
-  },
-  {
-    "model": "payments.wallet",
-    "pk": "550e8400-e29b-41d4-a716-446655440402",
-    "fields": {
-      "user": 3,
-      "balance": "250.00",
-      "currency": "NPR",
-      "is_active": true,
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
-    }
-  },
-  {
-    "model": "payments.transaction",
-    "pk": "550e8400-e29b-41d4-a716-446655440501",
-    "fields": {
-      "user": 2,
-      "payment_method": "550e8400-e29b-41d4-a716-446655440301",
-      "related_rental": null,
-      "transaction_id": "TXN001",
-      "transaction_type": "TOPUP",
-      "amount": "500.00",
-      "currency": "NPR",
-      "status": "SUCCESS",
-      "payment_method_type": "GATEWAY",
-      "gateway_reference": "khalti_ref_001",
-      "gateway_response": {"status": "success", "reference": "khalti_ref_001"},
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
-    }
-  },
-  {
-    "model": "payments.transaction",
-    "pk": "550e8400-e29b-41d4-a716-446655440502",
-    "fields": {
-      "user": 3,
-      "payment_method": "550e8400-e29b-41d4-a716-446655440302",
-      "related_rental": null,
-      "transaction_id": "TXN002",
-      "transaction_type": "TOPUP",
-      "amount": "250.00",
-      "currency": "NPR",
-      "status": "SUCCESS",
-      "payment_method_type": "GATEWAY",
-      "gateway_reference": "esewa_ref_001",
-      "gateway_response": {"status": "success", "reference": "esewa_ref_001"},
+      "configuration": {"public_key": "pk_test_51S8FVxJEhqERESMdhoL5goIy9kGIyUiDO2vXqNhmilIo6uNej2MH2cXi1orphPhcctZCxqEe8MDtNztdEWpe1AnQ00dRLBN8D1", "secret_key": "sk_test_51S8FVxJEhqERESMdRVimWRhxcjs6MkL1hN1yV6EdL4RNgocDwPrtwK6Rf372mvUvtdcrFtXbs37wxLAljwk8Bqw200GBKmdv6B"},
+      "min_amount": "10.00",
+      "max_amount": "100.00",
+      "supported_currencies": ["GBP"],
       "created_at": "2024-01-01T00:00:00Z",
       "updated_at": "2024-01-01T00:00:00Z"
     }
