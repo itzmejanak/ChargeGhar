@@ -69,8 +69,15 @@ chmod +x deploy-production.sh
 
 
 netstat -tlnp | grep :8010
-# Kill the docker-proxy processes using the port
-kill -9 209593 209601
+docker ps --filter "publish=8010"
+
+docker stop <container_id>
+docker rm <container_id>
+
+eg:
+docker stop powerbank_local-powerbank_api-1
+docker rm powerbank_local-powerbank_api-1
+
 
 
 
