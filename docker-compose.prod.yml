@@ -128,24 +128,36 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
-    command: python manage.py migrate
+    command: sh -c "sleep 10 && python manage.py migrate"
     depends_on:
       powerbank_db:
         condition: service_healthy
+      powerbank_redis:
+        condition: service_healthy
     restart: "no"
+    environment:
+      - POSTGRES_HOST=powerbank_db
+      - REDIS_HOST=powerbank_redis
+      - RABBITMQ_HOST=powerbank_rabbitmq
 
   powerbank_collectstatic:
     <<: *common
     build:
       context: .
       dockerfile: Dockerfile.prod
-    command: python manage.py collectstatic --noinput
+    command: sh -c "sleep 10 && python manage.py collectstatic --noinput"
     depends_on:
       powerbank_db:
+        condition: service_healthy
+      powerbank_redis:
         condition: service_healthy
     volumes:
       - static_volume:/application/staticfiles
     restart: "no"
+    environment:
+      - POSTGRES_HOST=powerbank_db
+      - REDIS_HOST=powerbank_redis
+      - RABBITMQ_HOST=powerbank_rabbitmq
 
 networks:
   powerbank_main:

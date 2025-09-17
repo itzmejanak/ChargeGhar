@@ -164,6 +164,11 @@ sed -i 's/DJANGO_DEBUG=true/DJANGO_DEBUG=false/' .env
 sed -i 's/CELERY_TASK_ALWAYS_EAGER=true/CELERY_TASK_ALWAYS_EAGER=false/' .env
 sed -i 's/CELERY_TASK_EAGER_PROPAGATES=true/CELERY_TASK_EAGER_PROPAGATES=false/' .env
 
+# Fix service hostnames for Docker Compose
+sed -i 's/POSTGRES_HOST=db/POSTGRES_HOST=powerbank_db/' .env
+sed -i 's/REDIS_HOST=redis/REDIS_HOST=powerbank_redis/' .env
+sed -i 's/RABBITMQ_HOST=rabbitmq/RABBITMQ_HOST=powerbank_rabbitmq/' .env
+
 print_status "Environment configured for production"
 
 # Create necessary directories
