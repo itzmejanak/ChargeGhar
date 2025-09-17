@@ -14,21 +14,24 @@ from api.common.utils.helpers import validate_phone_number, mask_sensitive_data
 class UserRegistrationSerializer(serializers.Serializer):
     """Serializer for user registration"""
     username = serializers.CharField(max_length=150)
-    email = serializers.EmailField(required=False, allow_blank=True)
-    phone_number = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    identifier = serializers.CharField()
     password = serializers.CharField(write_only=True, min_length=8)
     referral_code = serializers.CharField(max_length=10, required=False, allow_blank=True)
     verification_token = serializers.CharField(write_only=True)
     
     def validate(self, attrs):
-        # At least one of email or phone_number is required
-        if not attrs.get('email') and not attrs.get('phone_number'):
-            raise serializers.ValidationError("Either email or phone number is required")
+        identifier = attrs['identifier']
         
-        # Validate phone number format if provided
-        if attrs.get('phone_number') and not validate_phone_number(attrs['phone_number']):
-            raise serializers.ValidationError("Invalid phone number format")
-        
+        # Validate identifier and split into email/phone
+        if '@' in identifier:
+            attrs['email'] = identifier
+            attrs['phone_number'] = None
+        else:
+            if not validate_phone_number(identifier):
+                raise serializers.ValidationError("Invalid phone number format")
+            attrs['email'] = None
+            attrs['phone_number'] = identifier
+            
         # Validate password
         try:
             validate_password(attrs['password'])

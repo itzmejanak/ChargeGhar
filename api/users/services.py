@@ -141,9 +141,11 @@ class AuthService(BaseService):
     def register_user(self, validated_data: Dict[str, Any], request) -> Dict[str, Any]:
         """Register new user"""
         try:
+            identifier = validated_data['identifier']
+            
             # Validate verification token
             if not self.validate_verification_token(
-                validated_data.get('email') or validated_data.get('phone_number'),
+                identifier,
                 validated_data['verification_token'],
                 'REGISTER'
             ):
