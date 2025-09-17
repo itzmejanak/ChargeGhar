@@ -107,3 +107,13 @@ chmod +x deploy-production.sh
 
 
 
+🔧 To Check if Fixtures Loaded:
+# Check if data exists in database
+docker-compose -f docker-compose.prod.yml exec powerbank_api python manage.py shell -c "
+from django.contrib.auth import get_user_model
+User = get_user_model()
+print(f'Users: {User.objects.count()}')
+
+from api.stations.models import Station
+print(f'Stations: {Station.objects.count()}')
+"
