@@ -211,13 +211,25 @@ class PowerBankManager:
             for service in running_services:
                 print(f"  ✅ {service}")
         
-        # Check API endpoint
-        health_check = self.run_command("curl -s -f https://main.chargeghar.com/api/app/health/", show_output=False)
-        if health_check:
-            print(f"{Colors.GREEN}✅ API Health Check: PASSED{Colors.ENDC}")
-            print(f"Response: {health_check}")
-        else:
+        # Check API endpoint (try both with and without trailing slash)
+        health_urls = [
+            "https://main.chargeghar.com/api/app/health",
+            "https://main.chargeghar.com/api/app/health/"
+        ]
+        
+        health_passed = False
+        for url in health_urls:
+            health_check = self.run_command(f"curl -s -f {url}", show_output=False)
+            if health_check:
+                print(f"{Colors.GREEN}✅ API Health Check: PASSED{Colors.ENDC}")
+                print(f"URL: {url}")
+                print(f"Response: {health_check}")
+                health_passed = True
+                break
+        
+        if not health_passed:
             print(f"{Colors.RED}❌ API Health Check: FAILED{Colors.ENDC}")
+            print("Tried both /api/app/health and /api/app/health/")
 
     def full_redeploy(self):
         """Full redeployment"""

@@ -58,7 +58,7 @@ class AppVersionCheckView(GenericAPIView):
         return Response(response_serializer.data)
 
 
-@router.register(r"app/health", name="app-health")
+@router.register(r"app/health/?", name="app-health")
 class AppHealthView(GenericAPIView):
     """Get app health status"""
     serializer_class = serializers.AppHealthSerializer

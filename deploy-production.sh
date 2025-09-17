@@ -46,17 +46,91 @@ fi
 cd "$PROJECT_DIR"
 
 # Update repository
-print_step "Updating repository..."
+print_step "Repository Management..."
 if [[ -d ".git" ]]; then
-    git fetch origin
-    git checkout "$BRANCH"
-    git reset --hard "origin/$BRANCH"
-    git pull origin "$BRANCH"
+    # Show current git status
+    echo ""
+    echo -e "${YELLOW}Current Git Status:${NC}"
+    echo "Branch: $(git branch --show-current)"
+    echo "Last commit: $(git log -1 --oneline)"
+    echo ""
+    
+    # Show available branches
+    echo -e "${YELLOW}Available branches:${NC}"
+    git branch -a | grep -E "(main|master|develop|staging)" | head -5
+    echo ""
+    
+    # Interactive menu for git operations
+    echo -e "${BLUE}Git Update Options:${NC}"
+    echo "1. 🔄 Pull latest from current branch ($(git branch --show-current))"
+    echo "2. 🔀 Switch to main branch and pull"
+    echo "3. 🔀 Switch to different branch"
+    echo "4. 🗑️  Hard reset to remote (discards local changes)"
+    echo "5. 💾 Stash changes and pull"
+    echo "6. ⏭️  Skip git update (use current code)"
+    echo ""
+    
+    read -p "Select option (1-6): " git_choice
+    
+    case $git_choice in
+        1)
+            print_step "Pulling latest from current branch..."
+            git pull origin "$(git branch --show-current)"
+            ;;
+        2)
+            print_step "Switching to main branch and pulling..."
+            git stash push -m "Auto-stash before switching to main $(date)" || true
+            git checkout "$BRANCH" || git checkout -b "$BRANCH" "origin/$BRANCH"
+            git pull origin "$BRANCH"
+            ;;
+        3)
+            echo ""
+            echo -e "${YELLOW}Available branches:${NC}"
+            git branch -a | sed 's/remotes\/origin\///' | grep -v HEAD | sort | uniq | nl
+            echo ""
+            read -p "Enter branch name: " custom_branch
+            if [[ -n "$custom_branch" ]]; then
+                print_step "Switching to branch: $custom_branch"
+                git stash push -m "Auto-stash before switching to $custom_branch $(date)" || true
+                git checkout "$custom_branch" || git checkout -b "$custom_branch" "origin/$custom_branch"
+                git pull origin "$custom_branch" || true
+                BRANCH="$custom_branch"  # Update branch variable
+            else
+                print_error "No branch specified, using current branch"
+            fi
+            ;;
+        4)
+            print_step "Hard reset to remote (WARNING: This will discard local changes)..."
+            read -p "Are you sure? Type 'YES' to confirm: " confirm
+            if [[ "$confirm" == "YES" ]]; then
+                git fetch origin
+                git reset --hard "origin/$(git branch --show-current)"
+                print_status "Hard reset completed"
+            else
+                print_status "Hard reset cancelled"
+            fi
+            ;;
+        5)
+            print_step "Stashing changes and pulling..."
+            git stash push -m "Manual stash before deployment $(date)"
+            git pull origin "$(git branch --show-current)"
+            ;;
+        6)
+            print_status "Skipping git update, using current code"
+            ;;
+        *)
+            print_error "Invalid choice, defaulting to pull current branch"
+            git pull origin "$(git branch --show-current)" || true
+            ;;
+    esac
+    
+    print_status "Repository updated"
 else
+    print_step "Cloning repository for first time..."
     git clone "$REPO_URL" .
     git checkout "$BRANCH"
+    print_status "Repository cloned"
 fi
-print_status "Repository updated"
 
 # Configure environment for production
 print_step "Configuring production environment..."
@@ -112,6 +186,10 @@ print_status "Services started"
 # Wait for services to be ready
 print_step "Waiting for services to initialize..."
 sleep 60
+
+# Ensure static files are collected
+print_step "Collecting static files..."
+docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T powerbank_api python manage.py collectstatic --noinput || true
 
 # Show container status
 print_step "Container Status:"
