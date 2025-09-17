@@ -93,7 +93,6 @@ class AuthService(BaseService):
             token = os.environ.get("SPARROW_SMS_TOKEN")
             return {
                 'message': 'OTP sent successfully',
-                "token": token,
                 'expires_in': self.otp_expiry_minutes * 60
             }
             
