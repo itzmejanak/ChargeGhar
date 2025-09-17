@@ -11,16 +11,37 @@ x-common: &common
   restart: unless-stopped
 
 services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/var/www/static
+      - certbot_certs:/etc/letsencrypt
+    depends_on:
+      - powerbank_api
+    networks:
+      - powerbank_main
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot_certs:/etc/letsencrypt
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    command: certonly --webroot --webroot-path=/var/www/html --email your_email@example.com --agree-tos --no-eff-email -d your_domain.com
+
   powerbank_api:
     <<: *common
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
     environment:
       WORKERS: ${WORKERS:-4}
       THREADS: ${THREADS:-16}
       ENVIRONMENT: production
     command: make migrate run.server.prod
-    ports:
-      - "${API_PORT}:80"
     depends_on:
       - powerbank_pgbouncer
       - powerbank_migrations
@@ -40,7 +61,7 @@ services:
         reservations:
           memory: 512M
     volumes:
-      - .:/application
+      - static_volume:/application/staticfiles
 
   powerbank_db:
     <<: *common
@@ -116,7 +137,9 @@ services:
 
   powerbank_celery:
     <<: *common
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
     command: make run.celery.prod
     depends_on:
       - powerbank_api
@@ -126,26 +149,26 @@ services:
           memory: 512M
         reservations:
           memory: 256M
-    volumes:
-      - .:/application
 
   powerbank_migrations:
     <<: *common
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
     command: make migrate
     depends_on:
       - powerbank_db
-    volumes:
-      - .:/application
 
   powerbank_collectstatic:
     <<: *common
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
     command: make collectstatic
     depends_on:
       - powerbank_db
     volumes:
-      - .:/application
+      - static_volume:/application/staticfiles
 
 networks:
   powerbank_main:
@@ -156,3 +179,5 @@ volumes:
   powerbank_pgbouncer_data:
   powerbank_redis_data:
   powerbank_rabbitmq_data:
+  static_volume:
+  certbot_certs:
