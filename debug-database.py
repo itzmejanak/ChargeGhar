@@ -24,10 +24,27 @@ def get_api_container_name():
             return container.strip()
     return None
 
+def get_correct_api_container():
+    """Get the correct running API container name"""
+    # Check for production container first
+    result = subprocess.run('docker ps --format "{{.Names}}" | grep "powerbank.*api"', shell=True, capture_output=True, text=True)
+    containers = [c.strip() for c in result.stdout.strip().split('\n') if c.strip()]
+    
+    # Prefer production container
+    for container in containers:
+        if 'production' in container:
+            return container
+    
+    # Fall back to any API container
+    return containers[0] if containers else None
+
 def run_django_command(command):
     """Run Django management command in container"""
-    # Use the actual running container name
-    container_name = "powerbank_production-powerbank_api-1"
+    container_name = get_correct_api_container()
+    if not container_name:
+        return "", "No API container found"
+    
+    print(f"Using container: {container_name}")
     full_command = f'docker exec -i {container_name} python manage.py shell -c "{command}"'
     try:
         result = subprocess.run(full_command, shell=True, capture_output=True, text=True, cwd="/opt/powerbank")
@@ -35,28 +52,37 @@ def run_django_command(command):
     except Exception as e:
         return "", str(e)
 
+def load_fixture_to_container(fixture_path):
+    """Load a specific fixture to the correct container"""
+    container_name = get_correct_api_container()
+    if not container_name:
+        return False, "No API container found"
+    
+    command = f'docker exec -i {container_name} python manage.py loaddata {fixture_path}'
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd="/opt/powerbank")
+        return result.returncode == 0, result.stdout + result.stderr
+    except Exception as e:
+        return False, str(e)
+
 def check_containers():
     """Check container status"""
     print(f"{Colors.BLUE}🐳 Container Status{Colors.ENDC}")
     print("=" * 50)
     
-    result = subprocess.run('docker-compose -f docker-compose.prod.yml ps', shell=True, capture_output=True, text=True, cwd="/opt/powerbank")
+    # Show all PowerBank containers
+    result = subprocess.run('docker ps | grep powerbank', shell=True, capture_output=True, text=True, cwd="/opt/powerbank")
+    print("PowerBank Containers:")
     print(result.stdout)
     
     # Check if API container is running
-    api_status = subprocess.run('docker-compose -f docker-compose.prod.yml ps powerbank_api', shell=True, capture_output=True, text=True, cwd="/opt/powerbank")
-    if "Up" not in api_status.stdout:
-        print(f"{Colors.RED}❌ PowerBank API is not running!{Colors.ENDC}")
-        
-        # Show API logs
-        print(f"\n{Colors.YELLOW}📋 API Container Logs:{Colors.ENDC}")
-        logs = subprocess.run('docker-compose -f docker-compose.prod.yml logs --tail=20 powerbank_api', shell=True, capture_output=True, text=True, cwd="/opt/powerbank")
-        print(logs.stdout)
-        
-        return False
-    else:
-        print(f"{Colors.GREEN}✅ PowerBank API is running{Colors.ENDC}")
+    container_name = get_correct_api_container()
+    if container_name:
+        print(f"{Colors.GREEN}✅ Using API container: {container_name}{Colors.ENDC}")
         return True
+    else:
+        print(f"{Colors.RED}❌ No PowerBank API container found!{Colors.ENDC}")
+        return False
 
 def check_database():
     """Check database tables and data"""
@@ -159,18 +185,66 @@ def check_admin_access():
         print(f"{Colors.RED}Error reading .env: {e}{Colors.ENDC}")
 
 def reload_fixtures():
-    """Reload fixtures"""
-    print(f"\n{Colors.BLUE}🔄 Reloading Fixtures{Colors.ENDC}")
+    """Reload fixtures to correct container"""
+    print(f"\n{Colors.BLUE}🔄 Loading Fixtures to Correct Container{Colors.ENDC}")
     print("=" * 50)
     
-    confirm = input(f"{Colors.YELLOW}Do you want to reload fixtures? (y/N): {Colors.ENDC}")
+    container_name = get_correct_api_container()
+    if not container_name:
+        print(f"{Colors.RED}❌ No API container found{Colors.ENDC}")
+        return
+    
+    print(f"Loading fixtures to: {container_name}")
+    
+    confirm = input(f"{Colors.YELLOW}Do you want to load fixtures? (y/N): {Colors.ENDC}")
     if confirm.lower() == 'y':
-        os.chdir('/opt/powerbank')
-        result = subprocess.run('./load-fixtures.sh', shell=True)
-        if result.returncode == 0:
-            print(f"{Colors.GREEN}✅ Fixtures reloaded successfully{Colors.ENDC}")
-        else:
-            print(f"{Colors.RED}❌ Failed to reload fixtures{Colors.ENDC}")
+        fixtures = [
+            "api/config/fixtures/config.json",
+            "api/users/fixtures/users.json", 
+            "api/content/fixtures/content.json",
+            "api/stations/fixtures/stations.json",
+            "api/rentals/fixtures/rentals.json",
+            "api/payments/fixtures/payments.json",
+            "api/points/fixtures/points.json",
+            "api/promotions/fixtures/promotions.json",
+            "api/social/fixtures/social.json",
+            "api/notifications/fixtures/notifications.json"
+        ]
+        
+        loaded_count = 0
+        for fixture in fixtures:
+            if os.path.exists(fixture):
+                print(f"Loading {fixture}...")
+                success, output = load_fixture_to_container(fixture)
+                if success:
+                    print(f"{Colors.GREEN}✅ Loaded {fixture}{Colors.ENDC}")
+                    loaded_count += 1
+                else:
+                    print(f"{Colors.YELLOW}⚠ Failed to load {fixture}: {output}{Colors.ENDC}")
+            else:
+                print(f"{Colors.YELLOW}⚠ Fixture not found: {fixture}{Colors.ENDC}")
+        
+        print(f"\n{Colors.GREEN}✅ Loaded {loaded_count} fixtures successfully{Colors.ENDC}")
+        
+        # Create superuser if needed
+        print(f"\n{Colors.BLUE}Creating superuser...{Colors.ENDC}")
+        create_superuser_cmd = f"""
+from django.contrib.auth import get_user_model
+import os
+User = get_user_model()
+username = 'janak'
+email = 'janak@powerbank.com'
+password = '5060'
+if not User.objects.filter(username=username).exists():
+    User.objects.create_superuser(username=username, email=email, password=password)
+    print(f'Superuser {username} created successfully')
+else:
+    print(f'Superuser {username} already exists')
+"""
+        stdout, stderr = run_django_command(create_superuser_cmd)
+        print(stdout)
+        if stderr:
+            print(f"{Colors.YELLOW}Note: {stderr}{Colors.ENDC}")
 
 if __name__ == "__main__":
     if os.geteuid() != 0:

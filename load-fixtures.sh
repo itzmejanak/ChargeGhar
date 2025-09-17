@@ -38,13 +38,16 @@ if [[ ! -f "manage.py" ]]; then
     exit 1
 fi
 
-# Check if Docker containers are running
-DOCKER_COMPOSE_FILE="docker-compose.prod.yml"
-if ! docker-compose -f "$DOCKER_COMPOSE_FILE" ps powerbank_api | grep -q "Up"; then
-    print_error "PowerBank API container is not running! Please start it first with:"
-    echo "docker-compose -f $DOCKER_COMPOSE_FILE up -d"
+# Find the correct API container
+API_CONTAINER=$(docker ps --format "{{.Names}}" | grep "powerbank.*api" | head -1)
+if [[ -z "$API_CONTAINER" ]]; then
+    print_error "No PowerBank API container is running!"
+    echo "Available containers:"
+    docker ps --format "table {{.Names}}\t{{.Status}}" | grep powerbank || echo "No PowerBank containers found"
     exit 1
 fi
+
+print_status "Using API container: $API_CONTAINER"
 
 print_status "Docker containers are running ✓"
 
@@ -57,7 +60,7 @@ create_superuser() {
     print_step "Creating superuser..."
     
     # Check if superuser already exists
-    if docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T powerbank_api python manage.py shell -c "
+    if docker exec -i "$API_CONTAINER" python manage.py shell -c "
 from django.contrib.auth import get_user_model
 User = get_user_model()
 if User.objects.filter(is_superuser=True).exists():
@@ -70,13 +73,13 @@ else:
         print_status "Superuser already exists ✓"
     else
         print_status "Creating superuser..."
-        docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T powerbank_api python manage.py shell -c "
+        docker exec -i "$API_CONTAINER" python manage.py shell -c "
 from django.contrib.auth import get_user_model
 import os
 User = get_user_model()
-username = os.getenv('DJANGO_ADMIN_USERNAME', 'admin')
-email = os.getenv('DJANGO_ADMIN_EMAIL', 'admin@powerbank.com')
-password = os.getenv('DJANGO_ADMIN_PASSWORD', 'admin123')
+username = 'janak'
+email = 'janak@powerbank.com'
+password = '5060'
 if not User.objects.filter(username=username).exists():
     User.objects.create_superuser(username=username, email=email, password=password)
     print(f'Superuser {username} created successfully')
@@ -108,8 +111,8 @@ load_fixtures() {
             local fixture_name=$(basename "$fixture")
             print_status "Loading $fixture_name..."
 
-            # Use docker-compose exec to run the loaddata command
-            if docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T powerbank_api python manage.py loaddata "$fixture" 2>/dev/null; then
+            # Use the correct API container to run the loaddata command
+            if docker exec -i "$API_CONTAINER" python manage.py loaddata "$fixture" 2>/dev/null; then
                 print_status "✓ Successfully loaded $fixture_name"
             else
                 print_warning "⚠ Failed to load $fixture_name (might already exist or have dependencies)"
