@@ -22,7 +22,7 @@ services:
       WORKERS: ${WORKERS:-4}
       THREADS: ${THREADS:-16}
       ENVIRONMENT: production
-    command: sh -c "python -m gunicorn api.web.wsgi:application --bind 0.0.0.0:80 --workers ${WORKERS:-4} --threads ${THREADS:-16} --timeout 480"
+    command: sh -c "python manage.py collectstatic --noinput && python -m gunicorn api.web.wsgi:application --bind 0.0.0.0:80 --workers ${WORKERS:-4} --threads ${THREADS:-16} --timeout 480"
     depends_on:
       powerbank_db:
         condition: service_healthy
@@ -32,8 +32,7 @@ services:
         condition: service_started
       powerbank_migrations:
         condition: service_completed_successfully
-      powerbank_collectstatic:
-        condition: service_completed_successfully
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/api/app/health"]
       interval: 30s

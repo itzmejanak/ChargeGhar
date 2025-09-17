@@ -130,35 +130,41 @@ create_superuser
 print_step "Loading fixtures in dependency order..."
 echo ""
 
-# 1. Config - Basic app configuration
+# 1. Common - Countries, late fee configs, and other foundational data
+load_fixtures "common"
+
+# 2. Config - Basic app configuration
 load_fixtures "config"
 
-# 2. Users - Foundational user data
+# 3. Users - Foundational user data
 load_fixtures "users"
 
-# 3. Content - Static content data
+# 4. Content - Static content data
 load_fixtures "content"
 
-# 4. Stations - Station, amenity, slot, and power bank data
+# 5. Stations - Station, amenity, slot, and power bank data
 load_fixtures "stations"
 
-# 5. Rentals - Rental packages and rental data (depends on users, stations)
+# 6. Rentals - Rental packages and rental data (depends on users, stations)
 load_fixtures "rentals"
 
-# 6. Payments - Payment methods, wallets, transactions (depends on users, rentals)
+# 7. Payments - Payment methods, wallets, transactions (depends on users, rentals)
 load_fixtures "payments"
 
-# 7. Points - User points system (depends on users)
+# 8. Points - User points system (depends on users)
 load_fixtures "points"
 
-# 8. Promotions - Promotion data
+# 9. Promotions - Promotion data
 load_fixtures "promotions"
 
-# 9. Social - Social features (depends on users)
+# 10. Social - Social features (depends on users)
 load_fixtures "social"
 
-# 10. Notifications - Notification system (depends on users)
+# 11. Notifications - Notification system (depends on users)
 load_fixtures "notifications"
+
+# 12. Admin Panel - Admin specific data (if exists)
+load_fixtures "admin_panel"
 
 echo ""
 print_status "🎉 Fixtures loading completed!"
@@ -170,6 +176,7 @@ SERVER_IP=$(hostname -I | awk '{print $1}')
 
 print_status "Summary:"
 print_status "- Superuser created (check .env for credentials)"
+print_status "- Common fixtures loaded (countries, late fee configs)"
 print_status "- Config fixtures loaded"
 print_status "- User fixtures loaded"
 print_status "- Content fixtures loaded"
@@ -180,6 +187,7 @@ print_status "- Points fixtures loaded"
 print_status "- Promotions fixtures loaded"
 print_status "- Social fixtures loaded"
 print_status "- Notifications fixtures loaded"
+print_status "- Admin panel fixtures loaded (if available)"
 echo ""
 print_status "🌐 Your PowerBank API is ready!"
 print_status "API Base URL: http://$SERVER_IP:${API_PORT:-8010}"
