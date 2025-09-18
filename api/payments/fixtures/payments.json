@@ -36,7 +36,7 @@
       "name": "Stripe",
       "gateway": "stripe",
       "is_active": true,
-      "configuration": {"public_key": "pk_test_51S8FVxJEhqERESMdhoL5goIy9kGIyUiDO2vXqNhmilIo6uNej2MH2cXi1orphPhcctZCxqEe8MDtNztdEWpe1AnQ00dRLBN8D1", "secret_key": "sk_test_51S8FVxJEhqERESMdRVimWRhxcjs6MkL1hN1yV6EdL4RNgocDwPrtwK6Rf372mvUvtdcrFtXbs37wxLAljwk8Bqw200GBKmdv6B"},
+      "configuration": {"public_key": "STRIPE_TEST_KEY", "secret_key": "STRIPE_TEST_KEY"},
       "min_amount": "10.00",
       "max_amount": "100.00",
       "supported_currencies": ["GBP"],
