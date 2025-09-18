@@ -514,5 +514,578 @@ This is not required
 }
 
 -----------------------------------------------------------------
+### **Endpoint**
 
 
+`[METHOD] /api/points/leaderboard`
+
+### **Description**
+
+Retrieve points leaderboard with optional user inclusion
+
+
+
+
+
+
+### **Request**
+POST
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+```
+
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "include_me",
+  "key": "limit",
+}
+```
+
+**Request Body (if any)**
+This is not required
+```json
+{
+  "field2": "amount",
+  "field1": "payment_method_id",
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "success": true,
+  "message": "Points leaderboard retrieved successfully",
+  "data": [
+    {
+      "rank": 1,
+      "user_id": "2",
+      "username": "testuser1",
+      "total_points": 500,
+      "current_points": 150,
+      "points_this_month": 0,
+      "referrals_count": 0,
+      "rentals_count": 0
+    },
+    {
+      "rank": 2,
+      "user_id": "3",
+      "username": "testuser2",
+      "total_points": 200,
+      "current_points": 75,
+      "points_this_month": 0,
+      "referrals_count": 0,
+      "rentals_count": 0
+    },
+    {
+      "rank": 3,
+      "user_id": "4",
+      "username": "ritesh",
+      "total_points": 10,
+      "current_points": 10,
+      "points_this_month": 10,
+      "referrals_count": 0,
+      "rentals_count": 0
+    }
+  ]
+}
+
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+-------------------------------------------------------------------------
+
+
+`[METHOD] /api/referrals/validate`
+
+### **Description**
+Validate a referral code and return referrer information
+
+
+
+
+
+
+
+
+
+### **Request**
+POST
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+```
+This is not required
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "include_me",
+  "key": "limit",
+}
+```
+
+**Request Body (if any)**
+```json
+{
+  "field2": "code",
+}
+```
+
+---
+
+### **Response**
+
+{
+  "success": true,
+  "message": "Referral code validated successfully",
+  "data": {
+    "valid": true,
+    "referrer": "testuser1",
+    "message": "Valid referral code from testuser1"
+  }
+}
+
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+------------------------------------------------------------------------
+
+`[METHOD] /api/referrals/my-referrals`
+
+### **Description**
+
+Retrieve referrals sent by the authenticated user
+
+### **Request**
+POST
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+```
+
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "page integer",
+  "key": "page_size",
+}
+```
+
+**Request Body (if any)**
+This is not required
+```json
+{
+  "field2": "amount",
+  "field1": "payment_method_id",
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "success": true,
+  "message": "User referrals retrieved successfully",
+  "data": {
+    "results": [],
+    "pagination": {
+      "page": 1,
+      "page_size": 20,
+      "total_pages": 1,
+      "total_count": 0,
+      "has_next": false,
+      "has_previous": false
+    }
+  }
+}
+
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+--------------------------------------------------------------
+`[METHOD] /api/points/history`
+
+### **Description**
+
+Retrieve paginated list of user's points transactions with optional filtering
+
+
+### **Request**
+POST
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+```
+
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "end_date",
+  "key": "page",
+  "key": "page_size",
+  "key": "source",
+  "key": "start_date",
+  "key": "transaction_type",
+}
+```
+
+**Request Body (if any)**
+This is not required
+```json
+{
+  "field2": "amount",
+  "field1": "payment_method_id",
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "success": true,
+  "message": "Points history retrieved successfully",
+  "data": {
+    "results": [
+      {
+        "id": "588885cc-5943-4983-9f00-b5535e364eb6",
+        "transaction_type": "EARNED",
+        "source": "TOPUP",
+        "points": 10,
+        "balance_before": 0,
+        "balance_after": 10,
+        "description": "Top-up reward for NPR 100.0",
+        "created_at": "2025-09-17T15:56:34.637563+05:45",
+        "points_value": 1,
+        "formatted_points": "+10 points"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "page_size": 20,
+      "total_pages": 1,
+      "total_count": 1,
+      "has_next": false,
+      "has_previous": false
+    }
+  }
+}
+
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+----------------------------------------------------------------------
+
+`[METHOD] /api/promotions/coupons/activate`
+
+### **Description**
+Returns list of currently active and valid coupons
+
+
+
+
+
+### **Request**
+POST
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+```
+
+**Query Parameters (if any)**
+this is not required
+```json
+{
+  "key": "end_date",
+  "key": "page",
+  "key": "page_size",
+  "key": "source",
+  "key": "start_date",
+  "key": "transaction_type",
+}
+```
+
+**Request Body (if any)**
+This is not required
+```json
+{
+  "field2": "amount",
+  "field1": "payment_method_id",
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+[
+  {
+    "code": "NEWUSER100",
+    "name": "New User Special",
+    "points_value": 100,
+    "max_uses_per_user": 1,
+    "valid_until": "2027-01-01T05:44:59+05:45",
+    "is_currently_valid": true,
+    "days_remaining": 469
+  },
+  {
+    "code": "WELCOME50",
+    "name": "Welcome Bonus",
+    "points_value": 50,
+    "max_uses_per_user": 1,
+    "valid_until": "2027-01-01T05:44:59+05:45",
+    "is_currently_valid": true,
+    "days_remaining": 469
+  },
+  {
+    "code": "FESTIVAL25",
+    "name": "Festival Special",
+    "points_value": 25,
+    "max_uses_per_user": 3,
+    "valid_until": "2026-11-01T05:44:59+05:45",
+    "is_currently_valid": true,
+    "days_remaining": 408
+  }
+]
+
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+-------------------------------------------------------------------------
+`[METHOD] /api/promotions/coupons/apply`
+
+### **Description**
+Apply coupon code and receive points
+
+
+
+
+
+
+### **Request**
+POST
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+```
+
+**Query Parameters (if any)**
+this is not required
+```json
+{
+  "key": "end_date",
+  "key": "page",
+  "key": "page_size",
+  "key": "source",
+  "key": "start_date",
+  "key": "transaction_type",
+}
+```
+
+**Request Body (if any)**
+```json
+{
+  "field2": "coupon_code",
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "success": true,
+  "coupon_code": "WELCOME50",
+  "coupon_name": "Welcome Bonus",
+  "points_awarded": 50,
+  "message": "Coupon applied successfully! You received 50 points."
+}
+
+
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+--------------------------------------------------------------------
+
+`[METHOD] /api/promotions/coupons/my`
+
+### **Description**
+Returns user's coupon usage history
+
+
+
+
+
+
+
+
+### **Request**
+GET
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+```
+
+**Query Parameters (if any)**
+this is not required
+```json
+{
+  "key": "end_date",
+  "key": "page",
+  "key": "page_size",
+  "key": "source",
+  "key": "start_date",
+  "key": "transaction_type",
+}
+```
+
+**Request Body (if any)**
+this is not required
+```json
+{
+  "field2": "coupon_code",
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "results": [
+    {
+      "id": "b06de7c3-d0aa-4067-8f9c-2922d847e9b4",
+      "coupon_code": "WELCOME50",
+      "coupon_name": "Welcome Bonus",
+      "points_awarded": 50,
+      "used_at": "2025-09-18T13:24:14.752200+05:45"
+    },
+    {
+      "id": "694d6f12-530a-4e5f-9af5-bd9875905778",
+      "coupon_code": "NEWUSER100",
+      "coupon_name": "New User Special",
+      "points_awarded": 100,
+      "used_at": "2025-09-18T13:21:42.907725+05:45"
+    },
+    {
+      "id": "f2f0f8ff-4b44-4ea4-9442-d80edcdaa2de",
+      "coupon_code": "FESTIVAL25",
+      "coupon_name": "Festival Special",
+      "points_awarded": 25,
+      "used_at": "2025-09-18T13:21:25.894090+05:45"
+    }
+  ],
+  "pagination": {
+    "count": 3,
+    "page": 1,
+    "page_size": 20,
+    "total_pages": 1,
+    "has_next": false,
+    "has_previous": false
+  }
+}
+
+
+
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+
+----------------------------------------------------------------------

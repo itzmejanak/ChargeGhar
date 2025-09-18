@@ -25,7 +25,21 @@ class CouponService(CRUDService):
             cached_coupons = cache.get(cache_key)
             
             if cached_coupons:
-                return cached_coupons
+                # Convert cached data back to Coupon objects
+                coupons = []
+                for data in cached_coupons:
+                    coupon = Coupon(
+                        id=data['id'],
+                        code=data['code'],
+                        name=data['name'],
+                        points_value=data['points_value'],
+                        max_uses_per_user=data['max_uses_per_user'],
+                        valid_from=data['valid_from'],
+                        valid_until=data['valid_until'],
+                        status=data['status']
+                    )
+                    coupons.append(coupon)
+                return coupons
             
             now = timezone.now()
             coupons = Coupon.objects.filter(
@@ -34,11 +48,25 @@ class CouponService(CRUDService):
                 valid_until__gte=now
             ).order_by('-points_value')
             
+            # Convert queryset to list of dictionaries for caching
+            coupons_data = []
+            for coupon in coupons:
+                coupons_data.append({
+                    'id': str(coupon.id),
+                    'code': coupon.code,
+                    'name': coupon.name,
+                    'points_value': coupon.points_value,
+                    'max_uses_per_user': coupon.max_uses_per_user,
+                    'valid_from': coupon.valid_from,
+                    'valid_until': coupon.valid_until,
+                    'status': coupon.status
+                })
+            
             # Cache for 15 minutes
-            cache.set(cache_key, list(coupons), timeout=900)
+            cache.set(cache_key, coupons_data, timeout=900)
             
-            return coupons
-            
+            return list(coupons)
+
         except Exception as e:
             self.handle_service_error(e, "Failed to get active coupons")
     

@@ -3,12 +3,12 @@
     "model": "promotions.coupon",
     "pk": "550e8400-e29b-41d4-a716-446655440901",
     "fields": {
-      "code": "WELCOME50",
+      "code": "WELCOME51",
       "name": "Welcome Bonus",
       "points_value": 50,
       "max_uses_per_user": 1,
       "valid_from": "2024-01-01T00:00:00Z",
-      "valid_until": "2024-12-31T23:59:59Z",
+      "valid_until": "2026-12-31T23:59:59Z",
       "status": "active",
       "created_at": "2024-01-01T00:00:00Z",
       "updated_at": "2024-01-01T00:00:00Z"
@@ -18,12 +18,12 @@
     "model": "promotions.coupon",
     "pk": "550e8400-e29b-41d4-a716-446655440902",
     "fields": {
-      "code": "NEWUSER100",
+      "code": "NEWUSER101",
       "name": "New User Special",
       "points_value": 100,
       "max_uses_per_user": 1,
       "valid_from": "2024-01-01T00:00:00Z",
-      "valid_until": "2024-12-31T23:59:59Z",
+      "valid_until": "2026-12-31T23:59:59Z",
       "status": "active",
       "created_at": "2024-01-01T00:00:00Z",
       "updated_at": "2024-01-01T00:00:00Z"
@@ -33,12 +33,12 @@
     "model": "promotions.coupon",
     "pk": "550e8400-e29b-41d4-a716-446655440903",
     "fields": {
-      "code": "FESTIVAL25",
+      "code": "FESTIVAL21",
       "name": "Festival Special",
       "points_value": 25,
       "max_uses_per_user": 3,
       "valid_from": "2024-09-01T00:00:00Z",
-      "valid_until": "2024-10-31T23:59:59Z",
+      "valid_until": "2026-10-31T23:59:59Z",
       "status": "active",
       "created_at": "2024-09-01T00:00:00Z",
       "updated_at": "2024-09-01T00:00:00Z"
