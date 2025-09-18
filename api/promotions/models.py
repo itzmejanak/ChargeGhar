@@ -22,6 +22,7 @@ class Coupon(BaseModel):
     valid_until = models.DateTimeField()
     status = models.CharField(max_length=50, choices=StatusChoices.choices, default=StatusChoices.ACTIVE)
     
+    
     class Meta:
         db_table = "coupons"
         verbose_name = "Coupon"

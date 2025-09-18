@@ -25,7 +25,7 @@ class CouponService(CRUDService):
             cached_coupons = cache.get(cache_key)
             
             if cached_coupons:
-                return cached_coupons
+                return Coupon.objects.filter(id__in=[data['id'] for data in cached_coupons])
             
             now = timezone.now()
             coupons = Coupon.objects.filter(
@@ -34,34 +34,52 @@ class CouponService(CRUDService):
                 valid_until__gte=now
             ).order_by('-points_value')
             
+            # Convert queryset to list of dictionaries for caching
+            coupons_data = []
+            for coupon in coupons:
+                coupons_data.append({
+                    'id': str(coupon.id),
+                    'code': coupon.code,
+                    'name': coupon.name,
+                    'points_value': coupon.points_value,
+                    'max_uses_per_user': coupon.max_uses_per_user,
+                    'valid_from': coupon.valid_from.isoformat(),
+                    'valid_until': coupon.valid_until.isoformat(),
+                    'status': coupon.status
+                })
+            
             # Cache for 15 minutes
-            cache.set(cache_key, list(coupons), timeout=900)
+            cache.set(cache_key, coupons_data, timeout=900)
             
             return coupons
-            
+
         except Exception as e:
-            self.handle_service_error(e, "Failed to get active coupons")
+            self.log_error(f"Failed to get active coupons: {str(e)}")
+            return []
     
     def validate_coupon(self, coupon_code: str, user) -> Dict[str, Any]:
         """Validate if a coupon can be used by the user"""
         try:
-            coupon = Coupon.objects.get(code=coupon_code.upper())
+            # Convert code to uppercase and strip whitespace
+            coupon_code = coupon_code.strip().upper()
+            
+            coupon = Coupon.objects.select_related().get(code=coupon_code)
             
             now = timezone.now()
             
-            # Check if coupon is active
-            if coupon.status != Coupon.StatusChoices.ACTIVE:
+            # Check if coupon exists and is active
+            if not coupon or coupon.status != Coupon.StatusChoices.ACTIVE:
                 return {
                     'valid': False,
                     'coupon_code': coupon_code,
                     'points_value': 0,
-                    'message': 'Coupon is not active',
+                    'message': 'Invalid or inactive coupon code',
                     'can_use': False,
                     'uses_remaining': 0
                 }
             
-            # Check if coupon is within valid date range
-            if not (coupon.valid_from <= now <= coupon.valid_until):
+            # Check date validity
+            if now < coupon.valid_from or now > coupon.valid_until:
                 return {
                     'valid': False,
                     'coupon_code': coupon_code,
@@ -77,7 +95,7 @@ class CouponService(CRUDService):
                 user=user
             ).count()
             
-            uses_remaining = coupon.max_uses_per_user - user_usage_count
+            uses_remaining = max(0, coupon.max_uses_per_user - user_usage_count)
             
             if uses_remaining <= 0:
                 return {
@@ -108,7 +126,8 @@ class CouponService(CRUDService):
                 'uses_remaining': 0
             }
         except Exception as e:
-            self.handle_service_error(e, "Failed to validate coupon")
+            self.log_error(f"Failed to validate coupon: {str(e)}")
+            raise ServiceException("Failed to validate coupon")
     
     @transaction.atomic
     def apply_coupon(self, coupon_code: str, user) -> Dict[str, Any]:

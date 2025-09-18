@@ -27,7 +27,7 @@ docker-compose run --rm migrations python manage.py shell -c "from api.stations.
 docker-compose run --rm migrations python manage.py 
 shell -c "from api.stations.models import *; print('Amenities:', [a.name for a in StationAmenity.objects.all()]); print('Slots:', StationSlot.objects.count()); print('PowerBanks:', PowerBank.objects.count())"
 
-docker-compose run --rm migrations python manage.py loaddata api/notifications/fixtures/notifications.json
+docker compose run --rm migrations python manage.py loaddata api/notifications/fixtures/notifications.json
 
 docker-compose exec api python manage.py makemigrations points
 docker-compose exec api python manage.py check --deploy
@@ -36,74 +36,4 @@ docker-compose exec api uv sync
 
 docker-compose uv run manage.py loaddata api/notifications/fixtures/notifications.json
 
-docker-compose exec api python manage.py migrate
-
-
-
-# Git Related Commands 
-
-git branch --show-current
-git branch -a
-git pull origin rohan
-git push origin main
-
-
-
-
-
-
-
-cd /opt/powerbank
-
-# Stash local changes and pull latest
-git stash
-git pull origin main
-
-# The script will now work perfectly
-./deploy-production.sh
-
-
-
-
-
-
-netstat -tlnp | grep :8010
-# Kill the docker-proxy processes using the port
-kill -9 209593 209601
-
-# Check if there are any containers still running
-docker ps -a
-
-# Stop all old local containers
-docker stop powerbank_local-powerbank_api-1
-docker stop powerbank_local-powerbank_celery-1
-docker stop powerbank_local-powerbank_collectstatic-1
-docker stop powerbank_local-powerbank_migrations-1
-docker stop powerbank_local-powerbank_pgbouncer-1
-docker stop powerbank_local-powerbank_db-1
-docker stop powerbank_local-powerbank_redis-1
-docker stop powerbank_local-powerbank_rabbitmq-1
-
-# Remove the old containers
-docker rm powerbank_local-powerbank_api-1
-docker rm powerbank_local-powerbank_celery-1
-docker rm powerbank_local-powerbank_collectstatic-1
-docker rm powerbank_local-powerbank_migrations-1
-docker rm powerbank_local-powerbank_pgbouncer-1
-docker rm powerbank_local-powerbank_db-1
-docker rm powerbank_local-powerbank_redis-1
-docker rm powerbank_local-powerbank_rabbitmq-1
-
-# Clean up networks and volumes from the old deployment
-docker network prune -f
-docker volume prune -f
-
-# Verify port 8010 is free
-netstat -tlnp | grep :8010 || echo "Port 8010 is free"
-
-
-./deploy-production.sh
-
-
-
-
+docker compose exec api python manage.py migrate

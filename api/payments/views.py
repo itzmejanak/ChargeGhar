@@ -155,7 +155,7 @@ class RentalPackageListView(GenericAPIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
+# done the testing for fetching the payment method
 @router.register(r"payments/methods", name="payment-methods")
 @extend_schema(
     tags=["Payments"],
@@ -164,7 +164,7 @@ class RentalPackageListView(GenericAPIView):
 )
 class PaymentMethodListView(GenericAPIView):
     serializer_class = serializers.PaymentMethodSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny] #no auth needed
     
     @extend_schema(
         summary="Get Payment Methods",
@@ -174,8 +174,8 @@ class PaymentMethodListView(GenericAPIView):
         """Get available payment methods"""
         try:
             methods = PaymentMethod.objects.filter(is_active=True).order_by('name')
+
             serializer = self.get_serializer(methods, many=True)
-            
             return Response({
                 'payment_methods': serializer.data,
                 'count': methods.count()
@@ -187,6 +187,7 @@ class PaymentMethodListView(GenericAPIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+# done the testing part
 
 @router.register(r"payments/wallet/topup-intent", name="payment-topup-intent")
 @extend_schema(
@@ -261,7 +262,7 @@ class VerifyTopupView(GenericAPIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
+# testing part done
 @router.register(r"payments/calculate-options", name="payment-calculate-options")
 @extend_schema(
     tags=["Payments"],
@@ -353,7 +354,6 @@ class PaymentStatusView(GenericAPIView):
 )
 class PaymentCancelView(GenericAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = serializers.PaymentStatusSerializer  # Dummy serializer for schema
     
     @extend_schema(
         summary="Cancel Payment Intent",
@@ -366,7 +366,9 @@ class PaymentCancelView(GenericAPIView):
                 description="Payment Intent ID",
                 required=True
             )
-        ]
+        ],
+        request=None,  # Explicitly tell Swagger there is no request body
+        responses={200: serializers.PaymentStatusSerializer}
     )
     def post(self, request: Request, intent_id: str) -> Response:
         """Cancel payment intent"""
