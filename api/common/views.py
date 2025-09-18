@@ -1,20 +1,23 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from rest_framework.generics import GenericAPIView, ListAPIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.db.models import Q
+
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
+from rest_framework import status
+from rest_framework.generics import GenericAPIView, ListAPIView
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from django.db.models import Q
 
-from api.common.routers import CustomViewRouter
 from api.common import serializers
 from api.common.models import Country, MediaUpload
-from api.common.services import CountryService, AppDataService
+from api.common.routers import CustomViewRouter
+from api.common.services import AppDataService, CountryService
 from api.common.services.media import MediaUploadService
+from api.notifications.tasks import send_otp_task
+
 
 if TYPE_CHECKING:
     from rest_framework.request import Request
@@ -147,3 +150,12 @@ class AppInitDataView(GenericAPIView):
         init_data = service.get_app_initialization_data()
         
         return Response(init_data)
+
+@router.register(r"app/test-email", name="test-email")
+class TestEmailView(GenericAPIView):
+    """A view to test sending emails."""
+
+    def get(self, request: Request) -> Response:
+        """Triggers an email sending task."""
+        send_otp_task.delay(identifier="nikeshshrestha404@gmail.com", otp="123456", purpose="test")
+        return Response("Email task has been triggered.")

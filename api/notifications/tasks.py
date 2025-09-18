@@ -4,9 +4,11 @@ from celery import shared_task
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from typing import Dict, Any, List
+from django.conf import settings
 
 from api.common.tasks.base import BaseTask, NotificationTask
 from api.notifications.models import Notification, SMS_FCMLog
+from api.notifications.services.email import EmailService
 
 User = get_user_model()
 
@@ -18,10 +20,18 @@ def send_otp_task(self, identifier: str, otp: str, purpose: str):
         from api.notifications.services import SMSService
         
         if '@' in identifier:
-            # Send email OTP (implement email service)
-            self.logger.info(f"Email OTP would be sent to: {identifier}")
-            # TODO: Implement email service
-            return {'status': 'email_not_implemented', 'identifier': identifier}
+            # Send email OTP
+            email_service = EmailService()
+            email_service.send_email(
+                subject="Your OTP for ChargeGhar",
+                recipient_list=[identifier],
+                template_name="otp_email.html",
+                context={"otp": otp},
+            )
+            self.logger.info(f"Email OTP sent to: {identifier}")
+            if settings.DEBUG:
+                self.logger.debug(f"OTP for {identifier}: {otp}")
+            return {'status': 'sent', 'identifier': identifier}
         else:
             # Send SMS OTP
             sms_service = SMSService()
@@ -30,6 +40,8 @@ def send_otp_task(self, identifier: str, otp: str, purpose: str):
             result = sms_service.send_sms(identifier, message)
             
             self.logger.info(f"OTP SMS sent to: {identifier}, response: {result}")
+            if settings.DEBUG:
+                self.logger.debug(f"OTP for {identifier}: {otp}")
             return {
                 'status': 'sent',
                 'identifier': identifier,
