@@ -165,6 +165,35 @@ docker compose up -d --build
 ```
 
 ---
+----------------------------------------------------------------------------------------------------------------------------------
+## 🏗️ Building Docker Images
+
+You can build your own Docker images for development or production using the provided Dockerfiles.
+
+### Development Image
+
+The `Dockerfile` is configured for local development and includes tools for debugging and hot-reloading.
+
+To build the development image:
+```bash
+docker build -t powerbank-api:dev -f Dockerfile .
+```
+
+### Production Image
+
+The `Dockerfile.prod` is a multi-stage build optimized for production. It creates a smaller, more secure image without development dependencies.
+
+To build the production image:
+```bash
+docker build -t powerbank-api:latest -f Dockerfile.prod .
+```
+
+After building, you can see your new image by running:
+```bash
+docker images
+```
+
+----------------------------------------------------------------------------------------------------------------------------------
 
 ## ⚙️ Configuration
 
@@ -211,6 +240,69 @@ CLOUDINARY_API_KEY=your-api-key
 
 ---
 
+--- 
+----------------------------------------------------------------------------------------------------------------------------------
+## 🚀 Production Deployment
+
+This guide outlines the steps to deploy the application to a production environment on a VPS using the provided Docker and shell scripts.
+
+### Pre-deployment Steps (On Your Local Machine)
+
+1.  **Secure Your Credentials:** Make sure your `.env` file is **not** in your Git repository and is listed in your `.gitignore` file. This is critical for security.
+2.  **Configure Domain/Email:** In the `nginx.conf` and `docker-compose.prod.yml` files, replace `your_domain.com` and `your_email@example.com` with your actual domain and email address.
+3.  **Commit Changes:** Commit the `Dockerfile.prod`, `nginx.conf`, and the updated `docker-compose.prod.yml` to your Git repository.
+
+### Deployment Steps (On Your VPS)
+
+1.  **Initial Server Setup:**
+    *   Connect to your VPS as the `root` user.
+    *   Download and run the setup script. This will install Docker and create a dedicated user (`powerbank`) for your application.
+    ```bash
+    curl -O https://raw.githubusercontent.com/itzmejanak/ChargeGhar/main/deploy-server-setup.sh
+    chmod +x deploy-server-setup.sh
+    ./deploy-server-setup.sh
+    ```
+
+2.  **Clone Repository and Configure:**
+    *   Switch to the newly created application user:
+        ```bash
+        su - powerbank
+        ```
+    *   Clone your repository into the `/opt/powerbank` directory:
+        ```bash
+        git clone https://github.com/itzmejanak/ChargeGhar.git /opt/powerbank
+        cd /opt/powerbank
+        ```
+    *   **Securely create the `.env` file:** Copy the contents of your local `.env` file and paste it into a new file on the server at `/opt/powerbank/.env`. You can use a command-line editor like `nano`:
+        ```bash
+        nano .env
+        ```
+
+3.  **Generate SSL Certificate:**
+    *   Run the `certbot` service to obtain your initial SSL certificate from Let's Encrypt.
+    ```bash
+    docker-compose -f docker-compose.prod.yml run --rm certbot
+    ```
+
+4.  **Launch the Application:**
+    *   Build and start all services in detached mode.
+    ```bash
+    docker-compose -f docker-compose.prod.yml up -d --build
+    ```
+
+Your application should now be running and accessible at `https://your_domain.com`.
+
+### How to Update Your Application
+
+To deploy updates in the future, simply pull the latest code and rebuild your Docker containers:
+```bash
+cd /opt/powerbank
+git pull origin main
+docker-compose -f docker-compose.prod.yml up -d --build
+```
+
+---
+
 ## 🔧 Advanced Features
 
 ### Built-in Integrations
@@ -252,6 +344,7 @@ make db.dump.all    # Backup database
 - **API Documentation**: Available at `/api/schema/swagger-ui/` when server is running
 
 ### For DevOps Engineers
+- **[Production Deployment Guide](#-production-deployment)** - Complete production deployment guide
 - **[Async Workflow Guide](ASYNC_WORKFLOW_GUIDE.md)** - Production deployment guide
 - **Docker Compose**: Multi-service container orchestration
 - **Monitoring**: Sentry integration for error tracking

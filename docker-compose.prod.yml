@@ -1,0 +1,183 @@
+x-common: &common
+  env_file:
+    - .env
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+  networks:
+    - powerbank_main
+  restart: unless-stopped
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/var/www/static
+      - certbot_certs:/etc/letsencrypt
+    depends_on:
+      - powerbank_api
+    networks:
+      - powerbank_main
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot_certs:/etc/letsencrypt
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    command: certonly --webroot --webroot-path=/var/www/html --email your_email@example.com --agree-tos --no-eff-email -d your_domain.com
+
+  powerbank_api:
+    <<: *common
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    environment:
+      WORKERS: ${WORKERS:-4}
+      THREADS: ${THREADS:-16}
+      ENVIRONMENT: production
+    command: make migrate run.server.prod
+    depends_on:
+      - powerbank_pgbouncer
+      - powerbank_migrations
+      - powerbank_collectstatic
+      - powerbank_redis
+      - powerbank_rabbitmq
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    volumes:
+      - static_volume:/application/staticfiles
+
+  powerbank_db:
+    <<: *common
+    image: postgres:15
+    environment:
+      POSTGRES_INITDB_ARGS: --auth=scram-sha-256
+    volumes:
+      - powerbank_postgres_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    command: postgres -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all
+
+  powerbank_pgbouncer:
+    <<: *common
+    image: edoburu/pgbouncer:latest
+    depends_on:
+      - powerbank_db
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@powerbank_db:5432/${POSTGRES_DB}
+      - POOL_MODE=transaction
+      - MAX_CLIENT_CONN=1000
+      - DEFAULT_POOL_SIZE=20
+      - MIN_POOL_SIZE=5
+      - RESERVE_POOL_SIZE=5
+      - RESERVE_POOL_TIMEOUT=5
+      - SERVER_RESET_QUERY=DISCARD ALL
+      - SERVER_CHECK_QUERY=select 1
+      - LOG_CONNECTIONS=1
+      - LOG_DISCONNECTIONS=1
+      - LOG_POOLER_ERRORS=1
+      - STATS_PERIOD=60
+      - AUTH_TYPE=scram-sha-256
+    volumes:
+      - powerbank_pgbouncer_data:/var/lib/pgbouncer
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+  powerbank_redis:
+    <<: *common
+    image: redis:7-alpine
+    volumes:
+      - powerbank_redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+
+  powerbank_rabbitmq:
+    <<: *common
+    image: rabbitmq:3.13-management-alpine
+    environment:
+        RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-powerbank}
+        RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    volumes:
+      - powerbank_rabbitmq_data:/var/lib/rabbitmq
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  powerbank_celery:
+    <<: *common
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    command: make run.celery.prod
+    depends_on:
+      - powerbank_api
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  powerbank_migrations:
+    <<: *common
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    command: make migrate
+    depends_on:
+      - powerbank_db
+
+  powerbank_collectstatic:
+    <<: *common
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    command: make collectstatic
+    depends_on:
+      - powerbank_db
+    volumes:
+      - static_volume:/application/staticfiles
+
+networks:
+  powerbank_main:
+    driver: bridge
+
+volumes:
+  powerbank_postgres_data:
+  powerbank_pgbouncer_data:
+  powerbank_redis_data:
+  powerbank_rabbitmq_data:
+  static_volume:
+  certbot_certs:

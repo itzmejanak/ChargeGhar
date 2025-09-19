@@ -1,0 +1,47 @@
+# Stage 1: Builder
+FROM python:3.12 as builder
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+WORKDIR /application
+
+# Create a non-root user
+RUN useradd --create-home --shell /bin/bash appuser
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies into a virtual environment
+RUN uv sync --frozen
+
+# Copy the rest of the application code
+COPY . .
+
+# Change ownership to the app user
+RUN chown -R appuser:appuser /application
+
+# Stage 2: Final Image
+FROM python:3.12-slim
+
+WORKDIR /application
+
+# Create the non-root user
+RUN useradd --create-home --shell /bin/bash appuser
+
+# Copy the virtual environment from the builder stage
+COPY --from=builder /application/.venv ./.venv
+
+# Copy the application code from the builder stage
+COPY --from=builder --chown=appuser:appuser /application .
+
+# Set the PATH to use the virtual environment
+ENV PATH="/application/.venv/bin:$PATH"
+
+# Switch to the non-root user
+USER appuser
+
+# Expose the port the app runs on
+EXPOSE 80
+
+# The command to run the application will be specified in the docker-compose file
