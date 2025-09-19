@@ -6,6 +6,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+import logging
 
 from api.common.routers import CustomViewRouter
 from api.common.utils.helpers import create_success_response, create_error_response
@@ -14,6 +15,8 @@ from api.content.services import (
     ContentPageService, FAQService, ContactInfoService, 
     BannerService, AppInfoService, ContentSearchService
 )
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from rest_framework.request import Request
@@ -142,10 +145,49 @@ class ContactView(GenericAPIView):
     def get(self, request: Request) -> Response:
         """Get contact information"""
         try:
+            logger.info("Attempting to retrieve contact information")
+            
+            service = ContactInfoService()
+            contact_info = service.get_all_contact_info()
+            
+
+            
+            if not contact_info:
+                return create_success_response(
+                    data=[],
+                    message="No contact information found"
+                )
+
+            serializer = self.serializer_class(contact_info, many=True)
+            
+            return create_success_response(
+                data=serializer.data,
+                message="Contact information retrieved successfully"
+            )
+
+        except Exception as e:
+            return create_error_response(
+                message="Failed to retrieve contact information",
+                errors={'detail': str(e)}
+            )
+        """Get contact information"""
+        try:
+            logger.info("Attempting to retrieve contact information")
+            
             service = ContactInfoService()
             contact_info = service.get_all_contact_info()
 
-            serializer = serializers.ContactInfoPublicSerializer(contact_info, many=True)
+
+            if not contact_info:
+
+                return create_success_response(
+
+                    data=[],
+                    message="No contact information found"
+                )
+
+            serializer = self.serializer_class(contact_info, many=True)
+
 
             return create_success_response(
                 data=serializer.data,
@@ -153,6 +195,7 @@ class ContactView(GenericAPIView):
             )
 
         except Exception as e:
+            logger.error(f"Failed to retrieve contact information: {str(e)}", exc_info=True)
             return create_error_response(
                 message="Failed to retrieve contact information",
                 errors={'detail': str(e)}

@@ -1,0 +1,47 @@
+[
+  {
+    "model": "content.faq",
+    "pk": "550e8400-e29b-41d4-a716-446655440001",
+    "fields": {
+      "question": "What is this platform about?",
+      "answer": "This platform helps users manage their tasks and projects efficiently.",
+      "category": "General",
+      "sort_order": 1,
+      "is_active": true,
+      "created_by": 2,
+      "updated_by": 2,
+      "created_at": "2025-09-18T00:00:00Z",
+      "updated_at": "2025-09-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "content.faq",
+    "pk": "550e8400-e29b-41d4-a716-446655440002",
+    "fields": {
+      "question": "How do I reset my password?",
+      "answer": "Go to the login page and click on 'Forgot Password' to reset it.",
+      "category": "Account",
+      "sort_order": 2,
+      "is_active": true,
+      "created_by": 2,
+      "updated_by": 2,
+      "created_at": "2025-09-18T00:00:00Z",
+      "updated_at": "2025-09-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "content.faq",
+    "pk": "550e8400-e29b-41d4-a716-446655440003",
+    "fields": {
+      "question": "Who can I contact for support?",
+      "answer": "You can contact our support team via the 'Help' section in your dashboard.",
+      "category": "Support",
+      "sort_order": 3,
+      "is_active": true,
+      "created_by": 2,
+      "updated_by": 2,
+      "created_at": "2025-09-18T00:00:00Z",
+      "updated_at": "2025-09-18T00:00:00Z"
+    }
+  }
+]

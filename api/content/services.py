@@ -5,11 +5,14 @@ from django.db import transaction
 from django.utils import timezone
 from django.db.models import Q, Count
 from django.core.cache import cache
+import logging
+
 
 from api.common.services.base import BaseService, CRUDService, ServiceException
 from api.common.utils.helpers import paginate_queryset
 from api.content.models import ContentPage, FAQ, ContactInfo, Banner
 
+logger = logging.getLogger(__name__)
 
 class ContentPageService(CRUDService):
     """Service for content page operations"""
@@ -188,6 +191,8 @@ class ContactInfoService(CRUDService):
                 return cached_info
             
             contact_info = ContactInfo.objects.filter(is_active=True).order_by('info_type')
+            logger.debug(f"Found {contact_info.count()} active contact info records")
+
             
             # Cache for 1 hour
             cache.set(cache_key, list(contact_info), timeout=3600)
