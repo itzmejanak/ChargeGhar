@@ -568,7 +568,7 @@ class RefundService(CRUDService):
     def request_refund(self, user, transaction_id: str, reason: str) -> Refund:
         """Request refund for a transaction"""
         try:
-            transaction_obj = Transaction.objects.get(id=transaction_id, user=user)
+            transaction_obj = Transaction.objects.get(transaction_id=transaction_id, user=user)                     
             
             if transaction_obj.status != 'SUCCESS':
                 raise ServiceException(
