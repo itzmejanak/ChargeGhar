@@ -150,12 +150,3 @@ class AppInitDataView(GenericAPIView):
         init_data = service.get_app_initialization_data()
         
         return Response(init_data)
-
-@router.register(r"app/test-email", name="test-email")
-class TestEmailView(GenericAPIView):
-    """A view to test sending emails."""
-
-    def get(self, request: Request) -> Response:
-        """Triggers an email sending task."""
-        send_otp_task.delay(identifier="nikeshshrestha404@gmail.com", otp="123456", purpose="test")
-        return Response("Email task has been triggered.")

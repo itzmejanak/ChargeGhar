@@ -1,51 +1,71 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
+from typing import Dict, Any, List
 
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
+
+from api.common.services.base import BaseService, ServiceException
 
 logger = logging.getLogger(__name__)
 
 
-class EmailService:
-    """Service for sending emails."""
+class EmailService(BaseService):
+    """Service for sending emails"""
 
-    def __init__(self, from_email: Optional[str] = None):
-        self.from_email = from_email or settings.DEFAULT_FROM_EMAIL
+    def __init__(self):
+        super().__init__()
+        self.from_email = settings.DEFAULT_FROM_EMAIL
 
     def send_email(
         self,
         subject: str,
         recipient_list: List[str],
         template_name: str,
-        context: dict,
-        fail_silently: bool = False,
-    ) -> None:
+        context: Dict[str, Any],
+    ):
         """
-        Send an email using a template.
+        Send email using an HTML template.
 
         Args:
-            subject: The subject of the email.
-            recipient_list: A list of recipient email addresses.
-            template_name: The path to the email template file.
-            context: A dictionary of context data for the template.
-            fail_silently: Whether to raise an exception on failure.
+            subject (str): Email subject.
+            recipient_list (List[str]): List of recipient email addresses.
+            template_name (str): The filename of the email template.
+            context (Dict[str, Any]): A dictionary of context variables for the template.
         """
+        if not recipient_list:
+            logger.warning("Recipient list is empty. No email sent.")
+            return
+
         try:
-            html_message = render_to_string(template_name, context)
-            send_mail(
-                subject,
-                message="",  # Plain text message (optional)
+            logger.info(f"Attempting to send email with subject '{subject}' to {recipient_list}")
+
+            # Render HTML content from template
+            html_content = render_to_string(template_name, context)
+
+            # Create the email message
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body="",  # Plain text body is empty, we use HTML
                 from_email=self.from_email,
-                recipient_list=recipient_list,
-                html_message=html_message,
-                fail_silently=fail_silently,
+                to=recipient_list,
             )
-            logger.info(f"Email sent to {recipient_list} with subject: {subject}")
+            email.attach_alternative(html_content, "text/html")
+
+            # Send the email
+            sent_count = email.send()
+
+            if sent_count > 0:
+                logger.info(f"Successfully sent email to {recipient_list}")
+            else:
+                logger.error(f"Failed to send email to {recipient_list}. The send() method returned 0.")
+                raise ServiceException("Failed to send email")
+
         except Exception as e:
-            logger.error(f"Failed to send email: {e}")
-            if not fail_silently:
-                raise
+            logger.critical(
+                f"A critical error occurred while sending an email to {recipient_list}. Error: {str(e)}",
+                exc_info=True,
+            )
+            self.handle_service_error(e, "Failed to send email")

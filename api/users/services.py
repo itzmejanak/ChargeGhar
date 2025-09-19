@@ -18,6 +18,7 @@ from api.common.utils.helpers import (
 )
 from api.users.models import User, UserProfile, UserKYC, UserDevice, UserPoints, UserAuditLog
 from api.payments.models import Wallet
+from api.notifications.services.main import NotificationService
 
 
 User = get_user_model()
@@ -191,6 +192,8 @@ class AuthService(BaseService):
             
             # Log audit
             self._log_user_audit(user, 'CREATE', 'USER', str(user.id), request)
+
+            
             
             # Generate tokens
             refresh = RefreshToken.for_user(user)

@@ -78,3 +78,4 @@ class AppInitDataSerializer(serializers.Serializer):
     settings = serializers.DictField()
     countries = serializers.ListField()
     banners = serializers.ListField()
+

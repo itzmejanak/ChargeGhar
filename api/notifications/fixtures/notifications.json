@@ -432,5 +432,33 @@
       "created_at": "2025-09-13T10:00:00Z",
       "updated_at": "2025-09-13T10:00:00Z"
     }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 27,
+    "fields": {
+      "name": "Welcome Email",
+      "slug": "welcome-email",
+      "notification_type": "system",
+      "title_template": "Welcome to ChargeGhar!",
+      "message_template": "Hi {{username}}, welcome to ChargeGhar! We are excited to have you on board.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationrule",
+    "pk": 6,
+    "fields": {
+      "notification_type": "system",
+      "send_in_app": true,
+      "send_push": true,
+      "send_sms": false,
+      "send_email": true,
+      "is_critical": false,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
   }
 ]
