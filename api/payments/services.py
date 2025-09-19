@@ -568,43 +568,81 @@ class RefundService(CRUDService):
     def request_refund(self, user, transaction_id: str, reason: str) -> Refund:
         """Request refund for a transaction"""
         try:
-            transaction_obj = Transaction.objects.get(transaction_id=transaction_id, user=user)                     
+            # Input validation
+            if not transaction_id:
+                raise ServiceException(
+                    detail="Transaction ID is required",
+                    code="transaction_id_required"
+                )
             
+            if not reason or len(reason.strip()) < 10:
+                raise ServiceException(
+                    detail="Please provide a valid reason (minimum 10 characters)",
+                    code="invalid_reason"
+                )
+
+            # Find and validate transaction
+            try:
+                transaction_obj = Transaction.objects.select_related('user').get(transaction_id=transaction_id)
+            except Transaction.DoesNotExist:
+                raise ServiceException(
+                    detail=f"Transaction with ID {transaction_id} not found",
+                    code="transaction_not_found"
+                )
+
+            # Security check: verify ownership
+            if transaction_obj.user_id != user.id:
+                raise ServiceException(
+                    detail="You are not authorized to request refund for this transaction",
+                    code="unauthorized_transaction"
+                )
+            
+            # Business logic validation
             if transaction_obj.status != 'SUCCESS':
                 raise ServiceException(
                     detail="Only successful transactions can be refunded",
                     code="invalid_transaction_status"
                 )
             
-            # Check if refund already exists
-            if Refund.objects.filter(transaction=transaction_obj).exists():
+            # Check for existing refund request
+            existing_refund = Refund.objects.filter(transaction=transaction_obj).first()
+            if existing_refund:
                 raise ServiceException(
-                    detail="Refund already requested for this transaction",
+                    detail=f"A refund request already exists for this transaction (Status: {existing_refund.status})",
                     code="refund_already_exists"
                 )
             
+            # Create refund request
             refund = Refund.objects.create(
                 transaction=transaction_obj,
                 requested_by=user,
                 amount=transaction_obj.amount,
-                reason=reason,
+                reason=reason.strip(),
                 status='REQUESTED'
             )
             
-            # Send notification to admin
-            from api.notifications.tasks import send_refund_request_notification
-            send_refund_request_notification.delay(refund.id)
+            # Schedule admin notification
+            try:
+                from api.notifications.tasks import send_refund_request_notification
+                send_refund_request_notification.delay(refund.id)
+            except Exception as notification_error:
+                self.log_warning(f"Failed to send refund notification: {str(notification_error)}")
+                # Continue processing as notification is not critical
             
             self.log_info(f"Refund requested: {transaction_obj.transaction_id} by {user.username}")
             return refund
             
-        except Transaction.DoesNotExist:
-            raise ServiceException(
-                detail="Transaction not found",
-                code="transaction_not_found"
-            )
+        except ServiceException:
+            # Re-raise service exceptions as they already have proper formatting
+            raise
+        except ValidationError as e:
+            raise ServiceException(detail=str(e), code="validation_error")
         except Exception as e:
-            self.handle_service_error(e, "Failed to request refund")
+            self.log_error(f"Unexpected error in refund request: {str(e)}")
+            raise ServiceException(
+                detail="An unexpected error occurred while processing your refund request",
+                code="internal_error"
+            )
     
     def get_user_refunds(self, user, page: int = 1, page_size: int = 20) -> Dict[str, Any]:
         """Get user's refund requests"""

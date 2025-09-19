@@ -8,8 +8,10 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from django.core.exceptions import ValidationError
 
 from api.common.routers import CustomViewRouter
+from api.common.services.base import ServiceException
 from api.payments import serializers
 from api.payments.services import (
     TransactionService, PaymentIntentService, PaymentCalculationService,
@@ -453,9 +455,11 @@ class RefundListView(GenericAPIView):
     def post(self, request: Request) -> Response:
         """Request refund for a transaction"""
         try:
+            # Validate request data
             serializer = serializers.RefundRequestSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
+            # Process refund request
             service = RefundService()
             refund = service.request_refund(
                 user=request.user,
@@ -463,14 +467,47 @@ class RefundListView(GenericAPIView):
                 reason=serializer.validated_data['reason']
             )
             
+            # Prepare success response
             response_serializer = self.get_serializer(refund)
-            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+            return Response({
+                'success': True,
+                'message': 'Refund request submitted successfully',
+                'data': response_serializer.data
+            }, status=status.HTTP_201_CREATED)
+            
+        except ServiceException as e:
+            # Handle business rule violations with proper status code
+            return Response({
+                'success': False,
+                'error': {
+                    'code': getattr(e, 'code', 'refund_error'),
+                    'message': str(e)
+                }
+            }, status=getattr(e, 'status_code', status.HTTP_400_BAD_REQUEST))
+            
+        except ValidationError as e:
+            # Handle data validation errors
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'validation_error',
+                    'message': str(e) if str(e) else 'Invalid request data'
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
             
         except Exception as e:
-            return Response(
-                {'error': f'Failed to request refund: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            # Log unexpected errors and return a safe message
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Unexpected error in refund request: {str(e)}")
+            
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'internal_error',
+                    'message': 'An unexpected error occurred while processing your request'
+                }
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # Webhook endpoints for payment gateways

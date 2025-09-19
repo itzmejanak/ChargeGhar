@@ -629,21 +629,129 @@ This is not required
   }
 }
 ----------------------------------------------------------------------
+## pending work: post for refunds and get for refunds.
+-------------------------------------------------------
+`/api/referrals/my-code`
+
+### **Description**
+
+Retrieve the authenticated user's referral code
 
 
-`[METHOD] /api/points/leaderboard`
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+This is not required
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "include_me",
+  "key": "limit"
+}
+```
+
+**Request Body (if any)**
+This is not required
+
+```json
+{
+  "field2": "amount",
+  "field1": "payment_method_id"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "success": true,
+  "message": "Referral code retrieved successfully",
+  "data": {
+    "referral_code": "456789",
+    "user_id": "4",
+    "username": "ritesh"
+  }
+}
+
+**Error**
+
+````json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+-------------------------------------------------------------------
+`/api/referrals/validate`
+
+### **Description**
+
+Validate a referral code and return referrer information
+
+
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+This is not required
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "include_me",
+  "key": "limit"
+}
+```
+
+**Request Body (if any)**
+
+```json
+{
+  "field2": "code",
+}
+```
+
+---
+
+### **Response**
+**Error**
+
+{
+  "success": false,
+  "message": "Failed to validate referral code",
+  "errors": {
+    "detail": "{'referral_code': [ErrorDetail(string='You cannot refer yourself', code='invalid')]}"
+  }
+}
+--------------------------------------------------------------
+
+`/api/points/leaderboard`
 
 ### **Description**
 
 Retrieve points leaderboard with optional user inclusion
 
-
-
-
-
-
 ### **Request**
-POST
+GET
 
 **Headers**
 ```json
