@@ -85,7 +85,7 @@ GET
 }
 ````
 
-----------------------------------------
+---
 
 ### **Endpoint**
 
@@ -126,6 +126,7 @@ This is not required
   "field2": "payment_method_id"
 }
 ```
+
 ### **Response**
 
 **Success**
@@ -180,7 +181,7 @@ This is not required
 }
 ```
 
------------------------------------------
+---
 
 `[METHOD] /api/payments/calculate-options`
 
@@ -263,7 +264,7 @@ This is not required
 }
 ```
 
----------------------------------------------
+---
 
 `/api/payments/wallet/topup-intent`
 
@@ -336,7 +337,7 @@ This is not required
 }
 ```
 
----------------------------------------------
+---
 
 `/api/payments/status{intent_id}`
 
@@ -381,18 +382,18 @@ This is not required
 
 **Success**
 {
-  "intent_id": "415c43bd-a79a-449f-abaa-590a2a1a5162",
-  "status": "PENDING",
-  "amount": "500.00",
-  "currency": "NPR",
-  "gateway_reference": null,
-  "completed_at": null,
-  "failure_reason": null
+"intent_id": "415c43bd-a79a-449f-abaa-590a2a1a5162",
+"status": "PENDING",
+"amount": "500.00",
+"currency": "NPR",
+"gateway_reference": null,
+"completed_at": null,
+"failure_reason": null
 }
 
 **Error**
 
-````json
+`````json
 {
   "success": false,
   "error": {
@@ -645,7 +646,8 @@ GET
   "Authorization": "Bearer <token>",   // If authentication is required
   "Content-Type": "application/json"
 }
-````
+`````
+
 This is not required
 **Query Parameters (if any)**
 
@@ -672,13 +674,13 @@ This is not required
 
 **Success**
 {
-  "success": true,
-  "message": "Referral code retrieved successfully",
-  "data": {
-    "referral_code": "456789",
-    "user_id": "4",
-    "username": "ritesh"
-  }
+"success": true,
+"message": "Referral code retrieved successfully",
+"data": {
+"referral_code": "456789",
+"user_id": "4",
+"username": "ritesh"
+}
 }
 
 **Error**
@@ -710,6 +712,7 @@ GET
   "Content-Type": "application/json"
 }
 ````
+
 This is not required
 **Query Parameters (if any)**
 
@@ -724,23 +727,25 @@ This is not required
 
 ```json
 {
-  "field2": "code",
+  "field2": "code"
 }
 ```
 
 ---
 
 ### **Response**
+
 **Error**
 
 {
-  "success": false,
-  "message": "Failed to validate referral code",
-  "errors": {
-    "detail": "{'referral_code': [ErrorDetail(string='You cannot refer yourself', code='invalid')]}"
-  }
+"success": false,
+"message": "Failed to validate referral code",
+"errors": {
+"detail": "{'referral_code': [ErrorDetail(string='You cannot refer yourself', code='invalid')]}"
 }
---------------------------------------------------------------
+}
+
+---
 
 `/api/points/leaderboard`
 
@@ -749,15 +754,17 @@ This is not required
 Retrieve points leaderboard with optional user inclusion
 
 ### **Request**
+
 GET
 
 **Headers**
+
 ```json
 {
-  "Authorization": "Bearer <token>",   // If authentication is required
+  "Authorization": "Bearer <token>", // If authentication is required
   "Content-Type": "application/json"
 }
-````
+```
 
 **Query Parameters (if any)**
 
@@ -1221,7 +1228,7 @@ this is not required
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -1278,72 +1285,71 @@ this is not required
 
 **Success**
 {
-  "success": true,
-  "message": "User achievements retrieved successfully",
-  "data": [
-    {
-      "id": "34cf6c1e-03fb-49fe-a5c8-b5a71f21c6c4",
-      "achievement_name": "First Rental",
-      "achievement_description": "Complete your first power bank rental",
-      "criteria_type": "rental_count",
-      "criteria_value": 1,
-      "reward_type": "points",
-      "reward_value": 50,
-      "current_progress": 0,
-      "is_unlocked": false,
-      "points_awarded": null,
-      "unlocked_at": null,
-      "progress_percentage": 0
-    },
-    {
-      "id": "5f9f940d-ca31-43e1-868e-7b144c1e8fad",
-      "achievement_name": "Punctual User",
-      "achievement_description": "Return 5 power banks on time",
-      "criteria_type": "timely_return_count",
-      "criteria_value": 5,
-      "reward_type": "points",
-      "reward_value": 100,
-      "current_progress": 0,
-      "is_unlocked": false,
-      "points_awarded": null,
-      "unlocked_at": null,
-      "progress_percentage": 0
-    },
-    {
-      "id": "926d4b48-cd65-4752-b6b7-37098b199232",
-      "achievement_name": "Referral Champion",
-      "achievement_description": "Refer 3 friends to PowerBank",
-      "criteria_type": "referral_count",
-      "criteria_value": 3,
-      "reward_type": "points",
-      "reward_value": 300,
-      "current_progress": 0,
-      "is_unlocked": false,
-      "points_awarded": null,
-      "unlocked_at": null,
-      "progress_percentage": 0
-    },
-    {
-      "id": "263e133d-0590-464c-8363-4f418332f9bc",
-      "achievement_name": "Rental Master",
-      "achievement_description": "Complete 10 power bank rentals",
-      "criteria_type": "rental_count",
-      "criteria_value": 10,
-      "reward_type": "points",
-      "reward_value": 200,
-      "current_progress": 0,
-      "is_unlocked": false,
-      "points_awarded": null,
-      "unlocked_at": null,
-      "progress_percentage": 0
-    }
-  ]
+"success": true,
+"message": "User achievements retrieved successfully",
+"data": [
+{
+"id": "34cf6c1e-03fb-49fe-a5c8-b5a71f21c6c4",
+"achievement_name": "First Rental",
+"achievement_description": "Complete your first power bank rental",
+"criteria_type": "rental_count",
+"criteria_value": 1,
+"reward_type": "points",
+"reward_value": 50,
+"current_progress": 0,
+"is_unlocked": false,
+"points_awarded": null,
+"unlocked_at": null,
+"progress_percentage": 0
+},
+{
+"id": "5f9f940d-ca31-43e1-868e-7b144c1e8fad",
+"achievement_name": "Punctual User",
+"achievement_description": "Return 5 power banks on time",
+"criteria_type": "timely_return_count",
+"criteria_value": 5,
+"reward_type": "points",
+"reward_value": 100,
+"current_progress": 0,
+"is_unlocked": false,
+"points_awarded": null,
+"unlocked_at": null,
+"progress_percentage": 0
+},
+{
+"id": "926d4b48-cd65-4752-b6b7-37098b199232",
+"achievement_name": "Referral Champion",
+"achievement_description": "Refer 3 friends to PowerBank",
+"criteria_type": "referral_count",
+"criteria_value": 3,
+"reward_type": "points",
+"reward_value": 300,
+"current_progress": 0,
+"is_unlocked": false,
+"points_awarded": null,
+"unlocked_at": null,
+"progress_percentage": 0
+},
+{
+"id": "263e133d-0590-464c-8363-4f418332f9bc",
+"achievement_name": "Rental Master",
+"achievement_description": "Complete 10 power bank rentals",
+"criteria_type": "rental_count",
+"criteria_value": 10,
+"reward_type": "points",
+"reward_value": 200,
+"current_progress": 0,
+"is_unlocked": false,
+"points_awarded": null,
+"unlocked_at": null,
+"progress_percentage": 0
 }
-
+]
+}
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -1376,8 +1382,7 @@ GET
   "key": "category",
   "key": "include_me",
   "key": "limit",
-  "key": "period",
-  
+  "key": "period"
 }
 ```
 
@@ -1396,46 +1401,43 @@ this is not required
 
 **Success**
 {
-  "success": true,
-  "message": "Leaderboard retrieved successfully",
-  "data": {
-    "leaderboard": [
-      {
-        "rank": 1,
-        "username": "testuser1",
-        "profile_picture": null,
-        "total_rentals": 3,
-        "total_points_earned": 150,
-        "referrals_count": 1,
-        "timely_returns": 2,
-        "achievements_count": 1,
-        "last_updated": "2024-01-03T05:45:00+05:45"
-      },
-      {
-        "rank": 2,
-        "username": "testuser2",
-        "profile_picture": null,
-        "total_rentals": 1,
-        "total_points_earned": 100,
-        "referrals_count": 0,
-        "timely_returns": 1,
-        "achievements_count": 0,
-        "last_updated": "2024-01-02T05:45:00+05:45"
-      }
-    ],
-    "user_entry": null,
-    "category": "overall",
-    "period": "all_time",
-    "total_users": 2
-  }
+"success": true,
+"message": "Leaderboard retrieved successfully",
+"data": {
+"leaderboard": [
+{
+"rank": 1,
+"username": "testuser1",
+"profile_picture": null,
+"total_rentals": 3,
+"total_points_earned": 150,
+"referrals_count": 1,
+"timely_returns": 2,
+"achievements_count": 1,
+"last_updated": "2024-01-03T05:45:00+05:45"
+},
+{
+"rank": 2,
+"username": "testuser2",
+"profile_picture": null,
+"total_rentals": 1,
+"total_points_earned": 100,
+"referrals_count": 0,
+"timely_returns": 1,
+"achievements_count": 0,
+"last_updated": "2024-01-02T05:45:00+05:45"
 }
-
-
-
+],
+"user_entry": null,
+"category": "overall",
+"period": "all_time",
+"total_users": 2
+}
+}
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -1461,6 +1463,7 @@ GET
   "Content-Type": "application/json"
 }
 ````
+
 THIS IS NOT REQUIRED
 **Query Parameters (if any)**
 
@@ -1469,8 +1472,7 @@ THIS IS NOT REQUIRED
   "key": "category",
   "key": "include_me",
   "key": "limit",
-  "key": "period",
-  
+  "key": "period"
 }
 ```
 
@@ -1489,34 +1491,34 @@ this is not required
 
 **Success**
 {
-  "success": true,
-  "message": "Social statistics retrieved successfully",
-  "data": {
-    "total_users": 3,
-    "total_achievements": 4,
-    "unlocked_achievements": 1,
-    "user_rank": 0,
-    "user_achievements_unlocked": 0,
-    "user_achievements_total": 0,
-    "top_rental_user": {
-      "username": "testuser1",
-      "count": 3
-    },
-    "top_points_user": {
-      "username": "testuser1",
-      "count": 150
-    },
-    "top_referral_user": {
-      "username": "testuser1",
-      "count": 1
-    },
-    "recent_achievements": []
-  }
+"success": true,
+"message": "Social statistics retrieved successfully",
+"data": {
+"total_users": 3,
+"total_achievements": 4,
+"unlocked_achievements": 1,
+"user_rank": 0,
+"user_achievements_unlocked": 0,
+"user_achievements_total": 0,
+"top_rental_user": {
+"username": "testuser1",
+"count": 3
+},
+"top_points_user": {
+"username": "testuser1",
+"count": 150
+},
+"top_referral_user": {
+"username": "testuser1",
+"count": 1
+},
+"recent_achievements": []
+}
 }
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -1544,6 +1546,7 @@ GET
   "Content-Type": "application/json"
 }
 ````
+
 THIS IS NOT REQUIRED
 **Query Parameters (if any)**
 
@@ -1552,8 +1555,7 @@ THIS IS NOT REQUIRED
   "key": "category",
   "key": "include_me",
   "key": "limit",
-  "key": "period",
-  
+  "key": "period"
 }
 ```
 
@@ -1572,19 +1574,19 @@ this is not required
 
 **Success**
 {
-  "success": true,
-  "message": "About information retrieved successfully",
-  "data": {
-    "page_type": "about",
-    "title": "we are about it",
-    "content": "hello about",
-    "updated_at": "2025-09-18T15:07:27.258489+05:45"
-  }
+"success": true,
+"message": "About information retrieved successfully",
+"data": {
+"page_type": "about",
+"title": "we are about it",
+"content": "hello about",
+"updated_at": "2025-09-18T15:07:27.258489+05:45"
+}
 }
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -1611,6 +1613,7 @@ GET
   "Content-Type": "application/json"
 }
 ````
+
 THIS IS NOT REQUIRED
 **Query Parameters (if any)**
 
@@ -1619,8 +1622,7 @@ THIS IS NOT REQUIRED
   "key": "category",
   "key": "include_me",
   "key": "limit",
-  "key": "period",
-  
+  "key": "period"
 }
 ```
 
@@ -1639,31 +1641,31 @@ this is not required
 
 **Success**
 {
-  "success": true,
-  "message": "Active banners retrieved successfully",
-  "data": [
-    {
-      "id": "00000000-0000-0000-0000-000000000001",
-      "title": "Summer Sale",
-      "description": "Get up to 50% off on selected items!",
-      "image_url": "https://example.com/images/summer-sale.jpg",
-      "redirect_url": "https://example.com/sale",
-      "display_order": 1
-    },
-    {
-      "id": "00000000-0000-0000-0000-000000000002",
-      "title": "New Arrivals",
-      "description": "Check out the latest products in our store.",
-      "image_url": "https://example.com/images/new-arrivals.jpg",
-      "redirect_url": null,
-      "display_order": 2
-    }
-  ]
+"success": true,
+"message": "Active banners retrieved successfully",
+"data": [
+{
+"id": "00000000-0000-0000-0000-000000000001",
+"title": "Summer Sale",
+"description": "Get up to 50% off on selected items!",
+"image_url": "https://example.com/images/summer-sale.jpg",
+"redirect_url": "https://example.com/sale",
+"display_order": 1
+},
+{
+"id": "00000000-0000-0000-0000-000000000002",
+"title": "New Arrivals",
+"description": "Check out the latest products in our store.",
+"image_url": "https://example.com/images/new-arrivals.jpg",
+"redirect_url": null,
+"display_order": 2
+}
+]
 }
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -1672,7 +1674,7 @@ this is not required
   }
 }
 ------------------------------------------------------------
-     
+
 
 `/api/content/contact`
 
@@ -1690,6 +1692,7 @@ GET
   "Content-Type": "application/json"
 }
 ````
+
 THIS IS NOT REQUIRED
 **Query Parameters (if any)**
 
@@ -1698,8 +1701,7 @@ THIS IS NOT REQUIRED
   "key": "category",
   "key": "include_me",
   "key": "limit",
-  "key": "period",
-  
+  "key": "period"
 }
 ```
 
@@ -1718,39 +1720,39 @@ this is not required
 
 **Success**
 {
-  "success": true,
-  "message": "Contact information retrieved successfully",
-  "data": [
-    {
-      "info_type": "address",
-      "label": "Office Address",
-      "value": "Kathmandu, Nepal",
-      "description": "Main office location"
-    },
-    {
-      "info_type": "email",
-      "label": "Support Email",
-      "value": "support@chargeghar.com",
-      "description": "Email us for any queries"
-    },
-    {
-      "info_type": "phone",
-      "label": "Customer Support",
-      "value": "+977-9861234567",
-      "description": "Available 24/7 for support"
-    },
-    {
-      "info_type": "support_hours",
-      "label": "Support Hours",
-      "value": "24/7",
-      "description": "We're always here to help"
-    }
-  ]
+"success": true,
+"message": "Contact information retrieved successfully",
+"data": [
+{
+"info_type": "address",
+"label": "Office Address",
+"value": "Kathmandu, Nepal",
+"description": "Main office location"
+},
+{
+"info_type": "email",
+"label": "Support Email",
+"value": "support@chargeghar.com",
+"description": "Email us for any queries"
+},
+{
+"info_type": "phone",
+"label": "Customer Support",
+"value": "+977-9861234567",
+"description": "Available 24/7 for support"
+},
+{
+"info_type": "support_hours",
+"label": "Support Hours",
+"value": "24/7",
+"description": "We're always here to help"
+}
+]
 }
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -1777,13 +1779,12 @@ GET
   "Content-Type": "application/json"
 }
 ````
+
 **Query Parameters (if any)**
 
 ```json
 {
-  "key": "search",
-  
-  
+  "key": "search"
 }
 ```
 
@@ -1802,54 +1803,54 @@ this is not required
 
 **Success**
 {
-  "success": true,
-  "message": "FAQ content retrieved successfully",
-  "data": [
-    {
-      "category": "Account",
-      "faq_count": 1,
-      "faqs": [
-        {
-          "id": "550e8400-e29b-41d4-a716-446655440002",
-          "question": "How do I reset my password?",
-          "answer": "Go to the login page and click on 'Forgot Password' to reset it.",
-          "category": "Account",
-          "sort_order": 2
-        }
-      ]
-    },
-    {
-      "category": "General",
-      "faq_count": 1,
-      "faqs": [
-        {
-          "id": "550e8400-e29b-41d4-a716-446655440001",
-          "question": "What is this platform about?",
-          "answer": "This platform helps users manage their tasks and projects efficiently.",
-          "category": "General",
-          "sort_order": 1
-        }
-      ]
-    },
-    {
-      "category": "Support",
-      "faq_count": 1,
-      "faqs": [
-        {
-          "id": "550e8400-e29b-41d4-a716-446655440003",
-          "question": "Who can I contact for support?",
-          "answer": "You can contact our support team via the 'Help' section in your dashboard.",
-          "category": "Support",
-          "sort_order": 3
-        }
-      ]
-    }
-  ]
+"success": true,
+"message": "FAQ content retrieved successfully",
+"data": [
+{
+"category": "Account",
+"faq_count": 1,
+"faqs": [
+{
+"id": "550e8400-e29b-41d4-a716-446655440002",
+"question": "How do I reset my password?",
+"answer": "Go to the login page and click on 'Forgot Password' to reset it.",
+"category": "Account",
+"sort_order": 2
+}
+]
+},
+{
+"category": "General",
+"faq_count": 1,
+"faqs": [
+{
+"id": "550e8400-e29b-41d4-a716-446655440001",
+"question": "What is this platform about?",
+"answer": "This platform helps users manage their tasks and projects efficiently.",
+"category": "General",
+"sort_order": 1
+}
+]
+},
+{
+"category": "Support",
+"faq_count": 1,
+"faqs": [
+{
+"id": "550e8400-e29b-41d4-a716-446655440003",
+"question": "Who can I contact for support?",
+"answer": "You can contact our support team via the 'Help' section in your dashboard.",
+"category": "Support",
+"sort_order": 3
+}
+]
+}
+]
 }
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -1877,14 +1878,13 @@ GET
   "Content-Type": "application/json"
 }
 ````
+
 THIS IS NOT REQUIRED
 **Query Parameters (if any)**
 
 ```json
 {
-  "key": "search",
-  
-  
+  "key": "search"
 }
 ```
 
@@ -1904,22 +1904,19 @@ this is not required
 **Success**
 
 {
-  "success": true,
-  "message": "Privacy policy retrieved successfully",
-  "data": {
-    "page_type": "privacy-policy",
-    "title": "privacy policy",
-    "content": "fsfsdfsf",
-    "updated_at": "2025-09-18T15:15:55.473401+05:45"
-  }
+"success": true,
+"message": "Privacy policy retrieved successfully",
+"data": {
+"page_type": "privacy-policy",
+"title": "privacy policy",
+"content": "fsfsdfsf",
+"updated_at": "2025-09-18T15:15:55.473401+05:45"
 }
-          
-
-
+}
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -1953,8 +1950,6 @@ GET
 {
   "key": "content_type",
   "key": "query"
-  
-  
 }
 ```
 
@@ -1974,37 +1969,34 @@ this is not required
 **Success**
 
 {
-  "success": true,
-  "message": "Search results retrieved successfully",
-  "data": {
-    "query": "about",
-    "content_type": "all",
-    "results_count": 2,
-    "results": [
-      {
-        "content_type": "page",
-        "title": "we are about it",
-        "excerpt": "hello about",
-        "url": "/content/about",
-        "relevance_score": 12
-      },
-      {
-        "content_type": "faq",
-        "title": "What is this platform about?",
-        "excerpt": "This platform helps users manage their tasks and projects efficiently.",
-        "url": "/faq#550e8400-e29b-41d4-a716-446655440001",
-        "relevance_score": 10
-      }
-    ]
-  }
+"success": true,
+"message": "Search results retrieved successfully",
+"data": {
+"query": "about",
+"content_type": "all",
+"results_count": 2,
+"results": [
+{
+"content_type": "page",
+"title": "we are about it",
+"excerpt": "hello about",
+"url": "/content/about",
+"relevance_score": 12
+},
+{
+"content_type": "faq",
+"title": "What is this platform about?",
+"excerpt": "This platform helps users manage their tasks and projects efficiently.",
+"url": "/faq#550e8400-e29b-41d4-a716-446655440001",
+"relevance_score": 10
 }
-          
-
-
+]
+}
+}
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -2034,12 +2026,11 @@ GET
 **Query Parameters (if any)**
 
 THIS IS NOT REQUIRED
+
 ```json
 {
   "key": "content_type",
   "key": "query"
-  
-  
 }
 ```
 
@@ -2059,18 +2050,410 @@ this is not required
 **Success**
 
 {
-  "success": true,
-  "message": "Terms of service retrieved successfully",
-  "data": {
-    "page_type": "terms-of-service",
-    "title": "terrms of service",
-    "content": "terms of service",
-    "updated_at": "2025-09-18T15:15:20.920310+05:45"
+"success": true,
+"message": "Terms of service retrieved successfully",
+"data": {
+"page_type": "terms-of-service",
+"title": "terrms of service",
+"content": "terms of service",
+"updated_at": "2025-09-18T15:15:20.920310+05:45"
+}
+}
+
+**Error**
+
+````json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
   }
 }
-          
+------------------------------------------------------------------
+ ### NOTIFICATIONS ###
+
+`/api/notifications/`
+
+### **Description**
+Retrieve user notifications with optional filtering by type, channel, read status, and date range
 
 
+
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+
+**Query Parameters (if any)**
+
+THIS IS NOT REQUIRED
+
+```json
+{
+  "key": "channel",
+  "key": "is_read",
+  "key": "notification_type",
+  "key": "page",
+  "key": "pge_size"
+}
+```
+
+**Request Body (if any)**
+this is not required
+
+```json
+{
+  "field2": "coupon_code"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+
+{
+"notifications": [
+{
+"id": "8f4b5639-28de-4af2-bbd8-a418ff487ba4",
+"title": "",
+"notification_type": "promotion",
+"is_read": false,
+"created_at": "2025-09-18T13:24:14.760230+05:45",
+"time_ago": "2d"
+},
+{
+"id": "ccd7c96c-445a-44fe-ae0a-7a2103513b6e",
+"title": "",
+"notification_type": "promotion",
+"is_read": false,
+"created_at": "2025-09-18T13:21:42.923796+05:45",
+"time_ago": "2d"
+},
+{
+"id": "5a67aa18-5756-4c56-89e3-932b1f17a57e",
+"title": "",
+"notification_type": "promotion",
+"is_read": false,
+"created_at": "2025-09-18T13:21:25.937545+05:45",
+"time_ago": "2d"
+}
+],
+"pagination": {
+"count": 3,
+"page": 1,
+"page_size": 20,
+"total_pages": 1,
+"has_next": false,
+"has_previous": false
+}
+}
+
+**Error**
+
+````json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+--------------------------------------------------------
+
+`/api/notifications/{notification_id}`
+
+### **Description**
+Retrieve details of a specific notification
+
+
+
+
+
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "notification_id"
+}
+```
+
+**Request Body (if any)**
+this is not required
+
+```json
+{
+  "field2": "coupon_code"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+"id": "8f4b5639-28de-4af2-bbd8-a418ff487ba4",
+"title": "",
+"message": "",
+"notification_type": "promotion",
+"data": {
+"action": "view_points",
+"points": 50,
+"coupon_code": "WELCOME50",
+"coupon_name": "Welcome Bonus",
+"points_awarded": 50
+},
+"channel": "in_app",
+"is_read": false,
+"read_at": null,
+"created_at": "2025-09-18T13:24:14.760230+05:45",
+"time_ago": "2 days ago",
+"is_recent": false
+}
+
+**Error**
+
+````json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+
+------------------------------------------------------------------
+
+`/api/notifications/{notification_id}`
+
+### **Description**
+Mark a specific notification as read
+
+
+
+
+
+
+
+### **Request**
+PATCH
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "notification_id"
+}
+```
+
+**Request Body (if any)**
+
+```json
+{
+  "field2": "is_read"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+"id": "8f4b5639-28de-4af2-bbd8-a418ff487ba4",
+"title": "",
+"message": "",
+"notification_type": "promotion",
+"data": {
+"action": "view_points",
+"points": 50,
+"coupon_code": "WELCOME50",
+"coupon_name": "Welcome Bonus",
+"points_awarded": 50
+},
+"channel": "in_app",
+"is_read": true,
+"read_at": "2025-09-21T12:42:57.678786+05:45",
+"created_at": "2025-09-18T13:24:14.760230+05:45",
+"time_ago": "2 days ago",
+"is_recent": false
+}
+
+**Error**
+
+````json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+
+-------------------------------------------------------------------
+
+`/api/notifications/stats`
+
+### **Description**
+Retrieve notification statistics for the authenticated user
+
+
+
+
+
+
+
+
+### **Request**
+GET
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+
+**Query Parameters (if any)**
+this is not required
+
+```json
+{
+  "key": "notification_id"
+}
+```
+
+this is not required
+
+**Request Body (if any)**
+
+```json
+{
+  "field2": "is_read"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+"total_notifications": 3,
+"unread_count": 2,
+"read_count": 1,
+"notifications_today": 0,
+"notifications_this_week": 3,
+"notifications_this_month": 3,
+"rental_notifications": 0,
+"payment_notifications": 0,
+"promotion_notifications": 3,
+"system_notifications": 0,
+"achievement_notifications": 0,
+"in_app_notifications": 3,
+"push_notifications": 0,
+"sms_notifications": 0,
+"email_notifications": 0
+}
+
+**Error**
+
+````json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+--------------------------------------------------------------------
+
+`/api/notifications/mark-all-read/`
+
+### **Description**
+Mark all user notifications as read and return count of updated notifications
+
+### **Request**
+POST
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+
+**Query Parameters (if any)**
+this is not required
+
+```json
+{
+  "key": "notification_id"
+}
+```
+
+**Request Body (if any)**
+
+```json
+{
+  "field2": "total_notification",
+  "field2": "unread_count",
+  "field2": "read_count",
+  "field2": "notifications_today",
+  "field2": "notifications_this_week",
+  "field2": "notifications_this_month",
+  "field2": "rental_notifications",
+  "field2": "payment_notifications",
+  "field2": "promotion_notifications",
+  "field2": "system_notifications",
+  "field2": "achievement_notifications",
+  "field2": "in_app_notifications",
+  "field2": "push_notifications",
+  "field2": "sms_notifications",
+  "field2": "email_notifications"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "message": "All notifications marked as read",
+  "updated_count": 2
+}
 
 **Error**
 
@@ -2082,4 +2465,72 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
-------------------------------------------------------------------
+```----------------------------------------------------------------
+`/api/notifications/{notification_id}/`
+
+### **Description**
+Delete a specific notification
+
+
+
+### **Request**
+DELETE
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "notification_id"
+}
+```
+THIS IS NOT REQUIRED  
+**Request Body (if any)**
+
+```json
+{
+  "field2": "total_notification",
+  "field2": "unread_count",
+  "field2": "read_count",
+  "field2": "notifications_today",
+  "field2": "notifications_this_week",
+  "field2": "notifications_this_month",
+  "field2": "rental_notifications",
+  "field2": "payment_notifications",
+  "field2": "promotion_notifications",
+  "field2": "system_notifications",
+  "field2": "achievement_notifications",
+  "field2": "in_app_notifications",
+  "field2": "push_notifications",
+  "field2": "sms_notifications",
+  "field2": "email_notifications"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "message": "Notification deleted successfully"
+}
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+
+-------------------------------------------------------------
