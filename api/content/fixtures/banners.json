@@ -1,0 +1,34 @@
+[
+  {
+    "model": "content.banner",
+    "pk": "00000000-0000-0000-0000-000000000001",
+    "fields": {
+      "title": "Summer Sale",
+      "description": "Get up to 50% off on selected items!",
+      "image_url": "https://example.com/images/summer-sale.jpg",
+      "redirect_url": "https://example.com/sale",
+      "display_order": 1,
+      "is_active": true,
+      "valid_from": "2025-09-01T00:00:00Z",
+      "valid_until": "2025-09-30T23:59:59Z",
+      "created_at": "2025-09-01T00:00:00Z",
+      "updated_at": "2025-09-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "content.banner",
+    "pk": "00000000-0000-0000-0000-000000000002",
+    "fields": {
+      "title": "New Arrivals",
+      "description": "Check out the latest products in our store.",
+      "image_url": "https://example.com/images/new-arrivals.jpg",
+      "redirect_url": null,
+      "display_order": 2,
+      "is_active": true,
+      "valid_from": "2025-09-10T00:00:00Z",
+      "valid_until": "2025-12-31T23:59:59Z",
+      "created_at": "2025-09-10T00:00:00Z",
+      "updated_at": "2025-09-10T00:00:00Z"
+    }
+  }
+]

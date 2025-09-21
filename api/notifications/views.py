@@ -116,6 +116,35 @@ class NotificationListView(GenericAPIView):
             )
 
 
+@router.register(r"stats", name="notifications-stats")
+@extend_schema(
+    tags=["Notifications"],
+    summary="Notification Statistics",
+    description="Get user notification statistics"
+)
+class NotificationStatsView(GenericAPIView):
+    serializer_class = serializers.NotificationStatsSerializer
+    permission_classes = [IsAuthenticated]
+    
+    @extend_schema(
+        summary="Get Notification Stats",
+        description="Retrieve notification statistics for the authenticated user"
+    )
+    def get(self, request: Request) -> Response:
+        """Get notification statistics"""
+        try:
+            service = NotificationService()
+            stats = service.get_notification_stats(request.user)
+            serializer = self.get_serializer(stats)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to get notification stats: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
 @router.register(r"<str:notification_id>", name="notification-detail")
 @extend_schema(
     tags=["Notifications"],
