@@ -204,7 +204,7 @@ class NotificationDetailView(GenericAPIView):
             )
         ]
     )
-    def patch(self, request: Request, notification_id: str) -> Response:
+    def post(self, request: Request, notification_id: str) -> Response:
         """Mark notification as read"""
         try:
             service = NotificationService()
@@ -262,6 +262,7 @@ class NotificationDetailView(GenericAPIView):
 class NotificationMarkAllReadView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = serializers.NotificationStatsSerializer  # Dummy serializer to avoid schema error
+    # http_method_names = ['post']  # Explicitly allow POST method
     
     @extend_schema(
         summary="Mark All as Read",
