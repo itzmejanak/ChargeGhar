@@ -85,7 +85,7 @@ GET
 }
 ````
 
----
+----------------------------------------
 
 ### **Endpoint**
 
@@ -126,9 +126,6 @@ This is not required
   "field2": "payment_method_id"
 }
 ```
-
----
-
 ### **Response**
 
 **Success**
@@ -183,7 +180,7 @@ This is not required
 }
 ```
 
----
+-----------------------------------------
 
 `[METHOD] /api/payments/calculate-options`
 
@@ -266,7 +263,7 @@ This is not required
 }
 ```
 
----
+---------------------------------------------
 
 `/api/payments/wallet/topup-intent`
 
@@ -339,7 +336,7 @@ This is not required
 }
 ```
 
----
+---------------------------------------------
 
 `/api/payments/status{intent_id}`
 
@@ -631,6 +628,7 @@ This is not required
 ----------------------------------------------------------------------
 ## pending work: post for refunds and get for refunds.
 -------------------------------------------------------
+######          POINTS  #############
 `/api/referrals/my-code`
 
 ### **Description**
@@ -835,72 +833,8 @@ This is not required
 -------------------------------------------------------------------------
 
 
-`[METHOD] /api/referrals/validate`
-
-### **Description**
-Validate a referral code and return referrer information
 
 
-
-
-
-
-
-
-
-### **Request**
-POST
-
-**Headers**
-```json
-{
-  "Authorization": "Bearer <token>",   // If authentication is required
-  "Content-Type": "application/json"
-}
-````
-
-This is not required
-**Query Parameters (if any)**
-
-```json
-{
-  "key": "include_me",
-  "key": "limit"
-}
-```
-
-**Request Body (if any)**
-
-```json
-{
-  "field2": "code"
-}
-```
-
----
-
-### **Response**
-
-{
-"success": true,
-"message": "Referral code validated successfully",
-"data": {
-"valid": true,
-"referrer": "testuser1",
-"message": "Valid referral code from testuser1"
-}
-}
-
-**Error**
-
-````json
-{
-  "success": false,
-  "error": {
-    "code": "404",
-    "message": "Failed to get leaderboard :could not connect to server"
-  }
-}
 ------------------------------------------------------------------------
 
 `[METHOD] /api/referrals/my-referrals`
@@ -1057,18 +991,15 @@ This is not required
   }
 }
 ----------------------------------------------------------------------
+###             PROMOTIONS   ###
 
-`[METHOD] /api/promotions/coupons/activate`
+`/api/promotions/coupons/activate`
 
 ### **Description**
 Returns list of currently active and valid coupons
 
-
-
-
-
 ### **Request**
-POST
+GET
 
 **Headers**
 ```json
@@ -1148,15 +1079,10 @@ This is not required
   }
 }
 -------------------------------------------------------------------------
-`[METHOD] /api/promotions/coupons/apply`
+`/api/promotions/coupons/apply`
 
 ### **Description**
 Apply coupon code and receive points
-
-
-
-
-
 
 ### **Request**
 POST
@@ -1216,17 +1142,10 @@ this is not required
 }
 --------------------------------------------------------------------
 
-`[METHOD] /api/promotions/coupons/my`
+`/api/promotions/coupons/my`
 
 ### **Description**
 Returns user's coupon usage history
-
-
-
-
-
-
-
 
 ### **Request**
 GET
@@ -1312,4 +1231,855 @@ this is not required
 }
 
 ----------------------------------------------------------------------
+       ### SOCIALS  ###
+`/api/socials/achievements`
+
+### **Description**
+Retrieve all achievements for the authenticated user with progress information
+
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+
+**Query Parameters (if any)**
+this is not required
+
+```json
+{
+  "key": "end_date",
+  "key": "page",
+  "key": "page_size",
+  "key": "source",
+  "key": "start_date",
+  "key": "transaction_type"
+}
 ```
+
+**Request Body (if any)**
+this is not required
+
+```json
+{
+  "field2": "coupon_code"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "success": true,
+  "message": "User achievements retrieved successfully",
+  "data": [
+    {
+      "id": "34cf6c1e-03fb-49fe-a5c8-b5a71f21c6c4",
+      "achievement_name": "First Rental",
+      "achievement_description": "Complete your first power bank rental",
+      "criteria_type": "rental_count",
+      "criteria_value": 1,
+      "reward_type": "points",
+      "reward_value": 50,
+      "current_progress": 0,
+      "is_unlocked": false,
+      "points_awarded": null,
+      "unlocked_at": null,
+      "progress_percentage": 0
+    },
+    {
+      "id": "5f9f940d-ca31-43e1-868e-7b144c1e8fad",
+      "achievement_name": "Punctual User",
+      "achievement_description": "Return 5 power banks on time",
+      "criteria_type": "timely_return_count",
+      "criteria_value": 5,
+      "reward_type": "points",
+      "reward_value": 100,
+      "current_progress": 0,
+      "is_unlocked": false,
+      "points_awarded": null,
+      "unlocked_at": null,
+      "progress_percentage": 0
+    },
+    {
+      "id": "926d4b48-cd65-4752-b6b7-37098b199232",
+      "achievement_name": "Referral Champion",
+      "achievement_description": "Refer 3 friends to PowerBank",
+      "criteria_type": "referral_count",
+      "criteria_value": 3,
+      "reward_type": "points",
+      "reward_value": 300,
+      "current_progress": 0,
+      "is_unlocked": false,
+      "points_awarded": null,
+      "unlocked_at": null,
+      "progress_percentage": 0
+    },
+    {
+      "id": "263e133d-0590-464c-8363-4f418332f9bc",
+      "achievement_name": "Rental Master",
+      "achievement_description": "Complete 10 power bank rentals",
+      "criteria_type": "rental_count",
+      "criteria_value": 10,
+      "reward_type": "points",
+      "reward_value": 200,
+      "current_progress": 0,
+      "is_unlocked": false,
+      "points_awarded": null,
+      "unlocked_at": null,
+      "progress_percentage": 0
+    }
+  ]
+}
+
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+--------------------------------------------------------------------
+
+`/api/socials/leaderboard`
+
+### **Description**
+Retrieve leaderboard with filtering options
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "category",
+  "key": "include_me",
+  "key": "limit",
+  "key": "period",
+  
+}
+```
+
+**Request Body (if any)**
+this is not required
+
+```json
+{
+  "field2": "coupon_code"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "success": true,
+  "message": "Leaderboard retrieved successfully",
+  "data": {
+    "leaderboard": [
+      {
+        "rank": 1,
+        "username": "testuser1",
+        "profile_picture": null,
+        "total_rentals": 3,
+        "total_points_earned": 150,
+        "referrals_count": 1,
+        "timely_returns": 2,
+        "achievements_count": 1,
+        "last_updated": "2024-01-03T05:45:00+05:45"
+      },
+      {
+        "rank": 2,
+        "username": "testuser2",
+        "profile_picture": null,
+        "total_rentals": 1,
+        "total_points_earned": 100,
+        "referrals_count": 0,
+        "timely_returns": 1,
+        "achievements_count": 0,
+        "last_updated": "2024-01-02T05:45:00+05:45"
+      }
+    ],
+    "user_entry": null,
+    "category": "overall",
+    "period": "all_time",
+    "total_users": 2
+  }
+}
+
+
+
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+
+--------------------------------------------------------------------
+`/api/socials/stats`
+
+### **Description**
+Retrieve comprehensive social statistics for the user
+
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+THIS IS NOT REQUIRED
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "category",
+  "key": "include_me",
+  "key": "limit",
+  "key": "period",
+  
+}
+```
+
+**Request Body (if any)**
+this is not required
+
+```json
+{
+  "field2": "coupon_code"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "success": true,
+  "message": "Social statistics retrieved successfully",
+  "data": {
+    "total_users": 3,
+    "total_achievements": 4,
+    "unlocked_achievements": 1,
+    "user_rank": 0,
+    "user_achievements_unlocked": 0,
+    "user_achievements_total": 0,
+    "top_rental_user": {
+      "username": "testuser1",
+      "count": 3
+    },
+    "top_points_user": {
+      "username": "testuser1",
+      "count": 150
+    },
+    "top_referral_user": {
+      "username": "testuser1",
+      "count": 1
+    },
+    "recent_achievements": []
+  }
+}
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+-----------------------------------------------------------------------
+     ## CONTENT  ###
+
+`/api/content/about`
+
+### **Description**
+Retrieve about us information
+
+
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+THIS IS NOT REQUIRED
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "category",
+  "key": "include_me",
+  "key": "limit",
+  "key": "period",
+  
+}
+```
+
+**Request Body (if any)**
+this is not required
+
+```json
+{
+  "field2": "coupon_code"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "success": true,
+  "message": "About information retrieved successfully",
+  "data": {
+    "page_type": "about",
+    "title": "we are about it",
+    "content": "hello about",
+    "updated_at": "2025-09-18T15:07:27.258489+05:45"
+  }
+}
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+------------------------------------------------------------------------
+
+     ## CONTENT  ###
+
+`/api/content/banners`
+
+### **Description**
+Retrieve currently active promotional banners
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+THIS IS NOT REQUIRED
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "category",
+  "key": "include_me",
+  "key": "limit",
+  "key": "period",
+  
+}
+```
+
+**Request Body (if any)**
+this is not required
+
+```json
+{
+  "field2": "coupon_code"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "success": true,
+  "message": "Active banners retrieved successfully",
+  "data": [
+    {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "title": "Summer Sale",
+      "description": "Get up to 50% off on selected items!",
+      "image_url": "https://example.com/images/summer-sale.jpg",
+      "redirect_url": "https://example.com/sale",
+      "display_order": 1
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "title": "New Arrivals",
+      "description": "Check out the latest products in our store.",
+      "image_url": "https://example.com/images/new-arrivals.jpg",
+      "redirect_url": null,
+      "display_order": 2
+    }
+  ]
+}
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+------------------------------------------------------------
+     
+
+`/api/content/contact`
+
+### **Description**
+Retrieve all contact information
+
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+THIS IS NOT REQUIRED
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "category",
+  "key": "include_me",
+  "key": "limit",
+  "key": "period",
+  
+}
+```
+
+**Request Body (if any)**
+this is not required
+
+```json
+{
+  "field2": "coupon_code"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "success": true,
+  "message": "Contact information retrieved successfully",
+  "data": [
+    {
+      "info_type": "address",
+      "label": "Office Address",
+      "value": "Kathmandu, Nepal",
+      "description": "Main office location"
+    },
+    {
+      "info_type": "email",
+      "label": "Support Email",
+      "value": "support@chargeghar.com",
+      "description": "Email us for any queries"
+    },
+    {
+      "info_type": "phone",
+      "label": "Customer Support",
+      "value": "+977-9861234567",
+      "description": "Available 24/7 for support"
+    },
+    {
+      "info_type": "support_hours",
+      "label": "Support Hours",
+      "value": "24/7",
+      "description": "We're always here to help"
+    }
+  ]
+}
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+---------------------------------------------------------------------
+
+`/api/content/faq`
+
+### **Description**
+Retrieve frequently asked questions grouped by category
+
+
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "search",
+  
+  
+}
+```
+
+**Request Body (if any)**
+this is not required
+
+```json
+{
+  "field2": "coupon_code"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+  "success": true,
+  "message": "FAQ content retrieved successfully",
+  "data": [
+    {
+      "category": "Account",
+      "faq_count": 1,
+      "faqs": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440002",
+          "question": "How do I reset my password?",
+          "answer": "Go to the login page and click on 'Forgot Password' to reset it.",
+          "category": "Account",
+          "sort_order": 2
+        }
+      ]
+    },
+    {
+      "category": "General",
+      "faq_count": 1,
+      "faqs": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440001",
+          "question": "What is this platform about?",
+          "answer": "This platform helps users manage their tasks and projects efficiently.",
+          "category": "General",
+          "sort_order": 1
+        }
+      ]
+    },
+    {
+      "category": "Support",
+      "faq_count": 1,
+      "faqs": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440003",
+          "question": "Who can I contact for support?",
+          "answer": "You can contact our support team via the 'Help' section in your dashboard.",
+          "category": "Support",
+          "sort_order": 3
+        }
+      ]
+    }
+  ]
+}
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+---------------------------------------------------------------------
+
+`/api/content/privacy-policy`
+
+### **Description**
+Retrieve the current privacy policy content
+
+
+
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+THIS IS NOT REQUIRED
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "search",
+  
+  
+}
+```
+
+**Request Body (if any)**
+this is not required
+
+```json
+{
+  "field2": "coupon_code"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+
+{
+  "success": true,
+  "message": "Privacy policy retrieved successfully",
+  "data": {
+    "page_type": "privacy-policy",
+    "title": "privacy policy",
+    "content": "fsfsdfsf",
+    "updated_at": "2025-09-18T15:15:55.473401+05:45"
+  }
+}
+          
+
+
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+---------------------------------------------------------------
+
+
+`/api/content/search`
+
+### **Description**
+Search across all content types (pages, FAQs, contact info)
+
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "content_type",
+  "key": "query"
+  
+  
+}
+```
+
+**Request Body (if any)**
+this is not required
+
+```json
+{
+  "field2": "coupon_code"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+
+{
+  "success": true,
+  "message": "Search results retrieved successfully",
+  "data": {
+    "query": "about",
+    "content_type": "all",
+    "results_count": 2,
+    "results": [
+      {
+        "content_type": "page",
+        "title": "we are about it",
+        "excerpt": "hello about",
+        "url": "/content/about",
+        "relevance_score": 12
+      },
+      {
+        "content_type": "faq",
+        "title": "What is this platform about?",
+        "excerpt": "This platform helps users manage their tasks and projects efficiently.",
+        "url": "/faq#550e8400-e29b-41d4-a716-446655440001",
+        "relevance_score": 10
+      }
+    ]
+  }
+}
+          
+
+
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+----------------------------------------------------------------------
+`/api/content/terms-of-service`
+
+### **Description**
+Retrieve the current terms of service content
+
+
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+
+**Query Parameters (if any)**
+
+THIS IS NOT REQUIRED
+```json
+{
+  "key": "content_type",
+  "key": "query"
+  
+  
+}
+```
+
+**Request Body (if any)**
+this is not required
+
+```json
+{
+  "field2": "coupon_code"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+
+{
+  "success": true,
+  "message": "Terms of service retrieved successfully",
+  "data": {
+    "page_type": "terms-of-service",
+    "title": "terrms of service",
+    "content": "terms of service",
+    "updated_at": "2025-09-18T15:15:20.920310+05:45"
+  }
+}
+          
+
+
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+------------------------------------------------------------------
