@@ -32,10 +32,10 @@ def send_otp_task(self, identifier: str, otp: str, purpose: str):
                 template_name="otp_email.html",
                 context={"otp": otp, "purpose": purpose},
             )
-            self.logger.info(f"Email OTP for {purpose} successfully sent to: {identifier}")
-            if settings.DEBUG:
-                self.logger.debug(f"OTP for {identifier}: {otp}")
-            return {'status': 'sent', 'channel': 'email', 'identifier': identifier}
+            # self.logger.info(f"Email OTP for {purpose} successfully sent to: {identifier}")
+            # if settings.DEBUG:
+            #     self.logger.debug(f"OTP for {identifier}: {otp}")
+            # return {'status': 'sent', 'channel': 'email', 'identifier': identifier}
         except Exception as e:
             self.logger.error(f"Failed to send email OTP to {identifier}: {str(e)}", exc_info=True)
             raise
