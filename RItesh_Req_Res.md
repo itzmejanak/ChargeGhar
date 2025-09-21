@@ -2451,13 +2451,13 @@ this is not required
 
 **Success**
 {
-  "message": "All notifications marked as read",
-  "updated_count": 2
+"message": "All notifications marked as read",
+"updated_count": 2
 }
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -2490,6 +2490,7 @@ DELETE
   "key": "notification_id"
 }
 ```
+
 THIS IS NOT REQUIRED  
 **Request Body (if any)**
 
@@ -2519,12 +2520,12 @@ THIS IS NOT REQUIRED
 
 **Success**
 {
-  "message": "Notification deleted successfully"
+"message": "Notification deleted successfully"
 }
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -2565,6 +2566,7 @@ this is not required
   "key": "notification_id"
 }
 ```
+
 THIS IS NOT REQUIRED  
 **Request Body (if any)**
 
@@ -2594,32 +2596,32 @@ THIS IS NOT REQUIRED
 
 **Success**
 [
-  {
-    "id": "550e8400-e29b-41d4-a716-446655440002",
-    "name": "India",
-    "code": "IN",
-    "dial_code": "+91",
-    "flag_url": "https://flagcdn.com/w320/in.png"
-  },
-  {
-    "id": "550e8400-e29b-41d4-a716-446655440001",
-    "name": "Nepal",
-    "code": "NP",
-    "dial_code": "+977",
-    "flag_url": "https://flagcdn.com/w320/np.png"
-  },
-  {
-    "id": "550e8400-e29b-41d4-a716-446655440003",
-    "name": "United States",
-    "code": "US",
-    "dial_code": "+1",
-    "flag_url": "https://flagcdn.com/w320/us.png"
-  }
+{
+"id": "550e8400-e29b-41d4-a716-446655440002",
+"name": "India",
+"code": "IN",
+"dial_code": "+91",
+"flag_url": "https://flagcdn.com/w320/in.png"
+},
+{
+"id": "550e8400-e29b-41d4-a716-446655440001",
+"name": "Nepal",
+"code": "NP",
+"dial_code": "+977",
+"flag_url": "https://flagcdn.com/w320/np.png"
+},
+{
+"id": "550e8400-e29b-41d4-a716-446655440003",
+"name": "United States",
+"code": "US",
+"dial_code": "+1",
+"flag_url": "https://flagcdn.com/w320/us.png"
+}
 ]
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -2656,6 +2658,7 @@ this is not required
   "key": "notification_id"
 }
 ```
+
 THIS IS NOT REQUIRED  
 **Request Body (if any)**
 
@@ -2685,27 +2688,26 @@ THIS IS NOT REQUIRED
 
 **Success**
 {
-  "success": true,
-  "message": "Health status retrieved successfully",
-  "data": {
-    "status": "healthy",
-    "timestamp": "2025-09-21T13:34:45.660714+05:45",
-    "version": "1.0.0",
-    "uptime_seconds": 1758440985,
-    "database_status": "healthy",
-    "cache_status": "healthy",
-    "services": {
-      "redis": "healthy",
-      "celery": "healthy",
-      "storage": "healthy"
-    }
-  }
+"success": true,
+"message": "Health status retrieved successfully",
+"data": {
+"status": "healthy",
+"timestamp": "2025-09-21T13:34:45.660714+05:45",
+"version": "1.0.0",
+"uptime_seconds": 1758440985,
+"database_status": "healthy",
+"cache_status": "healthy",
+"services": {
+"redis": "healthy",
+"celery": "healthy",
+"storage": "healthy"
 }
-
+}
+}
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -2740,6 +2742,7 @@ GET
   "key": "current_version"
 }
 ```
+
 THIS IS NOT REQUIRED  
 **Request Body (if any)**
 
@@ -2769,20 +2772,428 @@ THIS IS NOT REQUIRED
 
 **Success**
 {
-  "success": true,
-  "message": "Version information retrieved successfully",
-  "data": {
-    "current_version": "1.2.3",
-    "minimum_version": "1.0.0",
-    "latest_version": "1.2.3",
-    "latest_version": "1.2.3",
-    "update_required": false,
-    "update_available": false,
-    "update_url": null,
-    "release_notes": ""
+"success": true,
+"message": "Version information retrieved successfully",
+"data": {
+"current_version": "1.2.3",
+"minimum_version": "1.0.0",
+"latest_version": "1.2.3",
+"latest_version": "1.2.3",
+"update_required": false,
+"update_available": false,
+"update_url": null,
+"release_notes": ""
+}
+}
+
+**Error**
+
+````json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
   }
 }
 
+----------------------------------------------------------------------
+ ### STATIONS  ###
+
+ `/api/stations/list`
+
+### **Description**
+Lists all active stations with real-time status (slots, location, online/offline)
+
+
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+
+**Query Parameters (if any)**
+this is not required
+
+```json
+{
+  "key": "current_version"
+}
+```
+
+THIS IS NOT REQUIRED  
+**Request Body (if any)**
+
+```json
+{
+  "field2": "total_notification",
+  "field2": "unread_count",
+  "field2": "read_count",
+  "field2": "notifications_today",
+  "field2": "notifications_this_week",
+  "field2": "notifications_this_month",
+  "field2": "rental_notifications",
+  "field2": "payment_notifications",
+  "field2": "promotion_notifications",
+  "field2": "system_notifications",
+  "field2": "achievement_notifications",
+  "field2": "in_app_notifications",
+  "field2": "push_notifications",
+  "field2": "sms_notifications",
+  "field2": "email_notifications"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+"count": 2,
+"next": false,
+"previous": false,
+"results": [
+{
+"id": "550e8400-e29b-41d4-a716-446655440001",
+"station_name": "Kathmandu Mall Station",
+"serial_number": "KTM001",
+"latitude": "27.717245",
+"longitude": "85.323960",
+"address": "Kathmandu Mall, New Baneshwor, Kathmandu",
+"landmark": "Near main entrance",
+"status": "ONLINE",
+"total_slots": 8,
+"available_slots": 2,
+"distance": null,
+"is_favorite": false,
+"primary_image": null,
+"last_heartbeat": "2024-01-01T17:45:00+05:45"
+},
+{
+"id": "550e8400-e29b-41d4-a716-446655440002",
+"station_name": "Pokhara Airport Station",
+"serial_number": "PKR001",
+"latitude": "28.200896",
+"longitude": "83.982056",
+"address": "Pokhara Regional International Airport, Pokhara",
+"landmark": "Terminal building, Level 1",
+"status": "ONLINE",
+"total_slots": 6,
+"available_slots": 2,
+"distance": null,
+"is_favorite": false,
+"primary_image": null,
+"last_heartbeat": "2024-01-01T17:45:00+05:45"
+}
+]
+}
+
+**Error**
+
+````json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+-------------------------------------------------------------
+
+`/api/stations/{sn}`
+
+### **Description**
+Returns detailed station data: location, slot availability, battery levels, and online status
+
+
+
+
+
+### **Request**
+GET
+
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "sn"
+}
+```
+
+THIS IS NOT REQUIRED  
+**Request Body (if any)**
+
+```json
+{
+  "field2": "total_notification",
+  "field2": "unread_count",
+  "field2": "read_count",
+  "field2": "notifications_today",
+  "field2": "notifications_this_week",
+  "field2": "notifications_this_month",
+  "field2": "rental_notifications",
+  "field2": "payment_notifications",
+  "field2": "promotion_notifications",
+  "field2": "system_notifications",
+  "field2": "achievement_notifications",
+  "field2": "in_app_notifications",
+  "field2": "push_notifications",
+  "field2": "sms_notifications",
+  "field2": "email_notifications"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+{
+"id": "550e8400-e29b-41d4-a716-446655440001",
+"station_name": "Kathmandu Mall Station",
+"serial_number": "KTM001",
+"imei": "123456789012345",
+"latitude": "27.717245",
+"longitude": "85.323960",
+"address": "Kathmandu Mall, New Baneshwor, Kathmandu",
+"landmark": "Near main entrance",
+"total_slots": 8,
+"status": "ONLINE",
+"is_maintenance": false,
+"hardware_info": {
+"model": "PT-8S",
+"version": "2.1",
+"manufacturer": "PowerTech"
+},
+"last_heartbeat": "2024-01-01T17:45:00+05:45",
+"created_at": "2024-01-01T05:45:00+05:45",
+"updated_at": "2024-01-01T05:45:00+05:45",
+"slots": [
+{
+"id": "550e8400-e29b-41d4-a716-446655440301",
+"slot_number": 1,
+"status": "AVAILABLE",
+"battery_level": 95,
+"last_updated": "2024-01-01T17:45:00+05:45",
+"current_rental": null
+},
+{
+"id": "550e8400-e29b-41d4-a716-446655440302",
+"slot_number": 2,
+"status": "AVAILABLE",
+"battery_level": 88,
+"last_updated": "2024-01-01T17:45:00+05:45",
+"current_rental": null
+},
+{
+"id": "550e8400-e29b-41d4-a716-446655440303",
+"slot_number": 3,
+"status": "OCCUPIED",
+"battery_level": 100,
+"last_updated": "2024-01-01T17:45:00+05:45",
+"current_rental": null
+}
+],
+"amenities": [
+{
+"amenity": {
+"id": "550e8400-e29b-41d4-a716-446655440101",
+"name": "WiFi",
+"icon": "wifi",
+"description": "Free WiFi available",
+"is_active": true
+},
+"is_available": true,
+"notes": "Mall WiFi network"
+},
+{
+"amenity": {
+"id": "550e8400-e29b-41d4-a716-446655440102",
+"name": "Parking",
+"icon": "parking",
+"description": "Parking space available",
+"is_active": true
+},
+"is_available": true,
+"notes": "Mall parking available"
+}
+],
+"media": [],
+"available_slots": 2,
+"occupied_slots": 1,
+"maintenance_slots": 0,
+"is_favorite": false,
+"distance": null,
+"average_rating": 4.5,
+"total_reviews": 0
+}
+
+**Error**
+
+````json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+
+---------------------------------------------------------------------
+
+
+`/api/stations/{sn}/favourite`
+
+### **Description**
+Add station to user's favorite list
+
+
+
+
+
+
+
+### **Request**
+POST
+**Headers**
+```json
+{
+  "Authorization": "Bearer <token>",   // If authentication is required
+  "Content-Type": "application/json"
+}
+````
+
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "sn"
+}
+```
+
+THIS IS NOT REQUIRED  
+**Request Body (if any)**
+
+```json
+{
+  "field2": "total_notification",
+  "field2": "unread_count",
+  "field2": "read_count",
+  "field2": "notifications_today",
+  "field2": "notifications_this_week",
+  "field2": "notifications_this_month",
+  "field2": "rental_notifications",
+  "field2": "payment_notifications",
+  "field2": "promotion_notifications",
+  "field2": "system_notifications",
+  "field2": "achievement_notifications",
+  "field2": "in_app_notifications",
+  "field2": "push_notifications",
+  "field2": "sms_notifications",
+  "field2": "email_notifications"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+
+{
+"message": "Station added to favorites",
+"created": true
+}
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+```
+
+---
+
+`/api/stations/favouriteS`
+
+### **Description**
+
+Returns all stations marked as favorites by the user
+
+### **Request**
+
+GET
+**Headers**
+
+```json
+{
+  "Authorization": "Bearer <token>", // If authentication is required
+  "Content-Type": "application/json"
+}
+```
+
+**Query Parameters (if any)**
+this is not required
+
+```json
+{
+  "key": "sn"
+}
+```
+
+THIS IS NOT REQUIRED  
+**Request Body (if any)**
+
+```json
+{
+  "field2": "total_notification",
+  "field2": "unread_count",
+  "field2": "read_count",
+  "field2": "notifications_today",
+  "field2": "notifications_this_week",
+  "field2": "notifications_this_month",
+  "field2": "rental_notifications",
+  "field2": "payment_notifications",
+  "field2": "promotion_notifications",
+  "field2": "system_notifications",
+  "field2": "achievement_notifications",
+  "field2": "in_app_notifications",
+  "field2": "push_notifications",
+  "field2": "sms_notifications",
+  "field2": "email_notifications"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+
+{
+"message": "Station added to favorites",
+"created": true
+}
 
 **Error**
 
@@ -2795,5 +3206,149 @@ THIS IS NOT REQUIRED
   }
 }
 
-----------------------------------------------------------------------
 
+---------------------------------------------------------------
+`/api/stations/{sn}/favourite`
+
+### **Description**
+
+Remove station from user's favorite list
+
+
+### **Request**
+
+DELETE
+
+**Headers**
+
+```json
+{
+  "Authorization": "Bearer <token>", // If authentication is required
+  "Content-Type": "application/json"
+}
+```
+
+**Query Parameters (if any)**
+
+
+```json
+{
+  "key": "sn"
+}
+```
+
+THIS IS NOT REQUIRED  
+**Request Body (if any)**
+
+```json
+{
+  "field2": "total_notification",
+  "field2": "unread_count",
+  "field2": "read_count",
+  "field2": "notifications_today",
+  "field2": "notifications_this_week",
+  "field2": "notifications_this_month",
+  "field2": "rental_notifications",
+  "field2": "payment_notifications",
+  "field2": "promotion_notifications",
+  "field2": "system_notifications",
+  "field2": "achievement_notifications",
+  "field2": "in_app_notifications",
+  "field2": "push_notifications",
+  "field2": "sms_notifications",
+  "field2": "email_notifications"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+
+{
+  "message": "Station removed from favorites",
+  "removed": true
+}
+
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+--------------------------------------
+
+
+```
+
+`/api/stations/{sn}/report-issue`
+
+### **Description**
+
+Report station issues (offline, damaged, dirty, location wrong, etc.)
+
+### **Request**
+
+POST
+**Headers**
+
+```json
+{
+  "Authorization": "Bearer <token>", // If authentication is required
+  "Content-Type": "application/json"
+}
+```
+
+**Query Parameters (if any)**
+
+```json
+{
+  "key": "sn"
+}
+```
+
+**Request Body (if any)**
+
+```json
+{
+  "field2": "issue_type",
+  "field2": "description",
+  "field2": "images"
+}
+```
+
+---
+
+### **Response**
+
+**Success**
+
+{
+"id": "57b8d730-06ed-4502-a0e3-a61090d74da1",
+"station": "550e8400-e29b-41d4-a716-446655440001",
+"issue_type": "OFFLINE",
+"description": "station not working",
+"images": "",
+"priority": "MEDIUM",
+"status": "REPORTED",
+"reported_at": "2025-09-21T14:22:39.764847+05:45",
+"resolved_at": null,
+"reported_by_name": "ritesh"
+}
+**Error**
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "404",
+    "message": "Failed to get leaderboard :could not connect to server"
+  }
+}
+
+------------------------------------------------------------------------
