@@ -18,33 +18,30 @@ GET
 "Content-Type": "application/json"
 }
 
-````
-### This is not required ###
-
 **Query Parameters (if any)**
-
-```json
-{
-  "key": "value"
-}
-````
 
 ### This is not required
 
-```json
+json
 {
-  "field1": "string",
-  "field2": "number|boolean|object"
+"key": "value"
 }
-```
 
----
+**Request Body (if any)**
+
+### This is not required
+
+json
+{
+"field1": "string",
+"field2": "number|boolean|object"
+}
 
 ### **Response**
 
 **Success**
 
-````json
+``````json
 {
   "payment_methods": [
     {
@@ -74,8 +71,7 @@ GET
 }
 
 **Error**
-
-```json
+json
 {
   "success": false,
   "error": {
@@ -83,9 +79,8 @@ GET
     "message": "Failed to get payment methods:could not connect to servere"
   }
 }
-````
 
----
+------------------------------------------------------------------------------------------------------------------------------------------------
 
 ### **Endpoint**
 
@@ -96,19 +91,19 @@ GET
 Retrieve all active rental packages with pricing
 
 ### **Request**
-
 GET
+
 **Headers**
 
-```json
+json
 {
   "Authorization": "Bearer <token>", // If authentication is required
   "Content-Type": "application/json"
 }
 ```
 
-This is not required
 **Query Parameters (if any)**
+This is not required
 
 ```json
 {
@@ -116,19 +111,17 @@ This is not required
 }
 ```
 
-This is not required
-
 **Request Body (if any)**
+This is not required
 
 ```json
 {
   "field1": "amount",
   "field2": "payment_method_id"
 }
-```
+
 
 ### **Response**
-
 **Success**
 {
 "packages": [
@@ -179,11 +172,13 @@ This is not required
     "message": "Failed to get payment packages:could not connect to server"
   }
 }
-```
+
 
 ---
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
-`[METHOD] /api/payments/calculate-options`
+`/api/payments/calculate-options`
 
 ### **Description**
 
@@ -202,8 +197,9 @@ POST
 }
 ```
 
-This is not required
 **Query Parameters (if any)**
+
+This is not required
 
 ```json
 {
@@ -221,8 +217,6 @@ This is not required
   "field2": "amount"
 }
 ```
-
----
 
 ### **Response**
 
@@ -263,8 +257,11 @@ This is not required
   }
 }
 ```
+------------------------------------------------------------------------------------------------------------------------------------------------
 
 ---
+### **Endpoint**
+
 
 `/api/payments/wallet/topup-intent`
 
@@ -273,7 +270,6 @@ This is not required
 Create a payment intent for wallet top-up with selected payment method
 
 ### **Request**
-
 POST
 
 **Headers**
@@ -286,8 +282,8 @@ This is required
 }
 ```
 
-This is not required
 **Query Parameters (if any)**
+This is not required
 
 ```json
 {
@@ -302,11 +298,9 @@ This is not required
   "field1": "amount",
   "field2": "payment_method_id"
 }
-```
 
----
 
-### **Response**
+###     **Response**
 
 **Success**
 {
@@ -338,6 +332,8 @@ This is not required
 ```
 
 ---
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
 `/api/payments/status{intent_id}`
 
@@ -346,7 +342,6 @@ This is not required
 Retrieve the current status of a payment intent
 
 ### **Request**
-
 POST
 
 **Headers**
@@ -358,9 +353,8 @@ POST
 }
 ```
 
-This is not required
-
 **Query Parameters (if any)**
+This is not required
 
 ```json
 {
@@ -402,17 +396,16 @@ This is not required
   }
 }
 
------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
 `/api/payments/cancel{intent_id}`
 
 ### **Description**
-
 Cancel a pending payment intent
 
 
 ### **Request**
-
 POST
 
 **Headers**
@@ -424,9 +417,8 @@ POST
 }
 ```
 
-This is not required
-
 **Query Parameters (if any)**
+This is not required
 
 ```json
 {
@@ -464,7 +456,9 @@ This is not required
   }
 }
 
-------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
+
 `/api/payments/verify-topup`
 
 ### **Description**
@@ -474,7 +468,6 @@ Verify payment with gateway and update wallet balance
 
 
 ### **Request**
-
 POST
 
 **Headers**
@@ -486,9 +479,8 @@ POST
 }
 ```
 
-This is not required
-
 **Query Parameters (if any)**
+This is not required
 
 ```json
 {
@@ -500,7 +492,8 @@ This is not required
 
 ```json
 {
-  "field2": "intent_id"
+  "field1": "intent_id",
+  "field2": "gateway_reference",
 }
 ```
 
@@ -526,14 +519,14 @@ This is not required
     "message": "Failed to get payment methods:could not connect to server"
   }
 }
------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
+
 `/api/payments/transactions`
 
 ### **Description**
 
 Retrieve user's transaction history with optional filtering
-
-
 
 
 ### **Request**
@@ -548,9 +541,8 @@ GET
 }
 ```
 
-This is not required
-
 **Query Parameters (if any)**
+This is not required
 
 ```json
 {
@@ -562,12 +554,12 @@ This is not required
 
 ```json
 {
-  "field2": "end_date",
+  "field1": "end_date",
   "field2": "page",
-  "field2": "page_size",
-  "field2": "start_date",
-  "field2": "status",
-  "field2": "transaction_type"
+  "field3": "page_size",
+  "field4": "start_date",
+  "field5": "status",
+  "field6": "transaction_type"
 }
 ```
 
@@ -577,20 +569,7 @@ This is not required
 
 {
   "transactions": [
-    {
-      "id": "9a9a78b8-6137-4201-bbf1-c1fe35f5764e",
-      "transaction_id": "TXN20250919070238U3UFF7",
-      "transaction_type": "TOPUP",
-      "amount": "100.00",
-      "currency": "NPR",
-      "status": "SUCCESS",
-      "payment_method_type": "GATEWAY",
-      "gateway_reference": "string",
-      "created_at": "2025-09-19T12:47:38.468835+05:45",
-      "formatted_amount": "NPR 100.00",
-      "payment_method_name": "eSewa",
-      "rental_code": "N/A"
-    },
+
     {
       "id": "0542c883-3a42-41a3-afbb-2e1c51dea26d",
       "transaction_id": "TXN20250917101132U6VYXC",
@@ -626,10 +605,11 @@ This is not required
     "message": "Failed to get payment methods:could not connect to server"
   }
 }
-----------------------------------------------------------------------
-## pending work: post for refunds and get for refunds.
--------------------------------------------------------
-######          POINTS  #############
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+######          POINTS      #######
+### **Endpoint**
+
 `/api/referrals/my-code`
 
 ### **Description**
@@ -646,10 +626,10 @@ GET
   "Authorization": "Bearer <token>",   // If authentication is required
   "Content-Type": "application/json"
 }
-`````
+``````
 
-This is not required
 **Query Parameters (if any)**
+This is not required
 
 ```json
 {
@@ -661,14 +641,12 @@ This is not required
 **Request Body (if any)**
 This is not required
 
-```json
+`````json
 {
   "field2": "amount",
   "field1": "payment_method_id"
 }
-```
 
----
 
 ### **Response**
 
@@ -693,7 +671,9 @@ This is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
--------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
+
 `/api/referrals/validate`
 
 ### **Description**
@@ -711,10 +691,10 @@ GET
   "Authorization": "Bearer <token>",   // If authentication is required
   "Content-Type": "application/json"
 }
-````
+`````
 
-This is not required
 **Query Parameters (if any)**
+This is not required
 
 ```json
 {
@@ -727,7 +707,7 @@ This is not required
 
 ```json
 {
-  "field2": "code"
+  "field1": "code"
 }
 ```
 
@@ -746,6 +726,8 @@ This is not required
 }
 
 ---
+
+### **Endpoint**
 
 `/api/points/leaderboard`
 
@@ -778,14 +760,11 @@ GET
 **Request Body (if any)**
 This is not required
 
-```json
+`````json
 {
   "field2": "amount",
   "field1": "payment_method_id"
 }
-```
-
----
 
 ### **Response**
 
@@ -837,21 +816,17 @@ This is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
--------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
-
-
-
-------------------------------------------------------------------------
-
-`[METHOD] /api/referrals/my-referrals`
+/api/referrals/my-referrals`
 
 ### **Description**
 
 Retrieve referrals sent by the authenticated user
 
 ### **Request**
-POST
+GET
 
 **Headers**
 ```json
@@ -859,7 +834,7 @@ POST
   "Authorization": "Bearer <token>",   // If authentication is required
   "Content-Type": "application/json"
 }
-````
+`````
 
 **Query Parameters (if any)**
 
@@ -911,8 +886,10 @@ This is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
---------------------------------------------------------------
-`[METHOD] /api/points/history`
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
+
+`/api/points/history`
 
 ### **Description**
 
@@ -997,8 +974,10 @@ This is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
-----------------------------------------------------------------------
-###             PROMOTIONS   ###
+------------------------------------------------------------------------------------------------------------------------------------------------
+###             PROMOTIONS       ###
+
+### **Endpoint**
 
 `/api/promotions/coupons/activate`
 
@@ -1085,7 +1064,9 @@ This is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
--------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
+
 `/api/promotions/coupons/apply`
 
 ### **Description**
@@ -1120,7 +1101,7 @@ this is not required
 
 ```json
 {
-  "field2": "coupon_code"
+  "field1": "coupon_code"
 }
 ```
 
@@ -1147,7 +1128,8 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
---------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
 `/api/promotions/coupons/my`
 
@@ -1156,6 +1138,7 @@ Returns user's coupon usage history
 
 ### **Request**
 GET
+
 **Headers**
 ```json
 {
@@ -1183,7 +1166,7 @@ this is not required
 
 ```json
 {
-  "field2": "coupon_code"
+  "field1": "coupon_code"
 }
 ```
 
@@ -1237,8 +1220,11 @@ this is not required
   }
 }
 
-----------------------------------------------------------------------
-       ### SOCIALS  ###
+------------------------------------------------------------------------------------------------------------------------------------------------
+       ###            SOCIALS                            ###
+
+### **Endpoint**
+
 `/api/socials/achievements`
 
 ### **Description**
@@ -1357,7 +1343,8 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
---------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
 `/api/socials/leaderboard`
 
@@ -1446,7 +1433,9 @@ this is not required
   }
 }
 
---------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
+
 `/api/socials/stats`
 
 ### **Description**
@@ -1464,8 +1453,8 @@ GET
 }
 ````
 
-THIS IS NOT REQUIRED
 **Query Parameters (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -1477,7 +1466,7 @@ THIS IS NOT REQUIRED
 ```
 
 **Request Body (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -1526,18 +1515,19 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
------------------------------------------------------------------------
-     ## CONTENT  ###
+------------------------------------------------------------------------------------------------------------------------------------------------
+     ##                    CONTENT                                  ###
+
+### **Endpoint**
 
 `/api/content/about`
 
 ### **Description**
 Retrieve about us information
 
-
-
 ### **Request**
 GET
+
 
 **Headers**
 ```json
@@ -1547,8 +1537,8 @@ GET
 }
 ````
 
-THIS IS NOT REQUIRED
 **Query Parameters (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -1560,7 +1550,7 @@ THIS IS NOT REQUIRED
 ```
 
 **Request Body (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -1594,9 +1584,9 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
-------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
 
-     ## CONTENT  ###
+### **Endpoint**
 
 `/api/content/banners`
 
@@ -1614,8 +1604,8 @@ GET
 }
 ````
 
-THIS IS NOT REQUIRED
 **Query Parameters (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -1627,7 +1617,7 @@ THIS IS NOT REQUIRED
 ```
 
 **Request Body (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -1673,8 +1663,9 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
-------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
 
+### **Endpoint**
 
 `/api/content/contact`
 
@@ -1693,8 +1684,8 @@ GET
 }
 ````
 
-THIS IS NOT REQUIRED
 **Query Parameters (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -1706,7 +1697,7 @@ THIS IS NOT REQUIRED
 ```
 
 **Request Body (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -1760,14 +1751,13 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
 `/api/content/faq`
 
 ### **Description**
 Retrieve frequently asked questions grouped by category
-
-
 
 ### **Request**
 GET
@@ -1789,7 +1779,7 @@ GET
 ```
 
 **Request Body (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -1858,15 +1848,13 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
 `/api/content/privacy-policy`
 
 ### **Description**
 Retrieve the current privacy policy content
-
-
-
 
 ### **Request**
 GET
@@ -1879,8 +1867,8 @@ GET
 }
 ````
 
-THIS IS NOT REQUIRED
 **Query Parameters (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -1889,7 +1877,7 @@ THIS IS NOT REQUIRED
 ```
 
 **Request Body (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -1924,8 +1912,9 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
----------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
 
+### **Endpoint**
 
 `/api/content/search`
 
@@ -1954,7 +1943,7 @@ GET
 ```
 
 **Request Body (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2004,13 +1993,13 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
-----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
+
 `/api/content/terms-of-service`
 
 ### **Description**
 Retrieve the current terms of service content
-
-
 
 ### **Request**
 GET
@@ -2024,7 +2013,6 @@ GET
 ````
 
 **Query Parameters (if any)**
-
 THIS IS NOT REQUIRED
 
 ```json
@@ -2035,7 +2023,7 @@ THIS IS NOT REQUIRED
 ```
 
 **Request Body (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2070,8 +2058,10 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
-------------------------------------------------------------------
- ### NOTIFICATIONS ###
+------------------------------------------------------------------------------------------------------------------------------------------------
+ ###              NOTIFICATIONS                                      ###
+
+### **Endpoint**
 
 `/api/notifications/`
 
@@ -2093,7 +2083,6 @@ GET
 ````
 
 **Query Parameters (if any)**
-
 THIS IS NOT REQUIRED
 
 ```json
@@ -2107,7 +2096,7 @@ THIS IS NOT REQUIRED
 ```
 
 **Request Body (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2168,17 +2157,13 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
---------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
 `/api/notifications/{notification_id}`
 
 ### **Description**
 Retrieve details of a specific notification
-
-
-
-
-
 
 ### **Request**
 GET
@@ -2200,7 +2185,7 @@ GET
 ```
 
 **Request Body (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2244,18 +2229,13 @@ this is not required
   }
 }
 
-------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
 `/api/notifications/{notification_id}`
 
 ### **Description**
 Mark a specific notification as read
-
-
-
-
-
-
 
 ### **Request**
 PATCH
@@ -2320,22 +2300,18 @@ PATCH
   }
 }
 
--------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
 `/api/notifications/stats`
 
 ### **Description**
 Retrieve notification statistics for the authenticated user
 
-
-
-
-
-
-
-
 ### **Request**
 GET
+
+
 **Headers**
 ```json
 {
@@ -2345,7 +2321,7 @@ GET
 ````
 
 **Query Parameters (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2353,9 +2329,8 @@ this is not required
 }
 ```
 
-this is not required
-
 **Request Body (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2396,7 +2371,8 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
---------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
 `/api/notifications/mark-all-read/`
 
@@ -2415,7 +2391,7 @@ POST
 ````
 
 **Query Parameters (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2427,21 +2403,21 @@ this is not required
 
 ```json
 {
-  "field2": "total_notification",
+  "field1": "total_notification",
   "field2": "unread_count",
-  "field2": "read_count",
-  "field2": "notifications_today",
-  "field2": "notifications_this_week",
-  "field2": "notifications_this_month",
-  "field2": "rental_notifications",
-  "field2": "payment_notifications",
-  "field2": "promotion_notifications",
-  "field2": "system_notifications",
-  "field2": "achievement_notifications",
-  "field2": "in_app_notifications",
-  "field2": "push_notifications",
-  "field2": "sms_notifications",
-  "field2": "email_notifications"
+  "field3": "read_count",
+  "field4": "notifications_today",
+  "field5": "notifications_this_week",
+  "field6": "notifications_this_month",
+  "field7": "rental_notifications",
+  "field8": "payment_notifications",
+  "field9": "promotion_notifications",
+  "field10": "system_notifications",
+  "field11": "achievement_notifications",
+  "field12": "in_app_notifications",
+  "field13": "push_notifications",
+  "field14": "sms_notifications",
+  "field15": "email_notifications"
 }
 ```
 
@@ -2465,16 +2441,18 @@ this is not required
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
-```----------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
+
 `/api/notifications/{notification_id}/`
 
 ### **Description**
 Delete a specific notification
 
-
-
 ### **Request**
 DELETE
+
+
 **Headers**
 ```json
 {
@@ -2491,8 +2469,8 @@ DELETE
 }
 ```
 
-THIS IS NOT REQUIRED  
 **Request Body (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2534,10 +2512,11 @@ THIS IS NOT REQUIRED
   }
 }
 
--------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
 
  ###   APP ###
 
+### **Endpoint**
 
  `/api/app/countries`
 
@@ -2559,7 +2538,7 @@ GET
 ````
 
 **Query Parameters (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2567,8 +2546,8 @@ this is not required
 }
 ```
 
-THIS IS NOT REQUIRED  
 **Request Body (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2629,15 +2608,13 @@ THIS IS NOT REQUIRED
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
----------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
+
 `/api/app/health`
 
 ### **Description**
 Check the health status of the application and its services
-
-
-
-
 
 ### **Request**
 GET
@@ -2651,7 +2628,7 @@ GET
 ````
 
 **Query Parameters (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2659,8 +2636,8 @@ this is not required
 }
 ```
 
-THIS IS NOT REQUIRED  
 **Request Body (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2716,7 +2693,8 @@ THIS IS NOT REQUIRED
   }
 }
 
---------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
 `/api/app/version`
 
@@ -2743,8 +2721,8 @@ GET
 }
 ```
 
-THIS IS NOT REQUIRED  
 **Request Body (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2797,15 +2775,15 @@ THIS IS NOT REQUIRED
   }
 }
 
-----------------------------------------------------------------------
- ### STATIONS  ###
+------------------------------------------------------------------------------------------------------------------------------------------------
+                        ### STATIONS  ###
+
+### **Endpoint**
 
  `/api/stations/list`
 
 ### **Description**
 Lists all active stations with real-time status (slots, location, online/offline)
-
-
 
 ### **Request**
 GET
@@ -2819,7 +2797,7 @@ GET
 ````
 
 **Query Parameters (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2827,8 +2805,8 @@ this is not required
 }
 ```
 
-THIS IS NOT REQUIRED  
 **Request Body (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -2905,16 +2883,13 @@ THIS IS NOT REQUIRED
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
--------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
 `/api/stations/{sn}`
 
 ### **Description**
 Returns detailed station data: location, slot availability, battery levels, and online status
-
-
-
-
 
 ### **Request**
 GET
@@ -2935,8 +2910,8 @@ GET
 }
 ```
 
-THIS IS NOT REQUIRED  
 **Request Body (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -3054,22 +3029,19 @@ THIS IS NOT REQUIRED
   }
 }
 
----------------------------------------------------------------------
-
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
 
 `/api/stations/{sn}/favourite`
 
 ### **Description**
 Add station to user's favorite list
 
-
-
-
-
-
-
 ### **Request**
 POST
+
+
+
 **Headers**
 ```json
 {
@@ -3086,8 +3058,8 @@ POST
 }
 ```
 
-THIS IS NOT REQUIRED  
 **Request Body (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -3134,7 +3106,9 @@ THIS IS NOT REQUIRED
 
 ---
 
-`/api/stations/favouriteS`
+### **Endpoint**
+
+`/api/stations/favouriteS` //facing error here
 
 ### **Description**
 
@@ -3153,7 +3127,7 @@ GET
 ```
 
 **Query Parameters (if any)**
-this is not required
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -3161,8 +3135,8 @@ this is not required
 }
 ```
 
-THIS IS NOT REQUIRED  
 **Request Body (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -3197,7 +3171,7 @@ THIS IS NOT REQUIRED
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -3207,16 +3181,16 @@ THIS IS NOT REQUIRED
 }
 
 
----------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+### **Endpoint**
+
 `/api/stations/{sn}/favourite`
 
 ### **Description**
-
 Remove station from user's favorite list
 
 
 ### **Request**
-
 DELETE
 
 **Headers**
@@ -3226,10 +3200,9 @@ DELETE
   "Authorization": "Bearer <token>", // If authentication is required
   "Content-Type": "application/json"
 }
-```
+````
 
 **Query Parameters (if any)**
-
 
 ```json
 {
@@ -3237,8 +3210,8 @@ DELETE
 }
 ```
 
-THIS IS NOT REQUIRED  
 **Request Body (if any)**
+THIS IS NOT REQUIRED
 
 ```json
 {
@@ -3267,13 +3240,13 @@ THIS IS NOT REQUIRED
 **Success**
 
 {
-  "message": "Station removed from favorites",
-  "removed": true
+"message": "Station removed from favorites",
+"removed": true
 }
 
 **Error**
 
-```json
+````json
 {
   "success": false,
   "error": {
@@ -3281,10 +3254,11 @@ THIS IS NOT REQUIRED
     "message": "Failed to get leaderboard :could not connect to server"
   }
 }
---------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-```
+### **Endpoint**
+
 
 `/api/stations/{sn}/report-issue`
 
@@ -3295,6 +3269,7 @@ Report station issues (offline, damaged, dirty, location wrong, etc.)
 ### **Request**
 
 POST
+
 **Headers**
 
 ```json
@@ -3302,7 +3277,7 @@ POST
   "Authorization": "Bearer <token>", // If authentication is required
   "Content-Type": "application/json"
 }
-```
+````
 
 **Query Parameters (if any)**
 
@@ -3351,4 +3326,7 @@ POST
   }
 }
 
-------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+```
