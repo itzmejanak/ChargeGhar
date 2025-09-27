@@ -44,6 +44,7 @@ docker-compose exec api python manage.py migrate
 
 git branch --show-current
 git branch -a
+git diff --stat HEAD origin/rohan
 git pull origin rohan
 git push origin main
 
