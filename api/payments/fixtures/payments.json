@@ -30,13 +30,13 @@
     }
   },
   {
-    "model": "payments.wallet",
-    "pk": "550e8400-e29b-41d4-a716-446655440401",
+    "model": "payments.paymentmethod",
+    "pk": "550e8400-e29b-41d4-a716-446655440303",
     "fields": {
-      "user": 2,
-      "balance": "500.00",
-      "currency": "NPR",
+      "name": "Stripe",
+      "gateway": "stripe",
       "is_active": true,
+<<<<<<< HEAD
       "created_at": "2024-01-01T00:00:00Z",
       "updated_at": "2024-01-01T00:00:00Z"
     }
@@ -60,7 +60,7 @@
       "user": 2,
       "payment_method": "550e8400-e29b-41d4-a716-446655440301",
       "related_rental": null,
-      "transaction_id": "TXN001",
+      "transaction_id": "TXN202509190000001ABCDE",
       "transaction_type": "TOPUP",
       "amount": "500.00",
       "currency": "NPR",
@@ -79,7 +79,7 @@
       "user": 3,
       "payment_method": "550e8400-e29b-41d4-a716-446655440302",
       "related_rental": null,
-      "transaction_id": "TXN002",
+      "transaction_id": "TXN202509190000002ABCDE",
       "transaction_type": "TOPUP",
       "amount": "250.00",
       "currency": "NPR",
@@ -87,6 +87,12 @@
       "payment_method_type": "GATEWAY",
       "gateway_reference": "esewa_ref_001",
       "gateway_response": {"status": "success", "reference": "esewa_ref_001"},
+=======
+      "configuration": {"public_key": "STRIPE_TEST_KEY", "secret_key": "STRIPE_TEST_KEY"},
+      "min_amount": "10.00",
+      "max_amount": "100.00",
+      "supported_currencies": ["GBP"],
+>>>>>>> 90e07927558a6e7d801d4eec7b5d3da92493091d
       "created_at": "2024-01-01T00:00:00Z",
       "updated_at": "2024-01-01T00:00:00Z"
     }

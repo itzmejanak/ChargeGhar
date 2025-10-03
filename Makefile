@@ -27,10 +27,10 @@ migrate:
 	uv run manage.py migrate
 
 collectstatic:
-	uv run collectstatic --no-input
+	uv run manage.py collectstatic --no-input
 
 createsuperuser:
-	uv run createsuperuser --email "" --username admin
+	uv run manage.py createsuperuser --email "" --username admin
 
 # Tests, linters & formatters
 format:

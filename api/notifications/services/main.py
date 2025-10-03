@@ -124,11 +124,18 @@ class NotificationService(CRUDService):
                 except Exception as e:
                     self.log_error(f"Failed to send SMS: {str(e)}")
             
-            # Send email if enabled (future implementation)
+            # Send email if enabled
             if rule.send_email and user.email:
                 try:
-                    # TODO: Implement email service
-                    self.log_info(f"Email notification would be sent to: {user.email}")
+                    from api.notifications.services import EmailService
+                    email_service = EmailService()
+                    email_service.send_email(
+                        subject=title,
+                        recipient_list=[user.email],
+                        template_name="generic_notification_email.html",
+                        context={'title': title, 'message': message},
+                    )
+                    self.log_info(f"Email notification sent to: {user.email}")
                 except Exception as e:
                     self.log_error(f"Failed to send email: {str(e)}")
             
@@ -205,58 +212,6 @@ class NotificationService(CRUDService):
             # Time-based counts
             now = timezone.now()
             today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            week_start = (now - timezone.timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
-            month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            
-            # Basic counts
-            total_count = notifications.count()
-            unread_count = notifications.filter(is_read=False).count()
-            read_count = notifications.filter(is_read=True).count()
-            
-            # Time-based notifications
-            notifications_today = notifications.filter(created_at__gte=today_start).count()
-            notifications_this_week = notifications.filter(created_at__gte=week_start).count()
-            notifications_this_month = notifications.filter(created_at__gte=month_start).count()
-            
-            # Type breakdown
-            type_counts = notifications.values('notification_type').annotate(
-                count=Count('id')
-            )
-            type_stats = {
-                'rental_notifications': 0,
-                'payment_notifications': 0,
-                'promotion_notifications': 0,
-                'system_notifications': 0,
-                'achievement_notifications': 0
-            }
-            for item in type_counts:
-                key = f"{item['notification_type']}_notifications"
-                type_stats[key] = item['count']
-            
-            # Channel breakdown
-            channel_counts = notifications.values('channel').annotate(
-                count=Count('id')
-            )
-            channel_stats = {
-                'in_app_notifications': 0,
-                'push_notifications': 0,
-                'sms_notifications': 0,
-                'email_notifications': 0
-            }
-            for item in channel_counts:
-                key = f"{item['channel']}_notifications"
-                channel_stats[key] = item['count']
-            
-            return {
-                'total_notifications': total_count,
-                'unread_count': unread_count,
-                'read_count': read_count,
-                'notifications_today': notifications_today,
-                'notifications_this_week': notifications_this_week,
-                'notifications_this_month': notifications_this_month,
-                **type_stats,
-                **channel_stats
-            }
             week_start = today_start - timezone.timedelta(days=7)
             month_start = today_start - timezone.timedelta(days=30)
             

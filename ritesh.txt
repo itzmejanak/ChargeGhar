@@ -1,0 +1,4 @@
+logger.debug(f"Serialized data: {serializer.data}")
+
+
+accordint to the given files first verify the contact infor model and create fixture into /fixtures/contact.json for my contact info model and make sure when user try to fetch content/contact make sure to successsfully give data to user look from foundation with 0 misktakes and be in my project boundaries

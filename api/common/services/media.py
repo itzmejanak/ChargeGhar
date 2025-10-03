@@ -53,6 +53,8 @@ class MediaUploadService(CRUDService):
     def get_user_uploads(self, user, file_type: Optional[str] = None) -> models.QuerySet:
         """Get user's uploaded files"""
         try:
+            if not user.is_authenticated:
+                return self.model.objects.none()
             queryset = self.model.objects.filter(uploaded_by=user)
             
             if file_type:

@@ -1,20 +1,23 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from rest_framework.generics import GenericAPIView, ListAPIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.db.models import Q
+
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
+from rest_framework import status
+from rest_framework.generics import GenericAPIView, ListAPIView
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from django.db.models import Q
 
-from api.common.routers import CustomViewRouter
 from api.common import serializers
 from api.common.models import Country, MediaUpload
-from api.common.services import CountryService, AppDataService
+from api.common.routers import CustomViewRouter
+from api.common.services import AppDataService, CountryService
 from api.common.services.media import MediaUploadService
+from api.notifications.tasks import send_otp_task
+
 
 if TYPE_CHECKING:
     from rest_framework.request import Request

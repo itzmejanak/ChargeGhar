@@ -13,6 +13,9 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+
 from api.common.routers import CustomViewRouter
 from api.common.services.base import ServiceException
 from api.users import serializers
@@ -97,6 +100,7 @@ class OTPVerifyView(GenericAPIView):
 
 
 @router.register(r"auth/register", name="auth-register")
+@method_decorator(csrf_exempt, name='dispatch')
 @extend_schema(
     tags=["Authentication"],
     summary="User Registration",

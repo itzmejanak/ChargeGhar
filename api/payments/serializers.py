@@ -235,7 +235,7 @@ class RefundSerializer(serializers.ModelSerializer):
 
 class RefundRequestSerializer(serializers.Serializer):
     """Serializer for refund requests"""
-    transaction_id = serializers.UUIDField()
+    transaction_id = serializers.CharField(max_length=255)
     reason = serializers.CharField(max_length=255)
     
     def validate_reason(self, value):

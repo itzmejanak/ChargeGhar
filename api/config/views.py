@@ -58,16 +58,15 @@ class AppVersionCheckView(GenericAPIView):
         return Response(response_serializer.data)
 
 
-@router.register(r"app/health/?", name="app-health")
 class AppHealthView(GenericAPIView):
     """Get app health status"""
     serializer_class = serializers.AppHealthSerializer
-    permission_classes = [HealthCheckPermission]
+    permission_classes = [AllowAny]
     
     @extend_schema(
         tags=["App"],
-        summary="Health Check",
-        description="Verifies backend availability and uptime. Returns 200 OK if operational.",
+        summary="Get app health status",
+        description="Check the health status of the application and its services",
     )
     def get(self, request: Request) -> Response:
         service = AppHealthService()

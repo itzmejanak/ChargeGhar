@@ -4,42 +4,68 @@ from celery import shared_task
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from typing import Dict, Any, List
+from django.conf import settings
 
 from api.common.tasks.base import BaseTask, NotificationTask
 from api.notifications.models import Notification, SMS_FCMLog
+from api.notifications.services.email import EmailService
 
 User = get_user_model()
 
 
 @shared_task(base=NotificationTask, bind=True)
 def send_otp_task(self, identifier: str, otp: str, purpose: str):
-    """Send OTP via SMS or Email"""
-    try:
-        from api.notifications.services import SMSService
+    """Send OTP via SMS or Email with enhanced logging and error handling."""
+    self.logger.info(f"Initiating OTP task for {identifier} with purpose: {purpose}")
+
+    if '@' in identifier:
+        # Send email OTP
+        if not all([settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD]):
+            self.logger.critical("Email service is not configured. EMAIL_HOST_USER and EMAIL_HOST_PASSWORD must be set.")
+            raise Exception("Email service is not configured.")
         
-        if '@' in identifier:
-            # Send email OTP (implement email service)
-            self.logger.info(f"Email OTP would be sent to: {identifier}")
-            # TODO: Implement email service
-            return {'status': 'email_not_implemented', 'identifier': identifier}
-        else:
-            # Send SMS OTP
+        try:
+            email_service = EmailService()
+            email_service.send_email(
+                subject=f"Your ChargeGhar {purpose.replace('_', ' ').title()} Code",
+                recipient_list=[identifier],
+                template_name="otp_email.html",
+                context={"otp": otp, "purpose": purpose},
+            )
+            # self.logger.info(f"Email OTP for {purpose} successfully sent to: {identifier}")
+            # if settings.DEBUG:
+            #     self.logger.debug(f"OTP for {identifier}: {otp}")
+            # return {'status': 'sent', 'channel': 'email', 'identifier': identifier}
+        except Exception as e:
+            self.logger.error(f"Failed to send email OTP to {identifier}: {str(e)}", exc_info=True)
+            raise
+
+    else:
+        # Send SMS OTP
+        if not settings.SPARROW_SMS_TOKEN:
+            self.logger.critical("SMS service is not configured. SPARROW_SMS_TOKEN must be set.")
+            raise Exception("SMS service is not configured.")
+            
+        try:
+            from api.notifications.services import SMSService
             sms_service = SMSService()
-            message = f"Your OTP is: {otp}. Valid for 5 minutes. Do not share with anyone."
+            message = f"Your ChargeGhar code is: {otp}. Valid for 5 mins. Do not share."
             
             result = sms_service.send_sms(identifier, message)
             
-            self.logger.info(f"OTP SMS sent to: {identifier}, response: {result}")
+            self.logger.info(f"OTP SMS for {purpose} sent to: {identifier}, response: {result}")
+            if settings.DEBUG:
+                self.logger.debug(f"OTP for {identifier}: {otp}")
             return {
                 'status': 'sent',
+                'channel': 'sms',
                 'identifier': identifier,
                 'purpose': purpose,
                 'result': result
             }
-        
-    except Exception as e:
-        self.logger.error(f"Failed to send OTP: {str(e)}")
-        raise
+        except Exception as e:
+            self.logger.error(f"Failed to send SMS OTP to {identifier}: {str(e)}", exc_info=True)
+            raise
 
 
 @shared_task(base=NotificationTask, bind=True)

@@ -178,13 +178,44 @@ class PointsService(CRUDService):
             transactions = PointsTransaction.objects.filter(user=user)
             
             # Points breakdown by source
-            source_breakdown = {}
-            for source, _ in PointsTransaction.SOURCE_CHOICES:
-                earned = transactions.filter(
-                    transaction_type='EARNED',
-                    source=source
-                ).aggregate(total=Sum('points'))['total'] or 0
-                source_breakdown[f"points_from_{source.lower()}"] = earned
+            points_from_signup = transactions.filter(
+                transaction_type='EARNED',
+                source='SIGNUP'
+            ).aggregate(total=Sum('points'))['total'] or 0
+            
+            points_from_referrals = transactions.filter(
+                transaction_type='EARNED',
+                source__in=['REFERRAL_INVITER', 'REFERRAL_INVITEE']
+            ).aggregate(total=Sum('points'))['total'] or 0
+            
+            points_from_topups = transactions.filter(
+                transaction_type='EARNED',
+                source='TOPUP'
+            ).aggregate(total=Sum('points'))['total'] or 0
+            
+            points_from_rentals = transactions.filter(
+                transaction_type='EARNED',
+                source='RENTAL'
+            ).aggregate(total=Sum('points'))['total'] or 0
+            
+            points_from_timely_returns = transactions.filter(
+                transaction_type='EARNED',
+                source='TIMELY_RETURN'
+            ).aggregate(total=Sum('points'))['total'] or 0
+            
+            points_from_coupons = transactions.filter(
+                transaction_type='EARNED',
+                source='COUPON'
+            ).aggregate(total=Sum('points'))['total'] or 0
+            
+            source_breakdown = {
+                'points_from_signup': points_from_signup,
+                'points_from_referrals': points_from_referrals,
+                'points_from_topups': points_from_topups,
+                'points_from_rentals': points_from_rentals,
+                'points_from_timely_returns': points_from_timely_returns,
+                'points_from_coupons': points_from_coupons
+            }
             
             # Recent activity
             recent_transactions = transactions.order_by('-created_at')[:10]
