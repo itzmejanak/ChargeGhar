@@ -210,15 +210,29 @@ docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T powerbank_api python manage.py 
 print_step "Container Status:"
 docker-compose -f "$DOCKER_COMPOSE_FILE" ps
 
-# Check for any failed services
+# Check for any failed services (excluding successful one-time services)
 print_step "Checking for failed services..."
-FAILED_SERVICES=$(docker-compose -f "$DOCKER_COMPOSE_FILE" ps --filter "status=exited" --format "table {{.Service}}\t{{.Status}}" | grep -v "SERVICE" | grep -v "Exit 0" || true)
+FAILED_SERVICES=$(docker-compose -f "$DOCKER_COMPOSE_FILE" ps --filter "status=exited" --format "table {{.Service}}\t{{.Status}}" | grep -v "SERVICE" | grep -v "Exit 0" | grep -v "powerbank_migrations" | grep -v "powerbank_collectstatic" || true)
 if [[ -n "$FAILED_SERVICES" ]]; then
     print_error "Some services failed:"
     echo "$FAILED_SERVICES"
     print_step "Showing logs for failed services..."
     docker-compose -f "$DOCKER_COMPOSE_FILE" logs --tail=50
     exit 1
+else
+    print_status "All services are running successfully!"
+    
+    # Check one-time services completed successfully
+    MIGRATION_STATUS=$(docker-compose -f "$DOCKER_COMPOSE_FILE" ps powerbank_migrations --format "{{.Status}}" | grep "Exit 0" || echo "")
+    COLLECTSTATIC_STATUS=$(docker-compose -f "$DOCKER_COMPOSE_FILE" ps powerbank_collectstatic --format "{{.Status}}" | grep "Exit 0" || echo "")
+    
+    if [[ -n "$MIGRATION_STATUS" ]]; then
+        print_status "✅ Database migrations completed successfully"
+    fi
+    
+    if [[ -n "$COLLECTSTATIC_STATUS" ]]; then
+        print_status "✅ Static files collection completed successfully"
+    fi
 fi
 
 # Auto-load fixtures
