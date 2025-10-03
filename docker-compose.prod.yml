@@ -27,18 +27,20 @@ services:
       powerbank_db:
         condition: service_healthy
       powerbank_redis:
-        condition: service_started
+        condition: service_healthy
       powerbank_rabbitmq:
-        condition: service_started
+        condition: service_healthy
       powerbank_migrations:
+        condition: service_completed_successfully
+      powerbank_collectstatic:
         condition: service_completed_successfully
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/api/app/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 60s
+      retries: 5
+      start_period: 120s
     deploy:
       resources:
         limits:
@@ -75,9 +77,10 @@ services:
       - powerbank_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -97,8 +100,9 @@ services:
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 30s
-      timeout: 30s
-      retries: 3
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     deploy:
       resources:
         limits:
@@ -127,36 +131,24 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
-    command: sh -c "sleep 10 && python manage.py migrate"
+    command: sh -c "sleep 15 && python manage.py migrate"
     depends_on:
       powerbank_db:
         condition: service_healthy
-      powerbank_redis:
-        condition: service_healthy
     restart: "no"
-    environment:
-      - POSTGRES_HOST=powerbank_db
-      - REDIS_HOST=powerbank_redis
-      - RABBITMQ_HOST=powerbank_rabbitmq
 
   powerbank_collectstatic:
     <<: *common
     build:
       context: .
       dockerfile: Dockerfile.prod
-    command: sh -c "sleep 10 && python manage.py collectstatic --noinput"
+    command: sh -c "sleep 15 && python manage.py collectstatic --noinput"
     depends_on:
       powerbank_db:
-        condition: service_healthy
-      powerbank_redis:
         condition: service_healthy
     volumes:
       - static_volume:/application/staticfiles
     restart: "no"
-    environment:
-      - POSTGRES_HOST=powerbank_db
-      - REDIS_HOST=powerbank_redis
-      - RABBITMQ_HOST=powerbank_rabbitmq
 
 networks:
   powerbank_main:

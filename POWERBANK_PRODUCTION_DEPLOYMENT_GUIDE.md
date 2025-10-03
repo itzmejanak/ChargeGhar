@@ -60,7 +60,7 @@ chmod +x deploy-server-setup.sh
 # 1. Download deployment scripts
 curl -O https://raw.githubusercontent.com/itzmejanak/ChargeGhar/main/deploy-production-final.sh
 curl -O https://raw.githubusercontent.com/itzmejanak/ChargeGhar/main/load-fixtures.sh
-chmod +x deploy-production-final.sh
+chmod +x deploy-production.sh
 chmod +x load-fixtures.sh
 
 # 2. Deploy the application (this handles everything automatically)

@@ -139,6 +139,8 @@ sed -i 's/ENVIRONMENT=local/ENVIRONMENT=production/' .env
 sed -i 's/DJANGO_DEBUG=true/DJANGO_DEBUG=false/' .env
 sed -i 's/CELERY_TASK_ALWAYS_EAGER=true/CELERY_TASK_ALWAYS_EAGER=false/' .env
 sed -i 's/CELERY_TASK_EAGER_PROPAGATES=true/CELERY_TASK_EAGER_PROPAGATES=false/' .env
+# Update service names to match production docker-compose
+sed -i 's/POSTGRES_HOST=pgbouncer/POSTGRES_HOST=powerbank_db/' .env
 sed -i 's/POSTGRES_HOST=db/POSTGRES_HOST=powerbank_db/' .env
 sed -i 's/REDIS_HOST=redis/REDIS_HOST=powerbank_redis/' .env
 sed -i 's/RABBITMQ_HOST=rabbitmq/RABBITMQ_HOST=powerbank_rabbitmq/' .env
@@ -185,7 +187,20 @@ print_status "Services started"
 
 # Wait for services to be ready
 print_step "Waiting for services to initialize..."
-sleep 60
+sleep 30
+
+# Check migration status
+print_step "Checking migration status..."
+if docker-compose -f "$DOCKER_COMPOSE_FILE" ps powerbank_migrations | grep -q "Exit 0"; then
+    print_status "Migrations completed successfully"
+elif docker-compose -f "$DOCKER_COMPOSE_FILE" ps powerbank_migrations | grep -q "Exit"; then
+    print_error "Migrations failed! Checking logs..."
+    docker-compose -f "$DOCKER_COMPOSE_FILE" logs powerbank_migrations
+    exit 1
+else
+    print_step "Migrations still running, waiting..."
+    sleep 30
+fi
 
 # Ensure static files are collected
 print_step "Collecting static files..."
@@ -194,6 +209,17 @@ docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T powerbank_api python manage.py 
 # Show container status
 print_step "Container Status:"
 docker-compose -f "$DOCKER_COMPOSE_FILE" ps
+
+# Check for any failed services
+print_step "Checking for failed services..."
+FAILED_SERVICES=$(docker-compose -f "$DOCKER_COMPOSE_FILE" ps --filter "status=exited" --format "table {{.Service}}\t{{.Status}}" | grep -v "SERVICE" | grep -v "Exit 0" || true)
+if [[ -n "$FAILED_SERVICES" ]]; then
+    print_error "Some services failed:"
+    echo "$FAILED_SERVICES"
+    print_step "Showing logs for failed services..."
+    docker-compose -f "$DOCKER_COMPOSE_FILE" logs --tail=50
+    exit 1
+fi
 
 # Auto-load fixtures
 print_step "Loading fixtures..."
