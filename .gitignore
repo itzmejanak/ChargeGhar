@@ -157,3 +157,6 @@ nginx.conf
 setup-ssl.sh
 update-env-domains.sh
 DOMAIN_SETUP_GUIDE.md
+
+
+smpt_config.txt

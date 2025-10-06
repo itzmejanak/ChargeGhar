@@ -100,7 +100,7 @@ services:
     build: .
     command: make migrate
     depends_on:
-      - db
+      - pgbouncer
     volumes:
       - .:/application
 
@@ -109,7 +109,7 @@ services:
     build: .
     command: make collectstatic
     depends_on:
-      - db
+      - pgbouncer
     volumes:
       - .:/application
 

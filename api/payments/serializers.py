@@ -308,3 +308,11 @@ class UserTransactionHistorySerializer(serializers.Serializer):
             raise serializers.ValidationError("start_date cannot be after end_date")
         
         return attrs
+
+class RefundActionSerializer(serializers.Serializer):
+    """Serializer for refund action (approve/reject)"""
+    refund_id = serializers.UUIDField(required=True)
+
+class RefundRejectSerializer(RefundActionSerializer):
+    """Serializer for refund rejection"""
+    rejection_reason = serializers.CharField(required=True, min_length=5)

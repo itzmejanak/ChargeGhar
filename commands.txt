@@ -27,7 +27,7 @@ docker-compose run --rm migrations python manage.py shell -c "from api.stations.
 docker-compose run --rm migrations python manage.py 
 shell -c "from api.stations.models import *; print('Amenities:', [a.name for a in StationAmenity.objects.all()]); print('Slots:', StationSlot.objects.count()); print('PowerBanks:', PowerBank.objects.count())"
 
-docker compose run --rm migrations python manage.py loaddata api/notifications/fixtures/notifications.json
+docker-compose run --rm migrations python manage.py loaddata api/notifications/fixtures/notifications.json
 
 docker-compose exec api python manage.py makemigrations points
 docker-compose exec api python manage.py check --deploy
@@ -36,4 +36,85 @@ docker-compose exec api uv sync
 
 docker-compose uv run manage.py loaddata api/notifications/fixtures/notifications.json
 
-docker compose exec api python manage.py migrate
+docker-compose exec api python manage.py migrate
+
+
+
+# Git Related Commands 
+
+git branch --show-current
+git branch -a
+git diff --stat HEAD origin/rohan
+git pull origin rohan
+git push origin main
+
+
+
+
+
+
+
+cd /opt/powerbank
+
+# Stash local changes and pull latest
+git stash
+git pull origin main
+
+# The script will now work perfectly
+chmod +x deploy-production.sh
+./deploy-production.sh
+
+
+
+
+
+
+netstat -tlnp | grep :8010
+docker ps --filter "publish=8010"
+
+docker stop <container_id>
+docker rm <container_id>
+
+eg:
+docker stop powerbank_local-powerbank_api-1
+docker rm powerbank_local-powerbank_api-1
+
+
+
+
+# Stop all containers except iotdemo ones
+docker ps -q | grep -v "$(docker ps -qf name=iotdemo-app-prod)" | grep -v "$(docker ps -qf name=iotdemo-redis-prod)" | xargs -r docker stop
+
+# Remove all stopped containers
+docker ps -a -q | grep -v "$(docker ps -qf name=iotdemo-app-prod)" | grep -v "$(docker ps -qf name=iotdemo-redis-prod)" | xargs -r docker rm
+
+
+docker image prune -a
+docker ps
+docker images
+
+
+cd /opt/powerbank
+
+# Stash local changes and pull latest
+git stash
+git pull origin main
+
+# The script will now work perfectly
+chmod +x deploy-production.sh
+./deploy-production.sh
+
+
+
+
+
+🔧 To Check if Fixtures Loaded:
+# Check if data exists in database
+docker-compose -f docker-compose.prod.yml exec powerbank_api python manage.py shell -c "
+from django.contrib.auth import get_user_model
+User = get_user_model()
+print(f'Users: {User.objects.count()}')
+
+from api.stations.models import Station
+print(f'Stations: {Station.objects.count()}')
+"

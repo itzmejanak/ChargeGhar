@@ -64,7 +64,12 @@ if USE_SILK:
     urlpatterns.append(path("silk/", include("silk.urls")))
 
 if not USE_S3_FOR_STATIC:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    # Force serving static files even in production mode for development
+    from django.views.static import serve
+    from django.urls import re_path
+    urlpatterns += [
+        re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
+    ]
 
 if not USE_S3_FOR_MEDIA:
     logger.warning("S3 is disabled, serving media files locally. Consider using S3.")

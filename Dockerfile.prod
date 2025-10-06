@@ -1,6 +1,12 @@
 # Stage 1: Builder
 FROM python:3.12 as builder
 
+# Install system dependencies needed for building Python packages
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
@@ -26,8 +32,19 @@ FROM python:3.12-slim
 
 WORKDIR /application
 
+# Install system dependencies including PostgreSQL client libraries
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
 # Create the non-root user
 RUN useradd --create-home --shell /bin/bash appuser
+
+# Copy uv from the builder stage
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 # Copy the virtual environment from the builder stage
 COPY --from=builder /application/.venv ./.venv
@@ -35,8 +52,8 @@ COPY --from=builder /application/.venv ./.venv
 # Copy the application code from the builder stage
 COPY --from=builder --chown=appuser:appuser /application .
 
-# Set the PATH to use the virtual environment
-ENV PATH="/application/.venv/bin:$PATH"
+# Set the PATH to use the virtual environment and include uv
+ENV PATH="/application/.venv/bin:/bin:$PATH"
 
 # Switch to the non-root user
 USER appuser

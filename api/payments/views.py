@@ -608,3 +608,198 @@ class StripeWebhookView(GenericAPIView):
                 {'error': f'Webhook processing failed: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+@router.register(r"admin/refunds", name="admin-refunds")
+@extend_schema(
+    tags=["Admin", "Payments"],
+    summary="Admin Refund Management",
+    description="Admin endpoints for managing refund requests"
+)
+class AdminRefundRequestsView(GenericAPIView):
+    serializer_class = serializers.RefundSerializer
+    permission_classes = [IsStaffPermission]
+    
+    @extend_schema(
+        summary="Get Pending Refund Requests",
+        description="Retrieve all pending refund requests for admin review",
+        parameters=[
+            OpenApiParameter(
+                name="page",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Page number for pagination",
+                required=False
+            ),
+            OpenApiParameter(
+                name="page_size",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Number of items per page (default: 20)",
+                required=False
+            )
+        ]
+    )
+    def get(self, request: Request) -> Response:
+        """Get pending refund requests for admin review"""
+        try:
+            service = RefundService()
+            
+            page = int(request.query_params.get('page', 1))
+            page_size = int(request.query_params.get('page_size', 20))
+            
+            result = service.get_pending_refunds(page, page_size)
+            
+            serializer = self.get_serializer(result['results'], many=True)
+            
+            return Response({
+                'refunds': serializer.data,
+                'pagination': {
+                    'count': result['pagination']['total_count'],
+                    'page': result['pagination']['current_page'],
+                    'page_size': result['pagination']['page_size'],
+                    'total_pages': result['pagination']['total_pages'],
+                    'has_next': result['pagination']['has_next'],
+                    'has_previous': result['pagination']['has_previous']
+                }
+            })
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to get refund requests: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+@router.register(r"admin/refunds/approve", name="admin-refund-approve")
+@extend_schema(
+    tags=["Admin", "Payments"],
+    summary="Approve Refund Request",
+    description="Admin endpoint to approve a refund request"
+)
+class AdminApproveRefundView(GenericAPIView):
+    serializer_class = serializers.RefundActionSerializer
+    permission_classes = [IsStaffPermission]
+    
+    @extend_schema(
+        summary="Approve Refund",
+        description="Approve a pending refund request",
+        request=serializers.RefundActionSerializer,
+        responses={
+            status.HTTP_200_OK: serializers.RefundSerializer,
+            status.HTTP_400_BAD_REQUEST: OpenApiTypes.OBJECT,
+            status.HTTP_404_NOT_FOUND: OpenApiTypes.OBJECT,
+            status.HTTP_500_INTERNAL_SERVER_ERROR: OpenApiTypes.OBJECT
+        }
+    )
+    def post(self, request: Request) -> Response:
+        """Approve a refund request"""
+        try:
+            # Validate request data
+            serializer = serializers.RefundActionSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            # Process refund approval
+            service = RefundService()
+            refund = service.approve_refund(
+                refund_id=serializer.validated_data['refund_id'],
+                admin_user=request.user
+            )
+            
+            # Prepare success response
+            response_serializer = serializers.RefundSerializer(refund)
+            return Response({
+                'success': True,
+                'message': 'Refund request approved successfully',
+                'data': response_serializer.data
+            })
+            
+        except ServiceException as e:
+            # Handle business rule violations
+            return Response({
+                'success': False,
+                'error': {
+                    'code': getattr(e, 'code', 'refund_error'),
+                    'message': str(e)
+                }
+            }, status=getattr(e, 'status_code', status.HTTP_400_BAD_REQUEST))
+            
+        except Exception as e:
+            # Log unexpected errors
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error approving refund: {str(e)}")
+            
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'internal_error',
+                    'message': 'An unexpected error occurred while processing the request'
+                }
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@router.register(r"admin/refunds/reject", name="admin-refund-reject")
+@extend_schema(
+    tags=["Admin", "Payments"],
+    summary="Reject Refund Request",
+    description="Admin endpoint to reject a refund request"
+)
+class AdminRejectRefundView(GenericAPIView):
+    serializer_class = serializers.RefundRejectSerializer
+    permission_classes = [IsStaffPermission]
+    
+    @extend_schema(
+        summary="Reject Refund",
+        description="Reject a pending refund request with reason",
+        request=serializers.RefundRejectSerializer,
+        responses={
+            status.HTTP_200_OK: serializers.RefundSerializer,
+            status.HTTP_400_BAD_REQUEST: OpenApiTypes.OBJECT,
+            status.HTTP_404_NOT_FOUND: OpenApiTypes.OBJECT,
+            status.HTTP_500_INTERNAL_SERVER_ERROR: OpenApiTypes.OBJECT
+        }
+    )
+    def post(self, request: Request) -> Response:
+        """Reject a refund request"""
+        try:
+            # Validate request data
+            serializer = serializers.RefundRejectSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            # Process refund rejection
+            service = RefundService()
+            refund = service.reject_refund(
+                refund_id=serializer.validated_data['refund_id'],
+                admin_user=request.user,
+                rejection_reason=serializer.validated_data['rejection_reason']
+            )
+            
+            # Prepare success response
+            response_serializer = serializers.RefundSerializer(refund)
+            return Response({
+                'success': True,
+                'message': 'Refund request rejected successfully',
+                'data': response_serializer.data
+            })
+            
+        except ServiceException as e:
+            # Handle business rule violations
+            return Response({
+                'success': False,
+                'error': {
+                    'code': getattr(e, 'code', 'refund_error'),
+                    'message': str(e)
+                }
+            }, status=getattr(e, 'status_code', status.HTTP_400_BAD_REQUEST))
+            
+        except Exception as e:
+            # Log unexpected errors
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error rejecting refund: {str(e)}")
+            
+            return Response({
+                'success': False,
+                'error': {
+                    'code': 'internal_error',
+                    'message': 'An unexpected error occurred while processing the request'
+                }
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

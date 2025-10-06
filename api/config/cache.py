@@ -24,22 +24,9 @@ if USE_REDIS_FOR_CACHE:
         },
     }
 
-    # Ping the cache to see if it's working
-    try:
-        cache.set("ping", "pong")
-
-        if cache.get("ping") != "pong":
-            msg = "Cache is not working properly."
-            raise ValueError(msg)  # noqa: TRY301
-
-        cache.delete("ping")
-
-        logger.info("Cache is working properly")
-    except (ValueError, RedisError):
-        logger.exception("Cache is not working. Using dummy cache instead")
-        CACHES["default"] = {
-            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
-        }
+    # Don't test cache connection during startup to avoid blocking Django initialization
+    # The cache will be tested when first used
+    logger.info("Redis cache configured - connection will be tested on first use")
 else:
     logger.warning("Using dummy cache")
     CACHES["default"] = {

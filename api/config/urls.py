@@ -1,8 +1,10 @@
-from django.urls import path
-from api.config.views import AppVersionCheckView
-from api.config.views import router
+from __future__ import annotations
+
+from django.urls import path, re_path
+from api.config.views import router, AppHealthView
 
 urlpatterns = [
-    path("api/app/version", AppVersionCheckView.as_view(), name="app-version-check"),
-    *router.urls, 
+    *router.urls,
+    # Add explicit URL patterns for health endpoint to handle trailing slash
+    re_path(r'^app/health/?$', AppHealthView.as_view(), name='app-health-explicit'),
 ]

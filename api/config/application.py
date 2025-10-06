@@ -7,6 +7,10 @@ from api.config.silk import SILKY_MIDDLEWARE_CLASS, USE_SILK
 PROJECT_NAME = getenv("PROJECT_NAME", "django_template")
 PROJECT_VERBOSE_NAME = getenv("PROJECT_VERBOSE_NAME", "Django Template").strip("'\"")
 
+#Stripe API keys
+'''STRIPE_PUBLIC_KEY = getenv("STRIPE_PUBLIC_KEY", "")
+STRIPE_SECRET_KEY = getenv("STRIPE_SECRET_KEY", "")'''
+
 ENVIRONMENT = getenv("ENVIRONMENT", "local")
 HOST = getenv("HOST", "localhost")
 
@@ -86,3 +90,12 @@ USE_I18N = True
 SPARROW_SMS_TOKEN = getenv("SPARROW_SMS_TOKEN")
 SPARROW_SMS_FROM = getenv("SPARROW_SMS_FROM", "Demo")
 SPARROW_SMS_BASE_URL = getenv("SPARROW_SMS_BASE_URL", "https://sms.sparrowsms.com/v2/sms/")
+
+# Email Configuration
+EMAIL_BACKEND = getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = getenv('EMAIL_HOST', 'stmp.gmail.com')
+EMAIL_PORT = int(getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = getenv('EMAIL_USE_TLS', 'TRUE').lower() == 'true'
+EMAIL_HOST_USER = getenv('EMAIL_HOST_USER', 'nikeshshrestha405@gmail.com')
+EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD', 'vuautbzfearumtym')
+DEFAULT_FROM_EMAIL = getenv('DEFAULT_FROM_EMAIL', 'nikeshshrestha405@gmail.com')
