@@ -71,6 +71,7 @@ def send_otp_task(self, identifier: str, otp: str, purpose: str):
 @shared_task(base=NotificationTask, bind=True)
 def send_push_notification_task(self, user_id: str, title: str, message: str, data: Dict[str, Any] = None):
     """Send push notification to user"""
+    self.logger.critical("--- EXECUTING PUSH NOTIFICATION TASK ---")
     try:
         user = User.objects.get(id=user_id)
         
@@ -102,6 +103,7 @@ def send_push_notification_task(self, user_id: str, title: str, message: str, da
 @shared_task(base=NotificationTask, bind=True)
 def send_points_notification(self, user_id: str, points: int, source: str, description: str):
     """Send notification for points awarded"""
+    self.logger.critical("--- EXECUTING POINTS NOTIFICATION TASK ---")
     try:
         user = User.objects.get(id=user_id)
         
