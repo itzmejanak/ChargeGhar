@@ -29,7 +29,7 @@ class Transaction(BaseModel):
     ]
 
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='transactions')
-    payment_method = models.ForeignKey('PaymentMethod', on_delete=models.SET_NULL, null=True, blank=True)
+    # payment_method field removed as PaymentMethod model no longer exists
     related_rental = models.ForeignKey('rentals.Rental', on_delete=models.SET_NULL, null=True, blank=True)
     
     transaction_id = models.CharField(max_length=255, unique=True)
@@ -80,7 +80,7 @@ class WalletTransaction(BaseModel):
     ]
 
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='transactions')
-    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, null=True, blank=True)
     
     transaction_type = models.CharField(max_length=50, choices=TRANSACTION_TYPE_CHOICES)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -116,7 +116,8 @@ class PaymentIntent(BaseModel):
     ]
 
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='payment_intents')
-    payment_method = models.ForeignKey('PaymentMethod', on_delete=models.CASCADE)
+    # payment_method field removed as PaymentMethod model no longer exists
+    # Store gateway information directly in the intent_metadata
     related_rental = models.ForeignKey('rentals.Rental', on_delete=models.SET_NULL, null=True, blank=True)
     
     intent_id = models.CharField(max_length=255, unique=True)
@@ -183,6 +184,7 @@ class Refund(BaseModel):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     reason = models.CharField(max_length=255)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='REQUESTED')
+    admin_notes = models.TextField(blank=True, null=True, help_text='Notes from admin regarding the refund')
     gateway_reference = models.CharField(max_length=255, null=True, blank=True)
     requested_at = models.DateTimeField(auto_now_add=True)
     processed_at = models.DateTimeField(null=True, blank=True)

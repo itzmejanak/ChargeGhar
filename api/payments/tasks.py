@@ -354,16 +354,29 @@ def _process_gateway_refund(self, refund: Refund) -> bool:
             self.logger.info(f"Refund {refund.id} is for wallet/points payment, no gateway verification needed")
             return True
             
-        # Get payment method details
-        if not transaction.payment_method:
-            self.logger.error(f"No payment method found for transaction {transaction.transaction_id}")
-            return False
-            
-        gateway = transaction.payment_method.gateway
+        # Get gateway reference
         gateway_reference = transaction.gateway_reference
         
         if not gateway_reference:
             self.logger.error(f"No gateway reference found for transaction {transaction.transaction_id}")
+            return False
+            
+        # Determine gateway from reference or transaction metadata
+        # This is a simplified approach since payment_method table is missing
+        gateway = None
+        if gateway_reference.startswith('khalti_'):
+            gateway = 'khalti'
+        elif gateway_reference.startswith('esewa_'):
+            gateway = 'esewa'
+        elif gateway_reference.startswith('stripe_'):
+            gateway = 'stripe'
+        else:
+            # Try to extract from transaction metadata if available
+            if hasattr(transaction, 'metadata') and transaction.metadata and 'gateway' in transaction.metadata:
+                gateway = transaction.metadata.get('gateway')
+        
+        if not gateway:
+            self.logger.error(f"Could not determine gateway for transaction {transaction.transaction_id}")
             return False
             
         # Process based on gateway type
@@ -385,11 +398,12 @@ def _process_khalti_refund(self, transaction, refund):
     """Process refund through Khalti gateway"""
     try:
         import requests
+        import os
         
-        # Get Khalti configuration
-        config = transaction.payment_method.configuration
-        if not config or 'secret_key' not in config:
-            self.logger.error("Khalti configuration missing")
+        # Get Khalti configuration from environment variables instead of payment_method
+        secret_key = os.environ.get('KHALTI_SECRET_KEY')
+        if not secret_key:
+            self.logger.error("Khalti secret key not found in environment variables")
             return False
             
         # Verify transaction exists and is refundable in Khalti
@@ -402,7 +416,7 @@ def _process_khalti_refund(self, transaction, refund):
         # Make API call to Khalti refund endpoint
         khalti_response = requests.post(
             "https://khalti.com/api/v2/refund/",
-            headers={"Authorization": f"Key {config['secret_key']}"},
+            headers={"Authorization": f"Key {secret_key}"},
             json={
                 "transaction_id": transaction.gateway_reference, 
                 "amount": float(refund.amount),

@@ -44,7 +44,7 @@
 }
 ```
 
-**2. Payment Method**
+**2. Get Rental Packages**
 **Endpoint**: 'GET api/payments/packages'
 **Description**: Retrieve all active payment gateways and their configurations
 **Response**
@@ -56,7 +56,7 @@
 
 ```
 **3. Create Top-up Intent**
-**Endpoint**: 'GET api/payments/wallet/topup-intent'
+**Endpoint**: 'POST api/payments/wallet/topup-intent'
 **Description**: Retrieve all active payment gateways and their configurations
 **Response**
 ```json
@@ -75,21 +75,10 @@
   "formatted_amount": "NPR 100.00",
   "is_expired": false
 }
+
 ```
-**4. Get Transaction History**
-**Endpoint**: 'GET api/payments/transactions'
-**Description**: Retrieve user's transaction history with optional filtering
-**Response**
-```json
-{
-  "status": "SUCCESS",
-  "transaction_id": "TXN20250917095345S1SGMN",
-  "amount": 100,
-  "new_balance": 100
-}
-```
-**5. Verify Top-up Payment**
-**Endpoint**: 'GET api/payments/verify-topup'
+**4. Verify Top-up Payment**
+**Endpoint**: 'POST api/payments/verify-topup'
 **Description**: Verify payment with gateway and update wallet balanceonfigurations
 **Response**
 ```json
@@ -100,7 +89,7 @@
   "new_balance": 100
 }
 ```
-**6. Get Transaction History**
+**5. Get Transaction History**
 **Endpoint**: 'GET api/payments/transactions'
 **Description**: Retrieve user's transaction history with optional filtering
 **Response**
@@ -132,8 +121,8 @@
   }
 }
 ```
-**7. Calculate Payment Options**
-**Endpoint**: 'GET api/payments/calculate-options'
+**6. Calculate Payment Options**
+**Endpoint**: 'POST api/payments/calculate-options'
 **Description**: Calculate available payment options (wallet, points, combination) for a given scenario
 **Body**
 ```json
@@ -184,9 +173,9 @@
   }
 }
 ```
-**8. Get Payment Status**
+**7. Get Payment Status**
 **Endpoint**: 'GET api/payments/status/58f0d707-298e-4f7c-9033-765a9cec11cb'
-**Description**: Calculate available payment options (wallet, points, combination) for a given scenario
+**Description**: Retrieve the current status of a payment intent
 **Body**
 ```json
 {
@@ -209,8 +198,8 @@
   "failure_reason": null
 }
 ```
-**9. Cancel Payment Intent**
-**Endpoint**: 'GET api/payments/cancel/5b1bb880-cad8-40b8-af2c-bd47183d58d3'
+**8. Cancel Payment Intent**
+**Endpoint**: 'POST api/payments/cancel/5b1bb880-cad8-40b8-af2c-bd47183d58d3'
 **Description**: Cancel a pending payment intent
 **Body**
 ```json
@@ -244,6 +233,7 @@
     "errors": []
   }
 }
+```
 **Response**
 
 ```json
@@ -252,3 +242,142 @@
   "intent_id": "5b1bb880-cad8-40b8-af2c-bd47183d58d3",
   "message": "Payment intent cancelled successfully"
 }
+
+```
+**9. Request Refund**
+**Endpoint**: 'POST api/payments/refunds/
+**Description**: Request a refund for a transaction
+**Body**
+```json
+{
+  "transaction_id": {
+    "value": "TXN2025092106084239HRPM",
+    "errors": []
+  },
+  "reason": {
+    "value": "dont need it anymore",
+    "errors": []
+  }
+}
+```
+**Response**
+
+```json
+{
+  "success": true,
+  "message": "Refund request submitted successfully",
+  "data": {
+    "id": "a64a43f5-cf14-41be-acc4-3285603a27ba",
+    "amount": "600.00",
+    "reason": "dont need it anymore",
+    "status": "REQUESTED",
+    "gateway_reference": null,
+    "requested_at": "2025-09-21T11:56:41.621174+05:45",
+    "processed_at": null,
+    "transaction_id": "TXN2025092106084239HRPM",
+    "requested_by_name": "aaditya",
+    "formatted_amount": "NPR 600.00"
+  }
+}
+```
+**10. Get Pending Refund Request**
+**Endpoint**: 'GET api/admin/refunds/
+**Description**: Retrieve all pending refund requests for admin review
+**Response**
+
+```json
+{
+  "refunds": [
+    {
+      "id": "ed6a769d-6332-4f01-b8e4-d16f06a8a1ae",
+      "amount": "888.00",
+      "reason": "dont need it anymore",
+      "status": "REQUESTED",
+      "gateway_reference": null,
+      "requested_at": "2025-10-08T17:02:02.034906+05:45",
+      "processed_at": null,
+      "requested_by_name": "aaditya1",
+      "approved_by_name": "aaditya1",
+      "formatted_amount": "NPR 888.00"
+    }
+  ],
+  "pagination": {
+    "count": 1,
+    "page": 1,
+    "page_size": 20,
+    "total_pages": 1,
+    "has_next": false,
+    "has_previous": false
+  }
+}
+```
+**11. Approve Refund**
+**Endpoint**: 'POST api/admin/refunds/approve
+**Description**: Approve a pending refund request
+**Body**
+```json
+{
+  "refund_id": {
+    "value": "ed6a769d-6332-4f01-b8e4-d16f06a8a1ae",
+    "errors": []
+  }
+}
+```
+**Response**
+
+```json
+{
+  "success": true,
+  "message": "Refund request approved successfully",
+  "data": {
+    "id": "ed6a769d-6332-4f01-b8e4-d16f06a8a1ae",
+    "amount": "888.00",
+    "reason": "dont need it anymore",
+    "status": "APPROVED",
+    "gateway_reference": null,
+    "requested_at": "2025-10-08T17:02:02.034906+05:45",
+    "processed_at": null,
+    "requested_by_name": "aaditya1",
+    "approved_by_name": "aaditya1",
+    "formatted_amount": "NPR 888.00"
+  }
+}
+```
+
+
+**11. Reject Refund**
+**Endpoint**: 'POST api/admin/refunds/reject
+**Description**: Reject a pending refund request with reason
+**Body**
+```json
+{
+  "refund_id": {
+    "value": "ed6a769d-6332-4f01-b8e4-d16f06a8a1ae",
+    "errors": []
+  },
+  "rejection_reason": {
+    "value": "Rejected due to invalid reasoning",
+    "errors": []
+  }
+}
+```
+**Response**
+
+```json
+{
+  "success": true,
+  "message": "Refund request rejected successfully",
+  "data": {
+    "id": "ed6a769d-6332-4f01-b8e4-d16f06a8a1ae",
+    "amount": "888.00",
+    "reason": "dont need it anymore",
+    "status": "REJECTED",
+    "gateway_reference": null,
+    "requested_at": "2025-10-08T17:02:02.034906+05:45",
+    "processed_at": null,
+    "requested_by_name": "aaditya1",
+    "approved_by_name": "aaditya1",
+    "formatted_amount": "NPR 888.00"
+  }
+}
+```
