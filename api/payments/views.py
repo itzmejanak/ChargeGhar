@@ -617,7 +617,7 @@ class StripeWebhookView(GenericAPIView):
 )
 class AdminRefundRequestsView(GenericAPIView):
     serializer_class = serializers.RefundSerializer
-    permission_classes = [IsStaffPermission]
+    permission_classes = [IsAuthenticated]
     
     @extend_schema(
         summary="Get Pending Refund Requests",
@@ -677,7 +677,7 @@ class AdminRefundRequestsView(GenericAPIView):
 )
 class AdminApproveRefundView(GenericAPIView):
     serializer_class = serializers.RefundActionSerializer
-    permission_classes = [IsStaffPermission]
+    permission_classes = [IsAuthenticated]
     
     @extend_schema(
         summary="Approve Refund",
@@ -744,7 +744,7 @@ class AdminApproveRefundView(GenericAPIView):
 )
 class AdminRejectRefundView(GenericAPIView):
     serializer_class = serializers.RefundRejectSerializer
-    permission_classes = [IsStaffPermission]
+    permission_classes = [IsAuthenticated]
     
     @extend_schema(
         summary="Reject Refund",
