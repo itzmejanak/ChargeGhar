@@ -670,14 +670,13 @@ class RefundService(CRUDService):
         try:
             # Find and validate refund
             try:
-                # Remove payment_method from select_related as the table doesn't exist
-                refund = Refund.objects.select_related('transaction').get(id=refund_id)
+                refund = Refund.objects.select_related('transaction', 'transaction__payment_method').get(id=refund_id)
             except Refund.DoesNotExist:
                 raise ServiceException(
                     detail=f"Refund with ID {refund_id} not found",
                     code="refund_not_found"
                 )
-                
+            
             # Validate refund status
             if refund.status != 'REQUESTED':
                 raise ServiceException(
@@ -699,28 +698,35 @@ class RefundService(CRUDService):
                     code="invalid_transaction_status"
                 )
             
-            # For gateway payments, verify the gateway reference
+            # For gateway payments, verify the payment method and gateway reference
             if transaction.payment_method_type == 'GATEWAY':
-                # Skip payment_method validation since the table doesn't exist
-                
+                if not transaction.payment_method:
+                    raise ServiceException(
+                        detail="Payment method information missing for this transaction",
+                        code="payment_method_missing"
+                    )
+                    
                 if not transaction.gateway_reference:
                     raise ServiceException(
                         detail="Gateway reference missing for this transaction",
                         code="gateway_reference_missing"
                     )
                     
-                # Use transaction metadata or other fields to determine gateway type
-                # This is a simplified approach since payment_method table is missing
-                gateway = transaction.gateway_reference.split('_')[0] if '_' in transaction.gateway_reference else 'unknown'
-                if gateway not in ['khalti', 'esewa', 'stripe', 'unknown']:
+                # Additional gateway-specific validation
+                gateway = transaction.payment_method.gateway
+                if gateway not in ['khalti', 'esewa', 'stripe']:
                     raise ServiceException(
                         detail=f"Unsupported payment gateway: {gateway}",
                         code="unsupported_gateway"
                     )
-        except Exception as e:
-            self.handle_service_error(e, f"Failed to approve refund {refund_id}")
-        
-        try:
+                    
+                # Verify gateway configuration exists
+                if not transaction.payment_method.configuration:
+                    raise ServiceException(
+                        detail=f"Payment gateway configuration missing",
+                        code="gateway_config_missing"
+                    )
+            
             # Update refund status
             refund.status = 'APPROVED'
             refund.approved_by = admin_user
@@ -732,7 +738,7 @@ class RefundService(CRUDService):
                 process_pending_refunds.delay()
             except Exception as task_error:
                 self.log_warning(f"Failed to schedule refund processing: {str(task_error)}")
-                
+            
             # Notify user
             try:
                 from api.notifications.tasks import send_refund_approved_notification
@@ -751,23 +757,22 @@ class RefundService(CRUDService):
             raise ServiceException(
                 detail="An unexpected error occurred while approving the refund",
                 code="internal_error"
-            )
-            
+        )
     def get_pending_refunds(self, page: int = 1, page_size: int = 20) -> Dict[str, Any]:
         """Get all pending refund requests for admin review"""
         try:
-            # Use values() to avoid any joins and only get the fields we need
-            queryset = Refund.objects.filter(status='REQUESTED').order_by('-requested_at')
+            queryset = Refund.objects.filter(status='REQUESTED').select_related(
+                'transaction', 'requested_by'
+            ).order_by('-requested_at')
             
             # Apply pagination
-            from api.common.utils.helpers import paginate_queryset
-            return paginate_queryset(queryset, page, page_size)
+            return self.paginate_queryset(queryset, page, page_size)
             
         except Exception as e:
             self.log_error(f"Error getting pending refunds: {str(e)}")
             return self.handle_service_error(e)
-
     @transaction.atomic
+    
     def reject_refund(self, refund_id: str, admin_user, rejection_reason: str) -> Refund:
         """Reject a refund request"""
         try:
@@ -818,7 +823,7 @@ class RefundService(CRUDService):
             raise ServiceException(
                 detail="An unexpected error occurred while rejecting the refund",
                 code="internal_error"
-            )
+        )
 
 
 class TransactionService(CRUDService):
