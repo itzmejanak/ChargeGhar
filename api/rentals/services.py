@@ -180,6 +180,7 @@ class RentalService(CRUDService):
         payment_options = calc_service.calculate_payment_options(
             user=user,
             scenario='pre_payment',
+            package_id=str(package.id),
             amount=package.price
         )
         
@@ -275,7 +276,7 @@ class RentalService(CRUDService):
             payment_options = calc_service.calculate_payment_options(
                 user=user,
                 scenario='pre_payment',
-                amount=package.price
+                package_id=package_id
             )
             
             if not payment_options['is_sufficient']:
