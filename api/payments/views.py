@@ -19,6 +19,7 @@ from api.payments.services import (
 )
 from api.payments.models import PaymentMethod
 from api.rentals.models import RentalPackage
+from api.users.permissions import IsStaffPermission
 
 if TYPE_CHECKING:
     from rest_framework.request import Request

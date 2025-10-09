@@ -214,7 +214,7 @@ class PayDueSerializer(serializers.Serializer):
 
 class RefundSerializer(serializers.ModelSerializer):
     """Serializer for refunds"""
-    transaction_id = serializers.CharField(source='transaction.transaction_id', read_only=True)
+    # Avoid accessing transaction directly to prevent problematic joins
     requested_by_name = serializers.CharField(source='requested_by.username', read_only=True)
     approved_by_name = serializers.CharField(source='approved_by.username', read_only=True)
     formatted_amount = serializers.SerializerMethodField()
@@ -223,7 +223,7 @@ class RefundSerializer(serializers.ModelSerializer):
         model = Refund
         fields = [
             'id', 'amount', 'reason', 'status', 'gateway_reference',
-            'requested_at', 'processed_at', 'transaction_id', 'requested_by_name',
+            'requested_at', 'processed_at', 'requested_by_name',
             'approved_by_name', 'formatted_amount'
         ]
         read_only_fields = ['id', 'requested_at', 'processed_at']

@@ -12,7 +12,7 @@ from api.payments.models import (
 @admin.register(Transaction)
 class TransactionAdmin(ModelAdmin):
     list_display = ['transaction_id', 'user', 'transaction_type', 'amount', 'status', 'created_at']
-    list_filter = ['transaction_type', 'status', 'payment_method_type', 'created_at']
+    list_filter = ['transaction_type', 'status', 'created_at']
     search_fields = ['user__username', 'transaction_id', 'gateway_reference']
     readonly_fields = ['created_at', 'updated_at']
 
@@ -36,7 +36,7 @@ class WalletTransactionAdmin(ModelAdmin):
 @admin.register(PaymentIntent)
 class PaymentIntentAdmin(ModelAdmin):
     list_display = ['intent_id', 'user', 'intent_type', 'amount', 'status', 'created_at']
-    list_filter = ['intent_type', 'status', 'payment_method', 'created_at']
+    list_filter = ['intent_type', 'status', 'created_at']
     search_fields = ['user__username', 'intent_id']
     readonly_fields = ['created_at', 'completed_at']
 
