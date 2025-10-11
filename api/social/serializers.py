@@ -131,7 +131,8 @@ class UserAchievementSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'unlocked_at']
     
-    def get_progress_percentage(self, obj):
+    @extend_schema_field(serializers.FloatField)
+    def get_progress_percentage(self, obj) -> float:
         return min(100, (obj.current_progress / obj.achievement.criteria_value) * 100)
 
 
@@ -160,7 +161,8 @@ class LeaderboardEntryDetailSerializer(serializers.ModelSerializer):
             'achievements_count', 'last_updated'
         ]
     
-    def get_achievements_count(self, obj):
+    @extend_schema_field(serializers.IntegerField)
+    def get_achievements_count(self, obj) -> int:
         return UserAchievement.objects.filter(user=obj.user, is_unlocked=True).count()
 
 
@@ -183,10 +185,12 @@ class UserLeaderboardSerializer(serializers.ModelSerializer):
             'achievements_count', 'rank_change', 'last_updated'
         ]
     
-    def get_achievements_count(self, obj):
+    @extend_schema_field(serializers.IntegerField)
+    def get_achievements_count(self, obj) -> int:
         return UserAchievement.objects.filter(user=obj.user, is_unlocked=True).count()
     
-    def get_rank_change(self, obj):
+    @extend_schema_field(serializers.IntegerField)
+    def get_rank_change(self, obj) -> int:
         # Mock rank change calculation - would need historical data
         return 0  # 0 = no change, positive = moved up, negative = moved down
 

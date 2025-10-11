@@ -76,7 +76,6 @@ else:
         docker exec -i "$API_CONTAINER" python manage.py shell -c "
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-import uuid
 
 User = get_user_model()
 username = 'janak'
@@ -93,35 +92,59 @@ if User.objects.filter(username=username).exists():
         user.save()
         print(f'Updated {username} to superuser')
 else:
-    # Create superuser with new user model fields
+    # Create superuser with actual user model fields
     user = User.objects.create_user(
+        identifier=email,  # Use identifier for create_user method
         username=username,
-        email=email,
         phone_number=phone_number,
         is_superuser=True,
         is_staff=True,
         is_active=True,
         email_verified=True,
         phone_verified=True,
-        profile_completed=True,
-        kyc_verified=True,
-        kyc_status='APPROVED',
-        account_status='ACTIVE',
-        created_at=timezone.now(),
-        updated_at=timezone.now()
+        status='ACTIVE'
     )
-    
-    # Set password for admin access
-    user.set_password('admin123')
-    user.save()
     
     print(f'✓ Superuser {username} created successfully')
     print(f'  - Email: {email}')
     print(f'  - Phone: {phone_number}')
-    print(f'  - Password: admin123')
-    print(f'  - Profile completed: True')
-    print(f'  - KYC verified: True')
-    print(f'  - Account status: ACTIVE')
+    print(f'  - Username: {username}')
+    print(f'  - Status: ACTIVE')
+    print(f'  - Email verified: True')
+    print(f'  - Phone verified: True')
+    
+    # Create UserProfile for complete profile
+    try:
+        from api.users.models import UserProfile
+        profile, created = UserProfile.objects.get_or_create(
+            user=user,
+            defaults={
+                'full_name': 'Janak Admin',
+                'is_profile_complete': True
+            }
+        )
+        if created:
+            print(f'  - Profile created: Complete')
+    except Exception as e:
+        print(f'  - Profile creation skipped: {e}')
+    
+    # Create UserKYC for KYC verification
+    try:
+        from api.users.models import UserKYC
+        kyc, created = UserKYC.objects.get_or_create(
+            user=user,
+            defaults={
+                'document_type': 'CITIZENSHIP',
+                'document_number': 'ADMIN001',
+                'document_front_url': 'https://example.com/admin-doc.jpg',
+                'status': 'APPROVED',
+                'verified_at': timezone.now()
+            }
+        )
+        if created:
+            print(f'  - KYC created: APPROVED')
+    except Exception as e:
+        print(f'  - KYC creation skipped: {e}')
 "
         print_status "✓ Superuser created successfully with updated user model"
     fi
@@ -248,7 +271,7 @@ API_PORT=$(grep "API_PORT" .env | cut -d '=' -f2 | tr -d ' ')
 SERVER_IP=$(hostname -I | awk '{print $1}')
 
 print_status "Summary:"
-print_status "- Superuser created with updated user model (username: janak, password: admin123)"
+print_status "- Superuser created with OTP-based user model (username: janak, email: janak@powerbank.com)"
 print_status "- Common fixtures loaded (countries, late fee configs)"
 print_status "- Config fixtures loaded"
 print_status "- User fixtures loaded"
@@ -270,13 +293,14 @@ print_status "Health Check: http://$SERVER_IP:${API_PORT:-8010}/api/app/health/"
 echo ""
 print_status "🔐 Authentication System:"
 print_status "- OTP-based registration and login implemented"
-print_status "- Admin credentials: username=janak, password=admin123"
+print_status "- Admin user: username=janak, email=janak@powerbank.com (no password - OTP only)"
 print_status "- For API testing, use OTP flow as documented in api/users/AUTH_FLOW.md"
 print_status "- Admin JWT token generated above for immediate Swagger UI testing"
-print_status "- Regular users must complete OTP verification for registration/login"
+print_status "- All users (including admin) use OTP verification for login"
 echo ""
 print_status "🔧 Useful commands:"
 print_status "Django shell: docker-compose exec $API_CONTAINER python manage.py shell"
 print_status "View logs: docker-compose logs -f $API_CONTAINER"
 print_status "Restart API: docker-compose restart $API_CONTAINER"
 print_status "Generate admin token: docker-compose exec $API_CONTAINER python manage.py shell -c \"from django.contrib.auth import get_user_model; from rest_framework_simplejwt.tokens import RefreshToken; User = get_user_model(); admin = User.objects.get(username='janak'); print('Admin JWT:', str(RefreshToken.for_user(admin).access_token))\""
+print_status "Admin OTP login: Use email 'janak@powerbank.com' in OTP flow for admin access"

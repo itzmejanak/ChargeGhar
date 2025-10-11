@@ -100,7 +100,8 @@ class ReferralListSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at']
     
-    def get_is_expired(self, obj):
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_expired(self, obj) -> bool:
         return timezone.now() > obj.expires_at
 
 
@@ -121,7 +122,8 @@ class ReferralDetailSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'completed_at']
     
-    def get_is_expired(self, obj):
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_expired(self, obj) -> bool:
         return timezone.now() > obj.expires_at
     
     def get_days_until_expiry(self, obj):
