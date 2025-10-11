@@ -278,27 +278,6 @@ class AppVersionView(GenericAPIView, BaseAPIView):
         )
 
 
-@router.register("app/health", name="app-health")
-class AppHealthView(GenericAPIView):
-    """App health check endpoint"""
-    serializer_class = serializers.AppHealthSerializer
-
-    def get(self, request: Request) -> Response:
-        """Get real-time health status"""
-        def operation():
-            service = AppInfoService()
-            health_status = service.get_app_health()
-            
-            serializer = self.get_serializer(health_status)
-            return serializer.data
-        
-        return self.handle_service_operation(
-            operation,
-            success_message="Health check completed successfully",
-            error_message="Failed to get health status"
-        )
-
-
 @router.register("content/search", name="content-search")
 @extend_schema(
     tags=["Content"],

@@ -107,7 +107,6 @@ chmod +x deploy-production.sh
 
 
 
-
 🔧 To Check if Fixtures Loaded:
 # Check if data exists in database
 docker-compose -f docker-compose.prod.yml exec powerbank_api python manage.py shell -c "
@@ -122,12 +121,6 @@ print(f'Stations: {Station.objects.count()}')
 docker-compose exec api python manage.py spectacular --color --file openapi-schema.json
 
 docker-compose exec api python manage.py shell -c "from django.db import connection; cursor = connection.cursor(); cursor.execute('SELECT table_name FROM information_schema.tables WHERE table_schema = %s', ['public']); print([row[0] for row in cursor.fetchall()])"
-
-
-
-
-
-
 
 
 

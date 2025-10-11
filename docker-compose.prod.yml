@@ -36,7 +36,7 @@ services:
         condition: service_completed_successfully
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://main.chargeghar.com/api/app/health/"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/api/app/health"]
       interval: 30s
       timeout: 10s
       retries: 5
