@@ -94,9 +94,8 @@ if User.objects.filter(username=username).exists():
 else:
     # Create superuser with actual user model fields
     user = User.objects.create_user(
-        identifier=email,  # Use identifier for create_user method
+        identifier=email,  # Use identifier for create_user method (email will be parsed)
         username=username,
-        phone_number=phone_number,
         is_superuser=True,
         is_staff=True,
         is_active=True,
@@ -107,7 +106,6 @@ else:
     
     print(f'✓ Superuser {username} created successfully')
     print(f'  - Email: {email}')
-    print(f'  - Phone: {phone_number}')
     print(f'  - Username: {username}')
     print(f'  - Status: ACTIVE')
     print(f'  - Email verified: True')
@@ -206,10 +204,9 @@ except Exception as e:
         print_status "✓ Admin JWT token generated successfully"
         echo ""
         print_status "🎫 Admin JWT Token (for Swagger UI):"
-        echo "$token"
+        echo "Bearer $token"
         echo ""
-        print_status "📋 Copy this token and use it in Swagger UI Authorization header:"
-        print_status "Bearer $token"
+        print_status "📋 Copy the above Bearer token for Swagger UI Authorization"
         echo ""
     else
         print_warning "⚠ Failed to generate admin JWT token"
