@@ -19,20 +19,9 @@ class ContentPageService(CRUDService):
     model = ContentPage
     
     def get_page_by_type(self, page_type: str) -> ContentPage:
-        """Get content page by type"""
+        """Get content page by type - caching handled by view decorator"""
         try:
-            # Check cache first
-            cache_key = f"content_page:{page_type}"
-            cached_page = cache.get(cache_key)
-            
-            if cached_page:
-                return cached_page
-            
             page = ContentPage.objects.get(page_type=page_type, is_active=True)
-            
-            # Cache for 1 hour
-            cache.set(cache_key, page, timeout=3600)
-            
             return page
             
         except ContentPage.DoesNotExist:
@@ -86,15 +75,8 @@ class FAQService(CRUDService):
     model = FAQ
     
     def get_faqs_by_category(self) -> Dict[str, List[FAQ]]:
-        """Get FAQs grouped by category"""
+        """Get FAQs grouped by category - caching handled by view decorator"""
         try:
-            # Check cache first
-            cache_key = "faqs_by_category"
-            cached_faqs = cache.get(cache_key)
-            
-            if cached_faqs:
-                return cached_faqs
-            
             faqs = FAQ.objects.filter(is_active=True).order_by('category', 'sort_order')
             
             # Group by category
@@ -103,9 +85,6 @@ class FAQService(CRUDService):
                 if faq.category not in faqs_by_category:
                     faqs_by_category[faq.category] = []
                 faqs_by_category[faq.category].append(faq)
-            
-            # Cache for 30 minutes
-            cache.set(cache_key, faqs_by_category, timeout=1800)
             
             return faqs_by_category
             
@@ -124,7 +103,7 @@ class FAQService(CRUDService):
     
     @transaction.atomic
     def create_faq(self, question: str, answer: str, category: str, admin_user) -> FAQ:
-        """Create new FAQ"""
+        """Create new FAQ - cache invalidation handled by view decorator"""
         try:
             # Get next sort order for category
             max_order = FAQ.objects.filter(category=category).aggregate(
@@ -140,9 +119,6 @@ class FAQService(CRUDService):
                 updated_by=admin_user
             )
             
-            # Clear cache
-            cache.delete("faqs_by_category")
-            
             self.log_info(f"FAQ created: {question[:50]}...")
             return faq
             
@@ -151,7 +127,7 @@ class FAQService(CRUDService):
     
     @transaction.atomic
     def update_faq(self, faq_id: str, question: str, answer: str, category: str, admin_user) -> FAQ:
-        """Update existing FAQ"""
+        """Update existing FAQ - cache invalidation handled by view decorator"""
         try:
             faq = FAQ.objects.get(id=faq_id)
             
@@ -160,9 +136,6 @@ class FAQService(CRUDService):
             faq.category = category
             faq.updated_by = admin_user
             faq.save(update_fields=['question', 'answer', 'category', 'updated_by', 'updated_at'])
-            
-            # Clear cache
-            cache.delete("faqs_by_category")
             
             self.log_info(f"FAQ updated: {faq_id}")
             return faq
@@ -181,21 +154,10 @@ class ContactInfoService(CRUDService):
     model = ContactInfo
     
     def get_all_contact_info(self) -> List[ContactInfo]:
-        """Get all active contact information"""
+        """Get all active contact information - caching handled by view decorator"""
         try:
-            # Check cache first
-            cache_key = "contact_info_all"
-            cached_info = cache.get(cache_key)
-            
-            if cached_info:
-                return cached_info
-            
             contact_info = ContactInfo.objects.filter(is_active=True).order_by('info_type')
             logger.debug(f"Found {contact_info.count()} active contact info records")
-
-            
-            # Cache for 1 hour
-            cache.set(cache_key, list(contact_info), timeout=3600)
             
             return contact_info
             
@@ -205,7 +167,7 @@ class ContactInfoService(CRUDService):
     @transaction.atomic
     def update_contact_info(self, info_type: str, label: str, value: str, 
                           description: str, admin_user) -> ContactInfo:
-        """Update contact information"""
+        """Update contact information - cache invalidation handled by view decorator"""
         try:
             contact_info, created = ContactInfo.objects.get_or_create(
                 info_type=info_type,
@@ -224,9 +186,6 @@ class ContactInfoService(CRUDService):
                 contact_info.updated_by = admin_user
                 contact_info.save(update_fields=['label', 'value', 'description', 'updated_by', 'updated_at'])
             
-            # Clear cache
-            cache.delete("contact_info_all")
-            
             self.log_info(f"Contact info updated: {info_type}")
             return contact_info
             
@@ -239,24 +198,14 @@ class BannerService(CRUDService):
     model = Banner
     
     def get_active_banners(self) -> List[Banner]:
-        """Get currently active banners"""
+        """Get currently active banners - caching handled by view decorator"""
         try:
-            # Check cache first
-            cache_key = "active_banners"
-            cached_banners = cache.get(cache_key)
-            
-            if cached_banners:
-                return cached_banners
-            
             now = timezone.now()
             banners = Banner.objects.filter(
                 is_active=True,
                 valid_from__lte=now,
                 valid_until__gte=now
             ).order_by('display_order', '-created_at')
-            
-            # Cache for 15 minutes
-            cache.set(cache_key, list(banners), timeout=900)
             
             return banners
             
@@ -267,7 +216,7 @@ class BannerService(CRUDService):
     def create_banner(self, title: str, description: str, image_url: str,
                      redirect_url: str, valid_from: timezone.datetime,
                      valid_until: timezone.datetime, admin_user) -> Banner:
-        """Create new banner"""
+        """Create new banner - cache invalidation handled by view decorator"""
         try:
             # Get next display order
             max_order = Banner.objects.aggregate(
@@ -283,9 +232,6 @@ class BannerService(CRUDService):
                 valid_from=valid_from,
                 valid_until=valid_until
             )
-            
-            # Clear cache
-            cache.delete("active_banners")
             
             self.log_info(f"Banner created: {title}")
             return banner

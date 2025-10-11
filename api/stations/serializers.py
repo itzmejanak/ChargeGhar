@@ -11,6 +11,7 @@ from api.stations.models import (
     StationIssue, StationMedia, UserStationFavorite, PowerBank
 )
 from api.common.utils.helpers import calculate_distance
+from api.common.serializers import BaseResponseSerializer
 
 
 class StationAmenitySerializer(serializers.ModelSerializer):
@@ -71,9 +72,9 @@ class StationAmenityMappingSerializer(serializers.ModelSerializer):
 
 
 class StationListSerializer(serializers.ModelSerializer):
-    """Serializer for station list view"""
+    """MVP serializer for station list views - minimal fields for performance"""
     available_slots = serializers.SerializerMethodField()
-    total_slots = serializers.IntegerField()
+    is_online = serializers.SerializerMethodField()
     distance = serializers.SerializerMethodField()
     is_favorite = serializers.SerializerMethodField()
     primary_image = serializers.SerializerMethodField()
@@ -81,15 +82,20 @@ class StationListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Station
         fields = [
-            'id', 'station_name', 'serial_number', 'latitude', 'longitude',
-            'address', 'landmark', 'status', 'total_slots', 'available_slots',
-            'distance', 'is_favorite', 'primary_image', 'last_heartbeat'
+            'id', 'station_name', 'latitude', 'longitude', 'status',
+            'available_slots', 'is_online', 'distance', 'is_favorite', 'primary_image'
         ]
+        read_only_fields = fields
     
     @extend_schema_field(serializers.IntegerField)
     def get_available_slots(self, obj) -> int:
         """Get count of available slots"""
         return obj.slots.filter(status='AVAILABLE').count()
+    
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_online(self, obj) -> bool:
+        """Check if station is online"""
+        return obj.status == 'ONLINE'
     
     @extend_schema_field(serializers.FloatField(allow_null=True))
     def get_distance(self, obj) -> Optional[float]:
@@ -322,3 +328,37 @@ class StationAnalyticsSerializer(serializers.Serializer):
     issues_count = serializers.IntegerField()
     uptime_percentage = serializers.FloatField()
     last_maintenance = serializers.DateTimeField(allow_null=True)
+
+
+# ===============================
+# RESPONSE SERIALIZERS FOR SWAGGER
+# ===============================
+
+class StationListResponseSerializer(BaseResponseSerializer):
+    """Response serializer for station list"""
+    data = serializers.ListField(child=StationListSerializer())
+
+
+class StationDetailResponseSerializer(BaseResponseSerializer):
+    """Response serializer for station detail"""
+    data = StationDetailSerializer()
+
+
+class StationFavoriteResponseSerializer(BaseResponseSerializer):
+    """Response serializer for station favorite operations"""
+    data = serializers.DictField()
+
+
+class StationIssueResponseSerializer(BaseResponseSerializer):
+    """Response serializer for station issue creation"""
+    data = StationIssueSerializer()
+
+
+class UserFavoriteStationsResponseSerializer(BaseResponseSerializer):
+    """Response serializer for user favorite stations"""
+    data = serializers.DictField()
+
+
+class UserStationReportsResponseSerializer(BaseResponseSerializer):
+    """Response serializer for user station reports"""
+    data = serializers.DictField()

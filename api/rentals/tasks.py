@@ -36,23 +36,12 @@ def check_overdue_rentals(self):
             overdue_hours = int((now - rental.due_at).total_seconds() / 3600)
             penalty_amount = float(rental.overdue_amount)
             
-            notification_service.create_notification(
-                user=rental.user,
-                title="",  # Will be overridden by template
-                message="",  # Will be overridden by template
-                notification_type='rental',
-                template_slug='rental_overdue',
-                data={
-                    'powerbank_id': rental.powerbank.serial_number,
-                    'overdue_hours': overdue_hours,
-                    'penalty_amount': penalty_amount,
-                    'rental_id': str(rental.id),
-                    'rental_code': rental.rental_code,
-                    'overdue_minutes': int((now - rental.due_at).total_seconds() / 60),
-                    'action': 'find_station'
-                },
-                auto_send=True  # This handles all channels including push notifications
-            )
+            # Send rental overdue notification using clean API
+            from api.notifications.services import notify
+            notify(rental.user, 'rental_overdue',
+                  powerbank_id=rental.powerbank.serial_number,
+                  overdue_hours=overdue_hours,
+                  penalty_amount=penalty_amount)
         
         self.logger.info(f"Updated {updated_count} overdue rentals")
         return {'updated_count': updated_count}
@@ -93,26 +82,9 @@ def calculate_overdue_charges(self):
                 
                 charged_count += 1
                 
-                # Send notification about charges
-                from api.notifications.services import NotificationService
-                notification_service = NotificationService()
-                
-                notification_service.create_notification(
-                    user=rental.user,
-                    title="",  # Will be overridden by template
-                    message="",  # Will be overridden by template
-                    notification_type='payment',
-                    template_slug='payment_overdue_charges',
-                    data={
-                        'amount': float(overdue_amount),
-                        'rental_id': str(rental.id),
-                        'rental_code': rental.rental_code,
-                        'overdue_amount': float(overdue_amount),
-                        'overdue_minutes': overdue_minutes,
-                        'action': 'pay_due'
-                    },
-                    auto_send=True
-                )
+                # Send overdue charges notification using clean API
+                from api.notifications.services import notify_fines_dues
+                notify_fines_dues(rental.user, float(overdue_amount), f"Overdue charges for rental {rental.rental_code}")
                 
             except Exception as e:
                 self.logger.error(f"Failed to calculate charges for rental {rental.id}: {str(e)}")
@@ -177,23 +149,11 @@ def auto_complete_abandoned_rentals(self):
                 from api.notifications.services import NotificationService
                 notification_service = NotificationService()
                 
-                notification_service.create_notification(
-                    user=rental.user,
-                    title="",  # Will be overridden by template
-                    message="",  # Will be overridden by template
-                    notification_type='rental',
-                    template_slug='rental_auto_completed',
-                    data={
-                        'powerbank_id': rental.power_bank.serial_number,
-                        'total_cost': float(rental.overdue_amount),
-                        'rental_id': str(rental.id),
-                        'rental_code': rental.rental_code,
-                        'total_charges': float(rental.overdue_amount),
-                        'lost_penalty': lost_penalty,
-                        'action': 'pay_due'
-                    },
-                    auto_send=True
-                )
+                # Send rental auto-completion notification using clean API
+                from api.notifications.services import notify
+                notify(rental.user, 'rental_auto_completed',
+                      powerbank_id=rental.power_bank.serial_number,
+                      total_cost=float(rental.overdue_amount))
                 
             except Exception as e:
                 self.logger.error(f"Failed to auto-complete rental {rental.id}: {str(e)}")
@@ -467,19 +427,9 @@ def detect_rental_anomalies(self):
             admin_users = User.objects.filter(is_staff=True, is_active=True)
             
             for admin in admin_users:
-                notification_service.create_notification(
-                    user=admin,
-                    title="",  # Will be overridden by template
-                    message="",  # Will be overridden by template
-                    notification_type='system',
-                    template_slug='rental_anomalies_alert',
-                    data={
-                        'anomaly_count': len(anomalies),
-                        'anomalies': anomalies,
-                        'action': 'review_anomalies'
-                    },
-                    auto_send=True
-                )
+                # Send rental anomalies alert using clean API
+                from api.notifications.services import notify
+                notify(admin, 'rental_anomalies_alert', anomaly_count=len(anomalies))
         
         self.logger.info(f"Detected {len(anomalies)} rental anomalies")
         return {

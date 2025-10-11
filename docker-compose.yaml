@@ -25,6 +25,7 @@ services:
       - pgbouncer
       - migrations
       - collectstatic
+      - fixtures
       - redis
       - rabbitmq
     restart: always
@@ -109,6 +110,16 @@ services:
     build: .
     command: make collectstatic
     depends_on:
+      - pgbouncer
+    volumes:
+      - .:/application
+
+  fixtures:
+    <<: *common
+    build: .
+    command: make loadfixtures
+    depends_on:
+      - migrations
       - pgbouncer
     volumes:
       - .:/application

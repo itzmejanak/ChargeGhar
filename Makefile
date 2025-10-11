@@ -32,6 +32,9 @@ collectstatic:
 createsuperuser:
 	uv run manage.py createsuperuser --email "" --username admin
 
+loadfixtures:
+	uv run python load_fixtures.py
+
 # Tests, linters & formatters
 format:
 	make -k ruff-format ruff-fix

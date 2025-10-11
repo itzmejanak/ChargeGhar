@@ -104,19 +104,9 @@ class AdminUserService(CRUDService):
                 from api.notifications.services import NotificationService
                 notification_service = NotificationService()
                 
-                notification_service.create_notification(
-                    user=user,
-                    title="",  # Will be overridden by template
-                    message="",  # Will be overridden by template
-                    notification_type='system',
-                    template_slug='account_status_updated',
-                    data={
-                        'status': status,
-                        'reason': reason,
-                        'user_name': user.first_name or user.username
-                    },
-                    auto_send=True
-                )
+                # Send account status notification using clean API
+                from api.notifications.services import notify_account_status
+                notify_account_status(user, status, reason)
             
             self.log_info(f"User status updated: {user.username} -> {status}")
             return user
@@ -169,20 +159,9 @@ class AdminUserService(CRUDService):
             from api.notifications.services import NotificationService
             notification_service = NotificationService()
             
-            notification_service.create_notification(
-                user=user,
-                title="",  # Will be overridden by template
-                message="",  # Will be overridden by template
-                notification_type='payment',
-                template_slug='admin_balance_added',
-                data={
-                    'amount': str(amount),
-                    'new_balance': str(new_balance),
-                    'reason': reason
-                },
-                auto_send=True
-                }
-            )
+            # Send balance added notification using clean API
+            from api.notifications.services import notify_wallet_recharged
+            notify_wallet_recharged(user, amount, new_balance)
             
             self.log_info(f"Balance added to user: {user.username} +NPR {amount}")
             
@@ -559,26 +538,10 @@ class AdminRefundService(CRUDService):
                 user_agent="Admin Panel"
             )
             
-            # Send notification to user
-            from api.notifications.services import NotificationService
-            notification_service = NotificationService()
-            
+            # Send refund notification using clean API
+            from api.notifications.services import notify
             template_slug = 'refund_approved' if action == 'APPROVED' else 'refund_rejected'
-            
-            notification_service.create_notification(
-                user=refund.requested_by,
-                title="",  # Will be overridden by template
-                message="",  # Will be overridden by template
-                notification_type='payment',
-                template_slug=template_slug,
-                data={
-                    'refund_id': str(refund.id),
-                    'action': action,
-                    'amount': str(refund.amount),
-                    'admin_notes': admin_notes
-                },
-                auto_send=True
-            )
+            notify(refund.requested_by, template_slug, amount=refund.amount, admin_notes=admin_notes)
             
             self.log_info(f"Refund {action.lower()}ed: {refund.id} by {admin_user.username}")
             return refund

@@ -1,0 +1,3367 @@
+{
+  "summary": {
+    "total_files_scanned": 136,
+    "total_usages_found": 174,
+    "requirements_count": 10,
+    "missing_implementations_count": 1,
+    "recommendations_count": 77
+  },
+  "requirements": [
+    {
+      "situation": "Time Alert",
+      "trigger": "15 minutes before rental ends",
+      "channels": [
+        "fcm",
+        "in_app"
+      ],
+      "notification_type": "rental",
+      "description": "Warns the user to return the power bank to avoid overdue charges",
+      "priority": "HIGH",
+      "app_context": "rentals"
+    },
+    {
+      "situation": "Profile Reminder",
+      "trigger": "Incomplete user profile",
+      "channels": [
+        "in_app"
+      ],
+      "notification_type": "system",
+      "description": "Prompts the user to complete their profile to become eligible for rentals",
+      "priority": "MEDIUM",
+      "app_context": "users"
+    },
+    {
+      "situation": "Fines/Dues",
+      "trigger": "Late return of power bank",
+      "channels": [
+        "in_app",
+        "fcm"
+      ],
+      "notification_type": "payment",
+      "description": "Notifies the user of deducted balance or pending dues due to late return",
+      "priority": "HIGH",
+      "app_context": "payments"
+    },
+    {
+      "situation": "Rewards",
+      "trigger": "Referral, signup, or top-up action",
+      "channels": [
+        "in_app"
+      ],
+      "notification_type": "achievement",
+      "description": "Displays points earned for actions like referrals, signup, or wallet top-ups",
+      "priority": "MEDIUM",
+      "app_context": "points"
+    },
+    {
+      "situation": "OTP",
+      "trigger": "Login or registration request",
+      "channels": [
+        "sms"
+      ],
+      "notification_type": "system",
+      "description": "Delivers a 6-digit OTP for email or phone verification during login/register",
+      "priority": "HIGH",
+      "app_context": "auth"
+    },
+    {
+      "situation": "Payment Status",
+      "trigger": "After recharge or package purchase",
+      "channels": [
+        "in_app"
+      ],
+      "notification_type": "payment",
+      "description": "Confirms the success or failure of a payment transaction",
+      "priority": "HIGH",
+      "app_context": "payments"
+    },
+    {
+      "situation": "Rental Status",
+      "trigger": "Power bank rent or return",
+      "channels": [
+        "in_app",
+        "fcm"
+      ],
+      "notification_type": "rental",
+      "description": "Confirms the ejection of a power bank (rent) or successful return to a station",
+      "priority": "HIGH",
+      "app_context": "rentals"
+    },
+    {
+      "situation": "Coupon Applied",
+      "trigger": "User applies a coupon successfully",
+      "channels": [
+        "in_app"
+      ],
+      "notification_type": "promotion",
+      "description": "Confirms coupon application and points awarded",
+      "priority": "MEDIUM",
+      "app_context": "promotions"
+    },
+    {
+      "situation": "Account Status Update",
+      "trigger": "User account status changes",
+      "channels": [
+        "in_app",
+        "fcm"
+      ],
+      "notification_type": "system",
+      "description": "Notifies user of account status changes (active, suspended, etc.)",
+      "priority": "HIGH",
+      "app_context": "users"
+    },
+    {
+      "situation": "KYC Status Update",
+      "trigger": "KYC verification status changes",
+      "channels": [
+        "in_app",
+        "fcm"
+      ],
+      "notification_type": "system",
+      "description": "Notifies user of KYC verification status (approved, rejected, pending)",
+      "priority": "HIGH",
+      "app_context": "users"
+    }
+  ],
+  "current_usages": [
+    {
+      "file_path": "api/promotions/services.py",
+      "line_number": 147,
+      "code_snippet": "notify_coupon_applied(user, coupon.code, coupon.points_value)",
+      "notification_type": "promotion",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "promotions"
+    },
+    {
+      "file_path": "api/promotions/tasks.py",
+      "line_number": 115,
+      "code_snippet": "notify(user, 'coupon_expiring_soon',",
+      "notification_type": "promotion",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "promotions"
+    },
+    {
+      "file_path": "api/promotions/tasks.py",
+      "line_number": 220,
+      "code_snippet": "notify(admin, 'coupon_performance_alert', underperforming_count=len(underperforming_coupons))",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "promotions"
+    },
+    {
+      "file_path": "api/promotions/tasks.py",
+      "line_number": 266,
+      "code_snippet": "def send_new_coupon_notifications(self, coupon_id: str):",
+      "notification_type": "promotion",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "promotions"
+    },
+    {
+      "file_path": "api/promotions/tasks.py",
+      "line_number": 289,
+      "code_snippet": "notify(user, 'new_coupon_available',",
+      "notification_type": "promotion",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "promotions"
+    },
+    {
+      "file_path": "api/common/tasks/base.py",
+      "line_number": 51,
+      "code_snippet": "def send_notification(self, user_id: str, message: str, data: Optional[Dict[str, Any]] = None):",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/common/tasks/base.py",
+      "line_number": 53,
+      "code_snippet": "raise NotImplementedError(\"Subclasses must implement send_notification method\")",
+      "notification_type": "payment",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/social/services.py",
+      "line_number": 114,
+      "code_snippet": "send_achievement_unlock_notifications.delay(",
+      "notification_type": "achievement",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "social"
+    },
+    {
+      "file_path": "api/social/tasks.py",
+      "line_number": 115,
+      "code_snippet": "def send_achievement_unlock_notifications(self, user_id: str, user_achievement_ids: List[str]):",
+      "notification_type": "achievement",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "social"
+    },
+    {
+      "file_path": "api/social/tasks.py",
+      "line_number": 129,
+      "code_snippet": "notify(user, 'achievement_unlocked',",
+      "notification_type": "achievement",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "social"
+    },
+    {
+      "file_path": "api/social/tasks.py",
+      "line_number": 217,
+      "code_snippet": "notify(leaderboard.user, 'leaderboard_update',",
+      "notification_type": "achievement",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "social"
+    },
+    {
+      "file_path": "api/users/services.py",
+      "line_number": 103,
+      "code_snippet": "notify_otp(user, otp, purpose.lower(), identifier)",
+      "notification_type": "system",
+      "channels": [
+        "sms",
+        "email"
+      ],
+      "app_context": "users"
+    },
+    {
+      "file_path": "api/users/services.py",
+      "line_number": 109,
+      "code_snippet": "email_service = EmailService()",
+      "notification_type": "system",
+      "channels": [
+        "email"
+      ],
+      "app_context": "users"
+    },
+    {
+      "file_path": "api/users/services.py",
+      "line_number": 110,
+      "code_snippet": "email_service.send_email(",
+      "notification_type": "system",
+      "channels": [
+        "email"
+      ],
+      "app_context": "users"
+    },
+    {
+      "file_path": "api/users/services.py",
+      "line_number": 123,
+      "code_snippet": "sms_service = SMSService()",
+      "notification_type": "system",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "users"
+    },
+    {
+      "file_path": "api/users/services.py",
+      "line_number": 125,
+      "code_snippet": "sms_service.send_sms(identifier, message)",
+      "notification_type": "rental",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "users"
+    },
+    {
+      "file_path": "api/users/services.py",
+      "line_number": 337,
+      "code_snippet": "notify_account_status(user, new_status, reason)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "users"
+    },
+    {
+      "file_path": "api/users/services.py",
+      "line_number": 371,
+      "code_snippet": "notify_profile_reminder(user)",
+      "notification_type": "system",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "users"
+    },
+    {
+      "file_path": "api/users/services.py",
+      "line_number": 474,
+      "code_snippet": "notify_kyc_status(user, status.lower(), rejection_reason)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "users"
+    },
+    {
+      "file_path": "api/users/tasks.py",
+      "line_number": 66,
+      "code_snippet": "send_account_deactivation_notification.delay(user.id)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "users"
+    },
+    {
+      "file_path": "api/users/tasks.py",
+      "line_number": 97,
+      "code_snippet": "notification_type=\"PROFILE_REMINDER\",",
+      "notification_type": "complete_profile",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "users"
+    },
+    {
+      "file_path": "api/users/tasks.py",
+      "line_number": 133,
+      "code_snippet": "notification_type=\"KYC_REMINDER\",",
+      "notification_type": "complete_kyc",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "users"
+    },
+    {
+      "file_path": "api/admin_panel/services.py",
+      "line_number": 109,
+      "code_snippet": "notify_account_status(user, status, reason)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/admin_panel/services.py",
+      "line_number": 543,
+      "code_snippet": "template_slug = 'refund_approved' if action == 'APPROVED' else 'refund_rejected'",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/admin_panel/services.py",
+      "line_number": 544,
+      "code_snippet": "notify(refund.requested_by, template_slug, amount=refund.amount, admin_notes=admin_notes)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/admin_panel/services.py",
+      "line_number": 562,
+      "code_snippet": "send_push: bool, send_email: bool, admin_user) -> Dict[str, Any]:",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm",
+        "email"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/admin_panel/services.py",
+      "line_number": 572,
+      "code_snippet": "result = bulk_service.send_bulk_notification(",
+      "notification_type": "system",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/admin_panel/services.py",
+      "line_number": 575,
+      "code_snippet": "notification_type='system',",
+      "notification_type": "system",
+      "channels": [
+        "fcm",
+        "in_app"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/admin_panel/services.py",
+      "line_number": 592,
+      "code_snippet": "'send_email': send_email,",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm",
+        "email"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/admin_panel/serializers.py",
+      "line_number": 359,
+      "code_snippet": "send_email = serializers.BooleanField(default=False)",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm",
+        "email"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/admin_panel/tasks.py",
+      "line_number": 222,
+      "code_snippet": "NotificationService().create_notification(",
+      "notification_type": "unknown",
+      "channels": [
+        "in_app"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/admin_panel/tasks.py",
+      "line_number": 226,
+      "code_snippet": "notification_type='system'",
+      "notification_type": "system",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/admin_panel/tasks.py",
+      "line_number": 442,
+      "code_snippet": "NotificationService().create_notification(",
+      "notification_type": "unknown",
+      "channels": [
+        "in_app"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/admin_panel/tasks.py",
+      "line_number": 446,
+      "code_snippet": "notification_type='system'",
+      "notification_type": "system",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/stations/services.py",
+      "line_number": 304,
+      "code_snippet": "send_station_issue_notification.delay(issue.id)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/stations/tasks.py",
+      "line_number": 88,
+      "code_snippet": "send_station_offline_notification.delay(station.id)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/stations/tasks.py",
+      "line_number": 195,
+      "code_snippet": "notification_type=\"MAINTENANCE_REMINDER\",",
+      "notification_type": "station_name",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/points/services.py",
+      "line_number": 407,
+      "code_snippet": "send_referral_completion_notification.delay(referral.id)",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "points"
+    },
+    {
+      "file_path": "api/points/tasks.py",
+      "line_number": 56,
+      "code_snippet": "send_points_notification.delay(",
+      "notification_type": "achievement",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "points"
+    },
+    {
+      "file_path": "api/points/tasks.py",
+      "line_number": 428,
+      "code_snippet": "def send_points_milestone_notifications(self):",
+      "notification_type": "achievement",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "points"
+    },
+    {
+      "file_path": "api/points/tasks.py",
+      "line_number": 448,
+      "code_snippet": "send_points_milestone_notification.delay(",
+      "notification_type": "achievement",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "points"
+    },
+    {
+      "file_path": "api/notifications/views.py",
+      "line_number": 81,
+      "code_snippet": "filters['notification_type'] = request.query_params.get('notification_type')",
+      "notification_type": "channel",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/admin.py",
+      "line_number": 21,
+      "code_snippet": "list_display = ['notification_type', 'send_in_app', 'send_push', 'send_sms', 'send_email', 'is_critical']",
+      "notification_type": "notification_type",
+      "channels": [
+        "sms",
+        "fcm",
+        "email",
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/admin.py",
+      "line_number": 22,
+      "code_snippet": "list_filter = ['send_in_app', 'send_push', 'send_sms', 'send_email', 'is_critical']",
+      "notification_type": "notification_type",
+      "channels": [
+        "sms",
+        "fcm",
+        "email",
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/serializers.py",
+      "line_number": 160,
+      "code_snippet": "'send_sms', 'send_email', 'is_critical', 'created_at'",
+      "notification_type": "created_at",
+      "channels": [
+        "sms",
+        "fcm",
+        "email",
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/serializers.py",
+      "line_number": 186,
+      "code_snippet": "if obj.notification_type == 'sms':",
+      "notification_type": "sms",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/serializers.py",
+      "line_number": 239,
+      "code_snippet": "notification_type = serializers.ChoiceField(choices=Notification.NotificationTypeChoices.choices)",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm",
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/serializers.py",
+      "line_number": 292,
+      "code_snippet": "notification_type = serializers.ChoiceField(",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 28,
+      "code_snippet": "email_service = EmailService()",
+      "notification_type": "unknown",
+      "channels": [
+        "email"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 29,
+      "code_snippet": "email_service.send_email(",
+      "notification_type": "system",
+      "channels": [
+        "email"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 51,
+      "code_snippet": "sms_service = SMSService()",
+      "notification_type": "system",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 54,
+      "code_snippet": "result = sms_service.send_sms(identifier, message)",
+      "notification_type": "system",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 72,
+      "code_snippet": "def send_push_notification_task(self, user_id: str, title: str, message: str, data: Dict[str, Any] = None):",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 79,
+      "code_snippet": "fcm_service = FCMService()",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 81,
+      "code_snippet": "result = fcm_service.send_push_notification(",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 104,
+      "code_snippet": "def send_points_notification(self, user_id: str, points: int, source: str, description: str):",
+      "notification_type": "achievement",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 112,
+      "code_snippet": "notify_points_earned(user, points, total_points)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 130,
+      "code_snippet": "def send_rental_reminder_notification(self, rental_id: str):",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 153,
+      "code_snippet": "def send_payment_status_notification(self, user_id: str, transaction_id: str, status: str, amount: str):",
+      "notification_type": "payment",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 161,
+      "code_snippet": "notify_payment(user, payment_status, float(amount), transaction_id)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 179,
+      "code_snippet": "def send_referral_completion_notification(self, referral_id: str):",
+      "notification_type": "achievement",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 190,
+      "code_snippet": "notify_points_earned(referral.inviter, referral.inviter_points_awarded, inviter_total)",
+      "notification_type": "achievement",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 194,
+      "code_snippet": "notify_points_earned(referral.invitee, referral.invitee_points_awarded, invitee_total)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 209,
+      "code_snippet": "def send_station_issue_notification(self, issue_id: str):",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 221,
+      "code_snippet": "NotificationService().create_notification(",
+      "notification_type": "unknown",
+      "channels": [
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 225,
+      "code_snippet": "notification_type='system'",
+      "notification_type": "system",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 241,
+      "code_snippet": "def send_station_offline_notification(self, station_id: str):",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 253,
+      "code_snippet": "NotificationService().create_notification(",
+      "notification_type": "unknown",
+      "channels": [
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 257,
+      "code_snippet": "notification_type='system'",
+      "notification_type": "system",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 334,
+      "code_snippet": "def send_points_milestone_notification(self, user_id: str, milestone: int):",
+      "notification_type": "achievement",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 341,
+      "code_snippet": "notify(user, 'points_milestone', milestone=milestone)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 359,
+      "code_snippet": "def send_account_deactivation_notification(self, user_id: str):",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 365,
+      "code_snippet": "sms_service = SMSService()",
+      "notification_type": "unknown",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 373,
+      "code_snippet": "sms_service.send_sms(user.phone_number, message, user)",
+      "notification_type": "rental",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 406,
+      "code_snippet": "if log.notification_type == 'sms':",
+      "notification_type": "sms",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 408,
+      "code_snippet": "sms_service = SMSService()",
+      "notification_type": "sent",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 409,
+      "code_snippet": "result = sms_service.send_sms(log.recipient, log.message, log.user)",
+      "notification_type": "sent",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 414,
+      "code_snippet": "elif log.notification_type == 'fcm':",
+      "notification_type": "fcm",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 416,
+      "code_snippet": "fcm_service = FCMService()",
+      "notification_type": "fcm",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/tasks.py",
+      "line_number": 419,
+      "code_snippet": "result = fcm_service.send_push_notification(",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/models.py",
+      "line_number": 24,
+      "code_snippet": "notification_type = models.CharField(max_length=50, choices=NotificationTypeChoices.choices)",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/models.py",
+      "line_number": 41,
+      "code_snippet": "notification_type = models.CharField(max_length=255, unique=True)",
+      "notification_type": "unknown",
+      "channels": [
+        "sms",
+        "fcm",
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/models.py",
+      "line_number": 44,
+      "code_snippet": "send_sms = models.BooleanField(default=False)",
+      "notification_type": "unknown",
+      "channels": [
+        "sms",
+        "fcm",
+        "email",
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/models.py",
+      "line_number": 45,
+      "code_snippet": "send_email = models.BooleanField(default=False)",
+      "notification_type": "unknown",
+      "channels": [
+        "sms",
+        "fcm",
+        "email",
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/models.py",
+      "line_number": 79,
+      "code_snippet": "notification_type = models.CharField(max_length=50, choices=NotificationTypeChoices.choices)",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/models.py",
+      "line_number": 112,
+      "code_snippet": "notification_type = models.CharField(max_length=50, choices=TypeChoices.choices)",
+      "notification_type": "sms_fcm_logs",
+      "channels": [
+        "sms",
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/sms.py",
+      "line_number": 14,
+      "code_snippet": "def send_sms(self, phone_number: str, message: str, user=None) -> Dict[str, Any]:",
+      "notification_type": "unknown",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/sms.py",
+      "line_number": 25,
+      "code_snippet": "notification_type='sms',",
+      "notification_type": "pending",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/sms.py",
+      "line_number": 31,
+      "code_snippet": "success, response_text = self._send_sms_message(formatted_phone, message)",
+      "notification_type": "unknown",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/sms.py",
+      "line_number": 69,
+      "code_snippet": "def _send_sms_message(self, phone_number: str, message: str) -> tuple[bool, str]:",
+      "notification_type": "rental",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/fcm.py",
+      "line_number": 61,
+      "code_snippet": "def send_push_notification(self, user, title: str, message: str,",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/fcm.py",
+      "line_number": 90,
+      "code_snippet": "notification_type='fcm',",
+      "notification_type": "pending",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/analytics.py",
+      "line_number": 48,
+      "code_snippet": "channel_stats['sms'] = sms_fcm_logs.filter(notification_type='sms').count()",
+      "notification_type": "fcm",
+      "channels": [
+        "sms",
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/analytics.py",
+      "line_number": 49,
+      "code_snippet": "channel_stats['fcm'] = sms_fcm_logs.filter(notification_type='fcm').count()",
+      "notification_type": "fcm",
+      "channels": [
+        "sms",
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/analytics.py",
+      "line_number": 54,
+      "code_snippet": "count = notifications.filter(notification_type=choice.value).count()",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/analytics.py",
+      "line_number": 145,
+      "code_snippet": "type_notifications = notifications.filter(notification_type=choice.value)",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/analytics.py",
+      "line_number": 190,
+      "code_snippet": "sms_logs = sms_fcm_logs.filter(notification_type='sms')",
+      "notification_type": "failed",
+      "channels": [
+        "sms",
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/analytics.py",
+      "line_number": 197,
+      "code_snippet": "fcm_logs = sms_fcm_logs.filter(notification_type='fcm')",
+      "notification_type": "failed",
+      "channels": [
+        "sms",
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/bulk.py",
+      "line_number": 17,
+      "code_snippet": "def send_bulk_notification(self, title: str, message: str, notification_type: str,",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm",
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/bulk.py",
+      "line_number": 46,
+      "code_snippet": "NotificationService().create_notification(",
+      "notification_type": "unknown",
+      "channels": [
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/bulk.py",
+      "line_number": 50,
+      "code_snippet": "notification_type=notification_type,",
+      "notification_type": "in_app",
+      "channels": [
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/bulk.py",
+      "line_number": 58,
+      "code_snippet": "from api.notifications.tasks import send_push_notification_task",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/bulk.py",
+      "line_number": 59,
+      "code_snippet": "send_push_notification_task.delay(",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/bulk.py",
+      "line_number": 106,
+      "code_snippet": "def send_targeted_notification(self, title: str, message: str, notification_type: str,",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/bulk.py",
+      "line_number": 133,
+      "code_snippet": "return self.send_bulk_notification(",
+      "notification_type": "id",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/bulk.py",
+      "line_number": 136,
+      "code_snippet": "notification_type=notification_type,",
+      "notification_type": "send_push",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 12,
+      "code_snippet": "notify(user, 'otp_sms', otp='123456', purpose='login')",
+      "notification_type": "payment",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 13,
+      "code_snippet": "notify_payment(user, 'successful', 100.0)",
+      "notification_type": "payment",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 14,
+      "code_snippet": "notify_profile_reminder(user)",
+      "notification_type": "payment",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 70,
+      "code_snippet": "notification_type=template.notification_type,",
+      "notification_type": "in_app",
+      "channels": [
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 103,
+      "code_snippet": "def _distribute_channels(self, user, title: str, message: str, notification_type: str, data: Dict[str, Any], template_slug: str = None):",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 123,
+      "code_snippet": "if rule.send_sms and user.phone_number:",
+      "notification_type": "unknown",
+      "channels": [
+        "sms",
+        "fcm",
+        "email"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 124,
+      "code_snippet": "self._send_sms(user, title, message)",
+      "notification_type": "unknown",
+      "channels": [
+        "sms",
+        "email"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 127,
+      "code_snippet": "if rule.send_email and user.email:",
+      "notification_type": "unknown",
+      "channels": [
+        "sms",
+        "email"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 128,
+      "code_snippet": "self._send_email(user, title, message, data)",
+      "notification_type": "unknown",
+      "channels": [
+        "email"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 136,
+      "code_snippet": "return NotificationRule.objects.get(notification_type=notification_type)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 145,
+      "code_snippet": "fcm_service = FCMService()",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 146,
+      "code_snippet": "fcm_service.send_push_notification(user, title, message, data)",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 150,
+      "code_snippet": "def _send_sms(self, user, title: str, message: str):",
+      "notification_type": "unknown",
+      "channels": [
+        "sms",
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 154,
+      "code_snippet": "sms_service = SMSService()",
+      "notification_type": "unknown",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 155,
+      "code_snippet": "sms_service.send_sms(user.phone_number, f\"{title}\\n{message}\", user)",
+      "notification_type": "unknown",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 159,
+      "code_snippet": "def _send_email(self, user, title: str, message: str, data: Dict[str, Any]):",
+      "notification_type": "unknown",
+      "channels": [
+        "sms",
+        "email"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 163,
+      "code_snippet": "email_service = EmailService()",
+      "notification_type": "unknown",
+      "channels": [
+        "email"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 164,
+      "code_snippet": "email_service.send_email(",
+      "notification_type": "unknown",
+      "channels": [
+        "email"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 186,
+      "code_snippet": "def notify(user, template_slug: str, **data) -> Notification:",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 199,
+      "code_snippet": "notify(user, 'otp_sms', otp='123456', purpose='login')",
+      "notification_type": "rental",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 200,
+      "code_snippet": "notify(user, 'payment_status', status='success', amount=100)",
+      "notification_type": "rental",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 201,
+      "code_snippet": "notify(user, 'rental_started', powerbank_id='PB001', station='Mall')",
+      "notification_type": "rental",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 210,
+      "code_snippet": "def notify_otp(user, otp: str, purpose: str = 'login', identifier: str = None) -> Notification:",
+      "notification_type": "system",
+      "channels": [
+        "sms",
+        "email"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 215,
+      "code_snippet": "template_slug = 'otp_email'",
+      "notification_type": "system",
+      "channels": [
+        "sms",
+        "email"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 218,
+      "code_snippet": "template_slug = 'otp_sms'",
+      "notification_type": "rental",
+      "channels": [
+        "sms",
+        "email"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 220,
+      "code_snippet": "return notify(user, template_slug, otp=otp, purpose=purpose, expiry_minutes=5, identifier=identifier)",
+      "notification_type": "rental",
+      "channels": [
+        "sms"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 222,
+      "code_snippet": "def notify_payment(user, status: str, amount: float, transaction_id: str = None) -> Notification:",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 224,
+      "code_snippet": "return notify(user, 'payment_status', status=status, amount=amount, transaction_id=transaction_id)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 226,
+      "code_snippet": "def notify_profile_reminder(user) -> Notification:",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 228,
+      "code_snippet": "return notify(user, 'profile_completion_reminder', user_id=str(user.id))",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 230,
+      "code_snippet": "def notify_kyc_status(user, kyc_status: str, rejection_reason: str = None) -> Notification:",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 232,
+      "code_snippet": "return notify(user, 'kyc_status_update', kyc_status=kyc_status, rejection_reason=rejection_reason)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 234,
+      "code_snippet": "def notify_account_status(user, new_status: str, reason: str = None) -> Notification:",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 236,
+      "code_snippet": "return notify(user, 'account_status_update', new_status=new_status, reason=reason, user=user)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 238,
+      "code_snippet": "def notify_fines_dues(user, amount: float, reason: str = \"Late return penalty\") -> Notification:",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 240,
+      "code_snippet": "return notify(user, 'fines_dues', amount=amount, reason=reason)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 242,
+      "code_snippet": "def notify_coupon_applied(user, coupon_code: str, points: int) -> Notification:",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 244,
+      "code_snippet": "return notify(user, 'coupon_applied', coupon_code=coupon_code, points=points)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 246,
+      "code_snippet": "def notify_rental_started(user, powerbank_id: str, station_name: str, max_hours: int) -> Notification:",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 248,
+      "code_snippet": "return notify(user, 'rental_started', powerbank_id=powerbank_id, station_name=station_name, max_hours=max_hours)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 252,
+      "code_snippet": "return notify(user, 'rental_ending_soon', powerbank_id=powerbank_id, remaining_hours=remaining_hours)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 256,
+      "code_snippet": "return notify(user, 'rental_completed', powerbank_id=powerbank_id, total_cost=total_cost)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 258,
+      "code_snippet": "def notify_points_earned(user, points: int, total_points: int) -> Notification:",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 260,
+      "code_snippet": "return notify(user, 'points_earned', points=points, total_points=total_points)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 264,
+      "code_snippet": "return notify(user, 'wallet_recharged', amount=amount, new_balance=new_balance)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 276,
+      "code_snippet": "template_slug: str = None, auto_send: bool = True) -> Notification:",
+      "notification_type": "in_app",
+      "channels": [
+        "in_app"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/notify.py",
+      "line_number": 286,
+      "code_snippet": "notification_type=notification_type,",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/services/email.py",
+      "line_number": 22,
+      "code_snippet": "def send_email(",
+      "notification_type": "unknown",
+      "channels": [
+        "email"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/management/commands/send_test_fcm.py",
+      "line_number": 44,
+      "code_snippet": "fcm_service = FCMService()",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/notifications/management/commands/send_test_fcm.py",
+      "line_number": 45,
+      "code_snippet": "result = fcm_service.send_push_notification(",
+      "notification_type": "unknown",
+      "channels": [
+        "fcm"
+      ],
+      "app_context": "notifications"
+    },
+    {
+      "file_path": "api/content/tasks.py",
+      "line_number": 320,
+      "code_snippet": "NotificationService().create_notification(",
+      "notification_type": "unknown",
+      "channels": [
+        "in_app"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/content/tasks.py",
+      "line_number": 324,
+      "code_snippet": "notification_type='system'",
+      "notification_type": "system",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/config/views.py",
+      "line_number": 321,
+      "code_snippet": "send_app_update_notifications.delay(str(version.id))",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/config/tasks.py",
+      "line_number": 163,
+      "code_snippet": "def send_app_update_notifications(self, version_id: str):",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "unknown"
+    },
+    {
+      "file_path": "api/rentals/services.py",
+      "line_number": 70,
+      "code_snippet": "send_rental_reminder_notification.apply_async(",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "rentals"
+    },
+    {
+      "file_path": "api/rentals/services.py",
+      "line_number": 77,
+      "code_snippet": "notify_rental_started(user, power_bank.serial_number, station.station_name, 24)",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "rentals"
+    },
+    {
+      "file_path": "api/rentals/services.py",
+      "line_number": 534,
+      "code_snippet": "NotificationService().create_notification(",
+      "notification_type": "rental",
+      "channels": [
+        "in_app"
+      ],
+      "app_context": "rentals"
+    },
+    {
+      "file_path": "api/rentals/services.py",
+      "line_number": 538,
+      "code_snippet": "notification_type='system'",
+      "notification_type": "system",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "rentals"
+    },
+    {
+      "file_path": "api/rentals/tasks.py",
+      "line_number": 41,
+      "code_snippet": "notify(rental.user, 'rental_overdue',",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "rentals"
+    },
+    {
+      "file_path": "api/rentals/tasks.py",
+      "line_number": 87,
+      "code_snippet": "notify_fines_dues(rental.user, float(overdue_amount), f\"Overdue charges for rental {rental.rental_code}\")",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "rentals"
+    },
+    {
+      "file_path": "api/rentals/tasks.py",
+      "line_number": 154,
+      "code_snippet": "notify(rental.user, 'rental_auto_completed',",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "rentals"
+    },
+    {
+      "file_path": "api/rentals/tasks.py",
+      "line_number": 194,
+      "code_snippet": "send_rental_reminder_notification.delay(str(rental.id))",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "rentals"
+    },
+    {
+      "file_path": "api/rentals/tasks.py",
+      "line_number": 432,
+      "code_snippet": "notify(admin, 'rental_anomalies_alert', anomaly_count=len(anomalies))",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "rentals"
+    },
+    {
+      "file_path": "api/payments/services.py",
+      "line_number": 165,
+      "code_snippet": "notify_fines_dues(user, float(late_fee), f\"Late return penalty - {overdue_minutes} minutes overdue\")",
+      "notification_type": "rental",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "payments"
+    },
+    {
+      "file_path": "api/payments/services.py",
+      "line_number": 378,
+      "code_snippet": "notify_payment(intent.user, 'successful', float(intent.amount), transaction_obj.transaction_id)",
+      "notification_type": "payment",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "payments"
+    },
+    {
+      "file_path": "api/payments/services.py",
+      "line_number": 647,
+      "code_snippet": "send_refund_request_notification.delay(refund.id)",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "payments"
+    },
+    {
+      "file_path": "api/payments/services.py",
+      "line_number": 753,
+      "code_snippet": "send_refund_approved_notification.delay(refund.id)",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "payments"
+    },
+    {
+      "file_path": "api/payments/services.py",
+      "line_number": 819,
+      "code_snippet": "send_refund_rejected_notification.delay(refund.id)",
+      "notification_type": "unknown",
+      "channels": [
+        "unknown"
+      ],
+      "app_context": "payments"
+    }
+  ],
+  "missing_implementations": [
+    {
+      "situation": "OTP",
+      "app_context": "auth",
+      "priority": "HIGH",
+      "expected_channels": [
+        "sms"
+      ],
+      "expected_type": "system",
+      "description": "Delivers a 6-digit OTP for email or phone verification during login/register"
+    }
+  ],
+  "recommendations": [
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/promotions/services.py",
+      "line": 147,
+      "situation": "Coupon Applied",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/promotions/tasks.py",
+      "line": 115,
+      "situation": "Coupon Applied",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/promotions/tasks.py",
+      "line": 220,
+      "situation": "Coupon Applied",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/promotions/tasks.py",
+      "line": 266,
+      "situation": "Coupon Applied",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/promotions/tasks.py",
+      "line": 289,
+      "situation": "Coupon Applied",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 103,
+      "situation": "Profile Reminder",
+      "current_channels": [
+        "sms",
+        "email"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [
+        "sms",
+        "email"
+      ],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app; Consider removing unnecessary channels: sms, email"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 103,
+      "situation": "Account Status Update",
+      "current_channels": [
+        "sms",
+        "email"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [
+        "sms",
+        "email"
+      ],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm; Consider removing unnecessary channels: sms, email"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 103,
+      "situation": "KYC Status Update",
+      "current_channels": [
+        "sms",
+        "email"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [
+        "sms",
+        "email"
+      ],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm; Consider removing unnecessary channels: sms, email"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 109,
+      "situation": "Profile Reminder",
+      "current_channels": [
+        "email"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [
+        "email"
+      ],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app; Consider removing unnecessary channels: email"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 109,
+      "situation": "Account Status Update",
+      "current_channels": [
+        "email"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [
+        "email"
+      ],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm; Consider removing unnecessary channels: email"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 109,
+      "situation": "KYC Status Update",
+      "current_channels": [
+        "email"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [
+        "email"
+      ],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm; Consider removing unnecessary channels: email"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 110,
+      "situation": "Profile Reminder",
+      "current_channels": [
+        "email"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [
+        "email"
+      ],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app; Consider removing unnecessary channels: email"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 110,
+      "situation": "Account Status Update",
+      "current_channels": [
+        "email"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [
+        "email"
+      ],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm; Consider removing unnecessary channels: email"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 110,
+      "situation": "KYC Status Update",
+      "current_channels": [
+        "email"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [
+        "email"
+      ],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm; Consider removing unnecessary channels: email"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 123,
+      "situation": "Profile Reminder",
+      "current_channels": [
+        "sms"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [
+        "sms"
+      ],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app; Consider removing unnecessary channels: sms"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 123,
+      "situation": "Account Status Update",
+      "current_channels": [
+        "sms"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [
+        "sms"
+      ],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm; Consider removing unnecessary channels: sms"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 123,
+      "situation": "KYC Status Update",
+      "current_channels": [
+        "sms"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [
+        "sms"
+      ],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm; Consider removing unnecessary channels: sms"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 125,
+      "situation": "Profile Reminder",
+      "current_channels": [
+        "sms"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [
+        "sms"
+      ],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app; Consider removing unnecessary channels: sms"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 125,
+      "situation": "Account Status Update",
+      "current_channels": [
+        "sms"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [
+        "sms"
+      ],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm; Consider removing unnecessary channels: sms"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 125,
+      "situation": "KYC Status Update",
+      "current_channels": [
+        "sms"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [
+        "sms"
+      ],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm; Consider removing unnecessary channels: sms"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 337,
+      "situation": "Profile Reminder",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 337,
+      "situation": "Account Status Update",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 337,
+      "situation": "KYC Status Update",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 371,
+      "situation": "Profile Reminder",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 371,
+      "situation": "Account Status Update",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 371,
+      "situation": "KYC Status Update",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 474,
+      "situation": "Profile Reminder",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 474,
+      "situation": "Account Status Update",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/services.py",
+      "line": 474,
+      "situation": "KYC Status Update",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/tasks.py",
+      "line": 66,
+      "situation": "Profile Reminder",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/tasks.py",
+      "line": 66,
+      "situation": "Account Status Update",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/tasks.py",
+      "line": 66,
+      "situation": "KYC Status Update",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/tasks.py",
+      "line": 97,
+      "situation": "Profile Reminder",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/tasks.py",
+      "line": 97,
+      "situation": "Account Status Update",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/tasks.py",
+      "line": 97,
+      "situation": "KYC Status Update",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/tasks.py",
+      "line": 133,
+      "situation": "Profile Reminder",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/tasks.py",
+      "line": 133,
+      "situation": "Account Status Update",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/users/tasks.py",
+      "line": 133,
+      "situation": "KYC Status Update",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "MIGRATION",
+      "file": "api/admin_panel/tasks.py",
+      "line": 222,
+      "current_code": "NotificationService().create_notification(",
+      "suggested_code": "notify(user, 'template_slug', key='value')",
+      "reason": "Migrate from old verbose API to new clean one-liner",
+      "priority": "OPTIMIZATION"
+    },
+    {
+      "type": "MIGRATION",
+      "file": "api/admin_panel/tasks.py",
+      "line": 442,
+      "current_code": "NotificationService().create_notification(",
+      "suggested_code": "notify(user, 'template_slug', key='value')",
+      "reason": "Migrate from old verbose API to new clean one-liner",
+      "priority": "OPTIMIZATION"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/points/services.py",
+      "line": 407,
+      "situation": "Rewards",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/points/tasks.py",
+      "line": 56,
+      "situation": "Rewards",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/points/tasks.py",
+      "line": 428,
+      "situation": "Rewards",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/points/tasks.py",
+      "line": 448,
+      "situation": "Rewards",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "MEDIUM",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "MIGRATION",
+      "file": "api/notifications/tasks.py",
+      "line": 221,
+      "current_code": "NotificationService().create_notification(",
+      "suggested_code": "notify(user, 'template_slug', key='value')",
+      "reason": "Migrate from old verbose API to new clean one-liner",
+      "priority": "OPTIMIZATION"
+    },
+    {
+      "type": "MIGRATION",
+      "file": "api/notifications/tasks.py",
+      "line": 253,
+      "current_code": "NotificationService().create_notification(",
+      "suggested_code": "notify(user, 'template_slug', key='value')",
+      "reason": "Migrate from old verbose API to new clean one-liner",
+      "priority": "OPTIMIZATION"
+    },
+    {
+      "type": "MIGRATION",
+      "file": "api/notifications/services/bulk.py",
+      "line": 46,
+      "current_code": "NotificationService().create_notification(",
+      "suggested_code": "notify(user, 'template_slug', key='value')",
+      "reason": "Migrate from old verbose API to new clean one-liner",
+      "priority": "OPTIMIZATION"
+    },
+    {
+      "type": "MIGRATION",
+      "file": "api/content/tasks.py",
+      "line": 320,
+      "current_code": "NotificationService().create_notification(",
+      "suggested_code": "notify(user, 'template_slug', key='value')",
+      "reason": "Migrate from old verbose API to new clean one-liner",
+      "priority": "OPTIMIZATION"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/services.py",
+      "line": 70,
+      "situation": "Time Alert",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "missing_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: fcm, in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/services.py",
+      "line": 70,
+      "situation": "Rental Status",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/services.py",
+      "line": 77,
+      "situation": "Time Alert",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "missing_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: fcm, in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/services.py",
+      "line": 77,
+      "situation": "Rental Status",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "MIGRATION",
+      "file": "api/rentals/services.py",
+      "line": 534,
+      "current_code": "NotificationService().create_notification(",
+      "suggested_code": "notify(user, 'template_slug', key='value')",
+      "reason": "Migrate from old verbose API to new clean one-liner",
+      "priority": "OPTIMIZATION"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/services.py",
+      "line": 534,
+      "situation": "Time Alert",
+      "current_channels": [
+        "in_app"
+      ],
+      "expected_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "missing_channels": [
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/services.py",
+      "line": 534,
+      "situation": "Rental Status",
+      "current_channels": [
+        "in_app"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/services.py",
+      "line": 538,
+      "situation": "Time Alert",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "missing_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: fcm, in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/services.py",
+      "line": 538,
+      "situation": "Rental Status",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/tasks.py",
+      "line": 41,
+      "situation": "Time Alert",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "missing_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: fcm, in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/tasks.py",
+      "line": 41,
+      "situation": "Rental Status",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/tasks.py",
+      "line": 87,
+      "situation": "Time Alert",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "missing_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: fcm, in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/tasks.py",
+      "line": 87,
+      "situation": "Rental Status",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/tasks.py",
+      "line": 154,
+      "situation": "Time Alert",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "missing_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: fcm, in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/tasks.py",
+      "line": 154,
+      "situation": "Rental Status",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/tasks.py",
+      "line": 194,
+      "situation": "Time Alert",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "missing_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: fcm, in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/tasks.py",
+      "line": 194,
+      "situation": "Rental Status",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/tasks.py",
+      "line": 432,
+      "situation": "Time Alert",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "missing_channels": [
+        "fcm",
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: fcm, in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/rentals/tasks.py",
+      "line": 432,
+      "situation": "Rental Status",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/payments/services.py",
+      "line": 165,
+      "situation": "Fines/Dues",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/payments/services.py",
+      "line": 165,
+      "situation": "Payment Status",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/payments/services.py",
+      "line": 378,
+      "situation": "Fines/Dues",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/payments/services.py",
+      "line": 378,
+      "situation": "Payment Status",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/payments/services.py",
+      "line": 647,
+      "situation": "Fines/Dues",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/payments/services.py",
+      "line": 647,
+      "situation": "Payment Status",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/payments/services.py",
+      "line": 753,
+      "situation": "Fines/Dues",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/payments/services.py",
+      "line": 753,
+      "situation": "Payment Status",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/payments/services.py",
+      "line": 819,
+      "situation": "Fines/Dues",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "missing_channels": [
+        "in_app",
+        "fcm"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app, fcm"
+    },
+    {
+      "type": "CHANNEL_FIX",
+      "file": "api/payments/services.py",
+      "line": 819,
+      "situation": "Payment Status",
+      "current_channels": [
+        "unknown"
+      ],
+      "expected_channels": [
+        "in_app"
+      ],
+      "missing_channels": [
+        "in_app"
+      ],
+      "extra_channels": [],
+      "priority": "HIGH",
+      "recommendation": "Add missing channels: in_app"
+    }
+  ]
+}

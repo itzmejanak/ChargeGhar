@@ -228,11 +228,7 @@
 *Serializer for user wallet response*
 
 ### `PasswordChangeSerializer`
-*Serializer for password change*
-
-**Validation Methods:**
-- `validate()`
-- `validate_old_password()`
+*REMOVED - OTP-based authentication only*
 
 ## services.py
 

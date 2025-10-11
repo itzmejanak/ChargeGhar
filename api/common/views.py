@@ -11,11 +11,18 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q
 
-from api.common import serializers
 from api.common.models import Country, MediaUpload
 from api.common.routers import CustomViewRouter
 from api.common.services import AppDataService, CountryService
 from api.common.services.media import MediaUploadService
+from api.common.serializers import (
+    CountryListSerializer, 
+    MediaUploadResponseSerializer, 
+    AppInitDataSerializer,
+    MediaUploadCreateSerializer,
+    MediaUploadSerializer
+)
+from api.common.serializers import BaseResponseSerializer, HealthCheckSerializer, AppVersionSerializer
 from api.notifications.tasks import send_otp_task
 
 
@@ -28,7 +35,7 @@ router = CustomViewRouter()
 @router.register(r"app/countries", name="countries")
 class CountryListView(ListAPIView):
     """Get list of countries with dialing codes"""
-    serializer_class = serializers.CountryListSerializer
+    serializer_class = CountryListSerializer
     permission_classes = [AllowAny]
     
     @extend_schema(
@@ -47,7 +54,7 @@ class CountryListView(ListAPIView):
 @router.register(r"app/countries/search", name="countries-search")
 class CountrySearchView(GenericAPIView):
     """Search countries by name or code"""
-    serializer_class = serializers.CountryListSerializer
+    serializer_class = CountryListSerializer
     permission_classes = [AllowAny]
     
     def get(self, request: Request) -> Response:
@@ -71,7 +78,7 @@ class CountrySearchView(GenericAPIView):
 @router.register(r"app/media/upload", name="media-upload")
 class MediaUploadView(GenericAPIView):
     """Upload media files to cloud storage"""
-    serializer_class = serializers.MediaUploadCreateSerializer
+    serializer_class = MediaUploadCreateSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
     
@@ -90,14 +97,14 @@ class MediaUploadView(GenericAPIView):
         service = MediaUploadService()
         media_upload = service.upload_file(file, file_type, request.user)
         
-        response_serializer = serializers.MediaUploadResponseSerializer(media_upload)
+        response_serializer = MediaUploadResponseSerializer(media_upload)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
 @router.register(r"app/media/uploads", name="user-media-uploads")
 class UserMediaUploadsView(ListAPIView):
     """Get user's uploaded media files"""
-    serializer_class = serializers.MediaUploadSerializer
+    serializer_class = MediaUploadSerializer
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
@@ -109,7 +116,7 @@ class UserMediaUploadsView(ListAPIView):
 @router.register(r"app/media/uploads/<str:upload_id>", name="media-upload-detail")
 class MediaUploadDetailView(GenericAPIView):
     """Delete media upload"""
-    serializer_class = serializers.MediaUploadSerializer  # Add missing serializer
+    serializer_class = MediaUploadSerializer
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
@@ -142,7 +149,7 @@ class MediaUploadDetailView(GenericAPIView):
 @router.register(r"app/init-data", name="app-init-data")
 class AppInitDataView(GenericAPIView):
     """Get app initialization data"""
-    serializer_class = serializers.AppInitDataSerializer  # Add missing serializer
+    serializer_class = AppInitDataSerializer
     permission_classes = [AllowAny]
     
     def get(self, request: Request) -> Response:

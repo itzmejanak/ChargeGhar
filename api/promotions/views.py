@@ -12,6 +12,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from api.common.routers import CustomViewRouter
+from api.common.mixins import BaseAPIView
+from api.common.decorators import cached_response, log_api_call
 from api.common.services.base import ServiceException
 from api.promotions import serializers
 from api.promotions.models import Coupon, CouponUsage
@@ -31,7 +33,7 @@ logger = logging.getLogger(__name__)
 # ===============================
 
 @router.register(r"promotions/coupons/apply", name="promotion-coupons-apply")
-class CouponApplyView(GenericAPIView):
+class CouponApplyView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.CouponApplySerializer
     permission_classes = [IsAuthenticated]
     
@@ -39,30 +41,32 @@ class CouponApplyView(GenericAPIView):
         tags=["Promotions"],
         summary="Apply Coupon Code",
         description="Apply coupon code and receive points",
-        operation_id="apply_coupon_code"
+        operation_id="apply_coupon_code",
+        responses={200: serializers.CouponApplyResponseSerializer}
     )
-    
+    @log_api_call()
     def post(self, request: Request) -> Response:
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        try:
+        """Apply coupon code - REAL-TIME (no caching for financial operations)"""
+        def operation():
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
             coupon_service = CouponService()
             result = coupon_service.apply_coupon(
                 coupon_code=serializer.validated_data['coupon_code'],
                 user=request.user
             )
-            return Response(result, status=status.HTTP_200_OK)
-            
-        except ServiceException as e:
-            return Response(
-                {'detail': str(e)}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return result
+        
+        return self.handle_service_operation(
+            operation,
+            "Coupon applied successfully",
+            "Failed to apply coupon"
+        )
 
 
 @router.register(r"promotions/coupons/validate", name="promotion-coupons-validate")
-class CouponValidateView(GenericAPIView):
+class CouponValidateView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.CouponApplySerializer
     permission_classes = [IsAuthenticated]
     
@@ -70,31 +74,32 @@ class CouponValidateView(GenericAPIView):
         tags=["Promotions"],
         summary="Validate Coupon Code",
         description="Check if coupon code is valid and can be used",
-        operation_id="validate_coupon_code"
+        operation_id="validate_coupon_code",
+        responses={200: serializers.CouponValidationResponseSerializer}
     )
+    @log_api_call()
     def post(self, request: Request) -> Response:
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        try:
+        """Validate coupon code - REAL-TIME (always check current status)"""
+        def operation():
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
             coupon_service = CouponService()
             result = coupon_service.validate_coupon(
                 coupon_code=serializer.validated_data['coupon_code'],
                 user=request.user
             )
-            
-            response_serializer = serializers.CouponValidationSerializer(result)
-            return Response(response_serializer.data, status=status.HTTP_200_OK)
-            
-        except ServiceException as e:
-            return Response(
-                {'detail': str(e)}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return result
+        
+        return self.handle_service_operation(
+            operation,
+            "Coupon validation completed",
+            "Failed to validate coupon"
+        )
 
 
 @router.register(r"promotions/coupons/my", name="promotion-coupons-my")
-class MyCouponsView(GenericAPIView):
+class MyCouponsView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.UserCouponHistorySerializer
     permission_classes = [IsAuthenticated]
     
@@ -102,10 +107,13 @@ class MyCouponsView(GenericAPIView):
         tags=["Promotions"],
         summary="My Coupon History",
         description="Returns user's coupon usage history",
-        operation_id="get_my_coupon_history"
+        operation_id="get_my_coupon_history",
+        responses={200: serializers.MyCouponsResponseSerializer}
     )
+    @log_api_call()
     def get(self, request: Request) -> Response:
-        try:
+        """Get user's coupon history - REAL-TIME (user-specific data)"""
+        def operation():
             page = int(request.query_params.get('page', 1))
             page_size = int(request.query_params.get('page_size', 20))
             
@@ -116,36 +124,23 @@ class MyCouponsView(GenericAPIView):
                 page_size=page_size
             )
             
-            # Serialize the results
-            serializer = self.get_serializer(result['results'], many=True)
+            # Use MVP list serializer for performance
+            serializer = serializers.UserCouponHistorySerializer(result['results'], many=True)
             
-            return Response({
+            return {
                 'results': serializer.data,
-                'pagination': {
-                    'count': result['pagination']['total_count'],
-                    'page': result['pagination']['current_page'],
-                    'page_size': result['pagination']['page_size'],
-                    'total_pages': result['pagination']['total_pages'],
-                    'has_next': result['pagination']['has_next'],
-                    'has_previous': result['pagination']['has_previous']
-                }
-            }, status=status.HTTP_200_OK)
-            
-        except ServiceException as e:
-            return Response(
-                {'detail': str(e)}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            logger.error(f"Failed to get user coupon history: {str(e)}")
-            return Response(
-                {'detail': 'Failed to retrieve coupon history'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+                'pagination': result['pagination']
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            "Coupon history retrieved successfully",
+            "Failed to retrieve coupon history"
+        )
 
 
 @router.register(r"promotions/coupons/active", name="promotion-coupons-active")
-class ActiveCouponsView(GenericAPIView):
+class ActiveCouponsView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.CouponPublicSerializer
     permission_classes = [AllowAny]
     
@@ -153,27 +148,26 @@ class ActiveCouponsView(GenericAPIView):
         tags=["Promotions"],
         summary="Active Coupons",
         description="Returns list of currently active and valid coupons",
-        operation_id="get_active_coupons"
+        operation_id="get_active_coupons",
+        responses={200: serializers.ActiveCouponsResponseSerializer}
     )
+    @log_api_call()
+    @cached_response(timeout=900)  # Cache for 15 minutes - coupons don't change frequently
     def get(self, request: Request) -> Response:
-        try:
+        """Get active coupons - CACHED for performance"""
+        def operation():
             coupon_service = CouponService()
             coupons = coupon_service.get_active_coupons()
             
-            serializer = self.get_serializer(coupons, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-            
-        except ServiceException as e:
-            return Response(
-                {'detail': str(e)}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            logger.error(f"Failed to get active coupons: {str(e)}")
-            return Response(
-                {'detail': 'Failed to retrieve active coupons'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            # Use MVP public serializer for performance
+            serializer = serializers.CouponPublicSerializer(coupons, many=True)
+            return serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            "Active coupons retrieved successfully",
+            "Failed to retrieve active coupons"
+        )
 
 
 # ===============================
@@ -183,31 +177,31 @@ class ActiveCouponsView(GenericAPIView):
 @router.register(r"admin/promotions/coupons", name="admin-coupons")
 @extend_schema_view(
     list=extend_schema(
-        tags=["Admin - Promotions"], 
+        tags=["Admin"], 
         summary="List All Coupons (Admin)",
         description="Returns paginated list of all coupons with filtering (Staff only)",
         operation_id="list_admin_coupons"
     ),
     create=extend_schema(
-        tags=["Admin - Promotions"], 
+        tags=["Admin"], 
         summary="Create Coupon (Admin)",
         description="Creates new coupon (Staff only)",
         operation_id="create_admin_coupon"
     ),
     retrieve=extend_schema(
-        tags=["Admin - Promotions"], 
+        tags=["Admin"], 
         summary="Get Coupon Details (Admin)",
         description="Retrieves specific coupon details (Staff only)",
         operation_id="get_admin_coupon_details"
     ),
     update=extend_schema(
-        tags=["Admin - Promotions"], 
+        tags=["Admin"], 
         summary="Update Coupon (Admin)",
         description="Updates coupon information (Staff only)",
         operation_id="update_admin_coupon"
     ),
     partial_update=extend_schema(
-        tags=["Admin - Promotions"], 
+        tags=["Admin"], 
         summary="Partial Update Coupon (Admin)",
         description="Partially updates coupon information (Staff only)",
         operation_id="partial_update_admin_coupon"
@@ -276,7 +270,7 @@ class AdminCouponViewSet(
     
     @action(detail=False, methods=['post'], url_path='bulk-create')
     @extend_schema(
-        tags=["Admin - Promotions"],
+        tags=["Admin"],
         summary="Bulk Create Coupons (Admin)",
         description="Creates multiple coupons at once (Staff only)",
         operation_id="bulk_create_admin_coupons",
@@ -313,7 +307,7 @@ class AdminCouponViewSet(
     
     @action(detail=True, methods=['get'], url_path='performance')
     @extend_schema(
-        tags=["Admin - Promotions"],
+        tags=["Admin"],
         summary="Coupon Performance (Admin)",
         description="Get performance metrics for a specific coupon (Staff only)",
         operation_id="get_admin_coupon_performance",
@@ -342,7 +336,7 @@ class AdminCouponViewSet(
 
 
 @router.register(r"admin/promotions/analytics", name="admin-promotion-analytics")
-class AdminPromotionAnalyticsView(GenericAPIView):
+class AdminPromotionAnalyticsView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.CouponAnalyticsSerializer
     permission_classes = [IsStaffPermission]
     
@@ -350,27 +344,25 @@ class AdminPromotionAnalyticsView(GenericAPIView):
         tags=["Admin"],
         summary="Promotion Analytics (Admin)",
         description="Get comprehensive promotion analytics (Staff only)",
-        operation_id="get_promotion_analytics"
+        operation_id="get_promotion_analytics",
+        responses={200: serializers.CouponAnalyticsResponseSerializer}
     )
+    @log_api_call()
+    @cached_response(timeout=3600)  # Cache for 1 hour - analytics change slowly
     def get(self, request: Request) -> Response:
-        try:
+        """Get promotion analytics - CACHED for performance"""
+        def operation():
             analytics_service = PromotionAnalyticsService()
             analytics = analytics_service.get_coupon_analytics()
             
-            serializer = self.get_serializer(analytics)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-            
-        except ServiceException as e:
-            return Response(
-                {'detail': str(e)}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            logger.error(f"Failed to get promotion analytics: {str(e)}")
-            return Response(
-                {'detail': 'Failed to retrieve analytics'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            serializer = serializers.CouponAnalyticsSerializer(analytics)
+            return serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            "Promotion analytics retrieved successfully",
+            "Failed to retrieve analytics"
+        )
 
 
 @router.register(r"admin/promotions/coupons/filter", name="admin-coupons-filter")

@@ -4,12 +4,15 @@ from typing import TYPE_CHECKING
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+from rest_framework.permissions import IsAdminUser, AllowAny
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 import logging
 
 from api.common.routers import CustomViewRouter
-from api.common.utils.helpers import create_success_response, create_error_response
+from api.common.mixins import BaseAPIView
+from api.common.decorators import cached_response, rate_limit, log_api_call
+from api.common.serializers import BaseResponseSerializer, PaginatedResponseSerializer
 from api.content import serializers
 from api.content.services import (
     ContentPageService, FAQService, ContactInfoService, 
@@ -25,217 +28,167 @@ router = CustomViewRouter()
 
 
 @router.register("content/terms-of-service", name="content-terms")
-class TermsOfServiceView(GenericAPIView):
+@extend_schema(
+    tags=["Content"],
+    summary="Terms of Service",
+    description="Retrieve current terms of service content",
+    responses={200: BaseResponseSerializer}
+)
+class TermsOfServiceView(GenericAPIView, BaseAPIView):
     """Terms of service endpoint"""
     serializer_class = serializers.ContentPagePublicSerializer
+    permission_classes = [AllowAny]
 
-    @extend_schema(
-        tags=["Content"],
-        summary="Get terms of service",
-        description="Retrieve the current terms of service content",
-        responses={
-            200: OpenApiResponse(description="Terms of service retrieved successfully"),
-            404: OpenApiResponse(description="Terms of service not found"),
-        }
-    )
+    @cached_response(timeout=3600)  # 1 hour cache for static content
     def get(self, request: Request) -> Response:
-        """Get terms of service"""
-        try:
+        """Get terms of service with caching"""
+        def operation():
             service = ContentPageService()
             page = service.get_page_by_type('terms-of-service')
+            serializer = self.get_serializer(page)
+            return serializer.data
 
-            serializer = serializers.ContentPagePublicSerializer(page)
-
-            return create_success_response(
-                data=serializer.data,
-                message="Terms of service retrieved successfully"
-            )
-
-        except Exception as e:
-            return create_error_response(
-                message="Failed to retrieve terms of service",
-                errors={'detail': str(e)},
-                status_code=status.HTTP_404_NOT_FOUND
-            )
+        return self.handle_service_operation(
+            operation,
+            success_message="Terms of service retrieved successfully",
+            error_message="Failed to retrieve terms of service"
+        )
 
 
 @router.register("content/privacy-policy", name="content-privacy")
-class PrivacyPolicyView(GenericAPIView):
-    """Privacy policy endpoint"""
+@extend_schema(
+    tags=["Content"],
+    summary="Privacy Policy",
+    description="Retrieve current privacy policy content (cached for performance)",
+    responses={200: BaseResponseSerializer}
+)
+class PrivacyPolicyView(GenericAPIView, BaseAPIView):
+    """Privacy policy endpoint with caching"""
     serializer_class = serializers.ContentPagePublicSerializer
+    permission_classes = [AllowAny]
 
-    @extend_schema(
-        tags=["Content"],
-        summary="Get privacy policy",
-        description="Retrieve the current privacy policy content",
-        responses={
-            200: OpenApiResponse(description="Privacy policy retrieved successfully"),
-            404: OpenApiResponse(description="Privacy policy not found"),
-        }
-    )
+    @cached_response(timeout=3600)  # 1 hour cache for static content
     def get(self, request: Request) -> Response:
-        """Get privacy policy"""
-        try:
+        """Get privacy policy with caching"""
+        def operation():
             service = ContentPageService()
             page = service.get_page_by_type('privacy-policy')
+            serializer = self.get_serializer(page)
+            return serializer.data
 
-            serializer = serializers.ContentPagePublicSerializer(page)
-
-            return create_success_response(
-                data=serializer.data,
-                message="Privacy policy retrieved successfully"
-            )
-
-        except Exception as e:
-            return create_error_response(
-                message="Failed to retrieve privacy policy",
-                errors={'detail': str(e)},
-                status_code=status.HTTP_404_NOT_FOUND
-            )
+        return self.handle_service_operation(
+            operation,
+            success_message="Privacy policy retrieved successfully",
+            error_message="Failed to retrieve privacy policy"
+        )
 
 
 @router.register("content/about", name="content-about")
-class AboutView(GenericAPIView):
-    """About us endpoint"""
+@extend_schema(
+    tags=["Content"],
+    summary="About Us",
+    description="Retrieve about us information (cached for performance)",
+    responses={200: BaseResponseSerializer}
+)
+class AboutView(GenericAPIView, BaseAPIView):
+    """About us endpoint with caching"""
     serializer_class = serializers.ContentPagePublicSerializer
+    permission_classes = [AllowAny]
 
-    @extend_schema(
-        tags=["Content"],
-        summary="Get about information",
-        description="Retrieve about us information",
-        responses={
-            200: OpenApiResponse(description="About information retrieved successfully"),
-            404: OpenApiResponse(description="About information not found"),
-        }
-    )
+    @cached_response(timeout=3600)  # 1 hour cache for static content
     def get(self, request: Request) -> Response:
-        """Get about information"""
-        try:
+        """Get about information with caching"""
+        def operation():
             service = ContentPageService()
             page = service.get_page_by_type('about')
+            serializer = self.get_serializer(page)
+            return serializer.data
 
-            serializer = serializers.ContentPagePublicSerializer(page)
-
-            return create_success_response(
-                data=serializer.data,
-                message="About information retrieved successfully"
-            )
-
-        except Exception as e:
-            return create_error_response(
-                message="Failed to retrieve about information",
-                errors={'detail': str(e)},
-                status_code=status.HTTP_404_NOT_FOUND
-            )
+        return self.handle_service_operation(
+            operation,
+            success_message="About information retrieved successfully",
+            error_message="Failed to retrieve about information"
+        )
 
 
 @router.register("content/contact", name="content-contact")
-class ContactView(GenericAPIView):
-    """Contact information endpoint"""
+@extend_schema(
+    tags=["Content"],
+    summary="Contact Information",
+    description="Retrieve all contact information (cached for performance)",
+    responses={200: BaseResponseSerializer}
+)
+class ContactView(GenericAPIView, BaseAPIView):
+    """Contact information endpoint with caching"""
     serializer_class = serializers.ContactInfoPublicSerializer
+    permission_classes = [AllowAny]
 
-    @extend_schema(
-        tags=["Content"],
-        summary="Get contact information",
-        description="Retrieve all contact information",
-        responses={
-            200: OpenApiResponse(description="Contact information retrieved successfully"),
-        }
-    )
+    @cached_response(timeout=3600)  # 1 hour cache for contact info
+    @log_api_call()  # Log API calls for monitoring
     def get(self, request: Request) -> Response:
-        """Get contact information"""
-        try:
-            logger.info("Attempting to retrieve contact information")
-            
+        """Get contact information with caching"""
+        def operation():
             service = ContactInfoService()
             contact_info = service.get_all_contact_info()
             
-
-            
             if not contact_info:
-                return create_success_response(
-                    data=[],
-                    message="No contact information found"
-                )
-
-            serializer = self.serializer_class(contact_info, many=True)
+                return []
             
-            return create_success_response(
-                data=serializer.data,
-                message="Contact information retrieved successfully"
-            )
+            serializer = self.get_serializer(contact_info, many=True)
+            return serializer.data
 
-        except Exception as e:
-            return create_error_response(
-                message="Failed to retrieve contact information",
-                errors={'detail': str(e)}
-            )
-        """Get contact information"""
-        try:
-            logger.info("Attempting to retrieve contact information")
-            
-            service = ContactInfoService()
-            contact_info = service.get_all_contact_info()
-
-
-            if not contact_info:
-
-                return create_success_response(
-
-                    data=[],
-                    message="No contact information found"
-                )
-
-            serializer = self.serializer_class(contact_info, many=True)
-
-
-            return create_success_response(
-                data=serializer.data,
-                message="Contact information retrieved successfully"
-            )
-
-        except Exception as e:
-            logger.error(f"Failed to retrieve contact information: {str(e)}", exc_info=True)
-            return create_error_response(
-                message="Failed to retrieve contact information",
-                errors={'detail': str(e)}
-            )
+        return self.handle_service_operation(
+            operation,
+            success_message="Contact information retrieved successfully",
+            error_message="Failed to retrieve contact information"
+        )
 
 
 @router.register("content/faq", name="content-faq")
-class FAQView(GenericAPIView):
-    """FAQ endpoint"""
-    serializer_class = serializers.FAQCategorySerializer
+@extend_schema(
+    tags=["Content"],
+    summary="FAQ Content",
+    description="Retrieve FAQs with search and pagination support",
+    parameters=[
+        OpenApiParameter("search", OpenApiTypes.STR, description="Search query for FAQs"),
+        OpenApiParameter("page", OpenApiTypes.INT, description="Page number"),
+        OpenApiParameter("page_size", OpenApiTypes.INT, description="Items per page"),
+    ],
+    responses={200: PaginatedResponseSerializer}
+)
+class FAQView(GenericAPIView, BaseAPIView):
+    """FAQ endpoint with search and pagination"""
+    permission_classes = [AllowAny]
 
-    @extend_schema(
-        tags=["Content"],
-        summary="Get FAQ content",
-        description="Retrieve frequently asked questions grouped by category",
-        parameters=[
-            OpenApiParameter("search", str, description="Search query for FAQs"),
-        ],
-        responses={
-            200: OpenApiResponse(description="FAQ content retrieved successfully"),
-        }
-    )
+    def get_serializer_class(self):
+        """Use different serializers based on request"""
+        if self.request.query_params.get('search'):
+            return serializers.FAQPublicSerializer
+        return serializers.FAQCategorySerializer
+
+    @cached_response(timeout=1800)  # 30 minutes cache for FAQ content
     def get(self, request: Request) -> Response:
-        """Get FAQ content"""
-        try:
+        """Get FAQ content with caching and pagination"""
+        def operation():
             service = FAQService()
             search_query = request.query_params.get('search')
 
             if search_query:
-                # Search FAQs
+                # Search FAQs - no caching for search results
                 faqs = service.search_faqs(search_query)
-                serializer = serializers.FAQPublicSerializer(faqs, many=True)
                 
-                return create_success_response(
-                    data={
-                        'search_query': search_query,
-                        'results': serializer.data
-                    },
-                    message="FAQ search results retrieved successfully"
+                # Use pagination for search results
+                paginated_data = self.paginate_response(
+                    faqs, 
+                    request, 
+                    serializer_class=serializers.FAQPublicSerializer
                 )
+                
+                return {
+                    'search_query': search_query,
+                    'results': paginated_data['results'],
+                    'pagination': paginated_data['pagination']
+                }
             else:
                 # Get FAQs by category
                 faqs_by_category = service.get_faqs_by_category()
@@ -250,94 +203,79 @@ class FAQView(GenericAPIView):
                         'faqs': faq_serializer.data
                     })
 
-                return create_success_response(
-                    data=categories_data,
-                    message="FAQ content retrieved successfully"
-                )
+                return categories_data
 
-        except Exception as e:
-            return create_error_response(
-                message="Failed to retrieve FAQ content",
-                errors={'detail': str(e)}
-            )
+        return self.handle_service_operation(
+            operation,
+            success_message="FAQ content retrieved successfully",
+            error_message="Failed to retrieve FAQ content"
+        )
 
 
 @router.register("content/banners", name="content-banners")
-class BannersView(GenericAPIView):
-    """Banners endpoint"""
+@extend_schema(
+    tags=["Content"],
+    summary="Active Banners",
+    description="Retrieve currently active promotional banners (light caching)",
+    responses={200: BaseResponseSerializer}
+)
+class BannersView(GenericAPIView, BaseAPIView):
+    """Banners endpoint with light caching"""
     serializer_class = serializers.BannerPublicSerializer
+    permission_classes = [AllowAny]
 
-    @extend_schema(
-        tags=["Content"],
-        summary="Get active banners",
-        description="Retrieve currently active promotional banners",
-        responses={
-            200: OpenApiResponse(description="Active banners retrieved successfully"),
-        }
-    )
+    @cached_response(timeout=900)  # 15 minutes cache for banners (promotional content)
     def get(self, request: Request) -> Response:
-        """Get active banners"""
-        try:
+        """Get active banners with light caching"""
+        def operation():
             service = BannerService()
             banners = service.get_active_banners()
+            serializer = self.get_serializer(banners, many=True)
+            return serializer.data
 
-            serializer = serializers.BannerPublicSerializer(banners, many=True)
-
-            return create_success_response(
-                data=serializer.data,
-                message="Active banners retrieved successfully"
-            )
-
-        except Exception as e:
-            return create_error_response(
-                message="Failed to retrieve active banners",
-                errors={'detail': str(e)}
-            )
+        return self.handle_service_operation(
+            operation,
+            success_message="Active banners retrieved successfully",
+            error_message="Failed to retrieve active banners"
+        )
 
 
 @router.register("app/version", name="app-version")
-class AppVersionView(GenericAPIView):
+@extend_schema(
+    tags=["App"],
+    summary="App Version Info",
+    description="Check for app updates and version compatibility",
+    parameters=[
+        OpenApiParameter("current_version", OpenApiTypes.STR, description="Current app version", required=True),
+    ],
+    responses={200: BaseResponseSerializer}
+)
+class AppVersionView(GenericAPIView, BaseAPIView):
     """App version endpoint"""
     serializer_class = serializers.AppVersionSerializer
+    permission_classes = [AllowAny]
 
-    @extend_schema(
-        tags=["App"],
-        summary="Get app version information",
-        description="Check for app updates and version compatibility",
-        parameters=[
-            OpenApiParameter("current_version", str, description="Current app version", required=True),
-        ],
-        responses={
-            200: OpenApiResponse(description="Version information retrieved successfully"),
-            400: OpenApiResponse(description="Invalid version format"),
-        }
-    )
     def get(self, request: Request) -> Response:
         """Get app version information"""
-        try:
+        def operation():
             current_version = request.query_params.get('current_version')
             if not current_version:
-                return create_error_response(
-                    message="current_version parameter is required",
-                    status_code=status.HTTP_400_BAD_REQUEST
+                from api.common.services.base import ServiceException
+                raise ServiceException(
+                    detail="current_version parameter is required",
+                    code="missing_parameter"
                 )
 
             service = AppInfoService()
             version_info = service.get_app_version_info(current_version)
+            serializer = self.get_serializer(version_info)
+            return serializer.data
 
-            serializer = serializers.AppVersionSerializer(version_info)
-
-            return create_success_response(
-                data=serializer.data,
-                message="Version information retrieved successfully"
-            )
-
-        except Exception as e:
-            return create_error_response(
-                message="Failed to retrieve version information",
-                errors={'detail': str(e)},
-                status_code=status.HTTP_400_BAD_REQUEST
-            )
+        return self.handle_service_operation(
+            operation,
+            success_message="Version information retrieved successfully",
+            error_message="Failed to retrieve version information"
+        )
 
 
 @router.register("app/health", name="app-health")
@@ -345,57 +283,47 @@ class AppHealthView(GenericAPIView):
     """App health check endpoint"""
     serializer_class = serializers.AppHealthSerializer
 
-    @extend_schema(
-        tags=["App"],
-        summary="Get app health status",
-        description="Check the health status of the application and its services",
-        responses={
-            200: OpenApiResponse(description="Health status retrieved successfully"),
-        }
-    )
     def get(self, request: Request) -> Response:
-        """Get app health status"""
-        try:
+        """Get real-time health status"""
+        def operation():
             service = AppInfoService()
-            health_data = service.get_app_health()
-
-            serializer = serializers.AppHealthSerializer(health_data)
-
-            return create_success_response(
-                data=serializer.data,
-                message="Health status retrieved successfully"
-            )
-
-        except Exception as e:
-            return create_error_response(
-                message="Failed to retrieve health status",
-                errors={'detail': str(e)}
-            )
+            health_status = service.get_app_health()
+            
+            serializer = self.get_serializer(health_status)
+            return serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            success_message="Health check completed successfully",
+            error_message="Failed to get health status"
+        )
 
 
 @router.register("content/search", name="content-search")
-class ContentSearchView(GenericAPIView):
-    """Content search endpoint"""
+@extend_schema(
+    tags=["Content"],
+    summary="Content Search",
+    description="Search across all content types with rate limiting and pagination",
+    parameters=[
+        OpenApiParameter("query", OpenApiTypes.STR, description="Search query", required=True),
+        OpenApiParameter("content_type", OpenApiTypes.STR, description="Content type to search (all, pages, faqs, contact)"),
+        OpenApiParameter("page", OpenApiTypes.INT, description="Page number"),
+        OpenApiParameter("page_size", OpenApiTypes.INT, description="Items per page"),
+    ],
+    responses={200: PaginatedResponseSerializer}
+)
+class ContentSearchView(GenericAPIView, BaseAPIView):
+    """Content search endpoint with rate limiting"""
     serializer_class = serializers.ContentSearchSerializer
+    permission_classes = [AllowAny]
 
-    @extend_schema(
-        tags=["Content"],
-        summary="Search content",
-        description="Search across all content types (pages, FAQs, contact info)",
-        parameters=[
-            OpenApiParameter("query", str, description="Search query", required=True),
-            OpenApiParameter("content_type", str, description="Content type to search (all, pages, faqs, contact)"),
-        ],
-        responses={
-            200: OpenApiResponse(description="Search results retrieved successfully"),
-            400: OpenApiResponse(description="Invalid search parameters"),
-        }
-    )
+    @rate_limit(max_requests=10, window_seconds=60)  # Rate limit search
+    @log_api_call(include_request_data=True)  # Log search queries
     def get(self, request: Request) -> Response:
-        """Search content"""
-        try:
+        """Search content with rate limiting and pagination"""
+        def operation():
             # Validate search parameters
-            search_serializer = serializers.ContentSearchSerializer(data=request.query_params)
+            search_serializer = self.get_serializer(data=request.query_params)
             search_serializer.is_valid(raise_exception=True)
             
             validated_data = search_serializer.validated_data
@@ -406,48 +334,53 @@ class ContentSearchView(GenericAPIView):
                 content_type=validated_data['content_type']
             )
 
-            # Serialize results
-            results_serializer = serializers.ContentSearchResultSerializer(results, many=True)
-
-            return create_success_response(
-                data={
-                    'query': validated_data['query'],
-                    'content_type': validated_data['content_type'],
-                    'results_count': len(results),
-                    'results': results_serializer.data
-                },
-                message="Search results retrieved successfully"
+            # Convert to queryset-like for pagination
+            from django.db.models import QuerySet
+            from collections import namedtuple
+            
+            # Create mock queryset for pagination
+            Result = namedtuple('Result', ['content_type', 'title', 'excerpt', 'url', 'relevance_score'])
+            mock_results = [Result(**result) for result in results]
+            
+            # Use pagination mixin
+            paginated_data = self.paginate_response(
+                mock_results, 
+                request, 
+                serializer_class=serializers.ContentSearchResultSerializer
             )
+            
+            return {
+                'query': validated_data['query'],
+                'content_type': validated_data['content_type'],
+                'results': paginated_data['results'],
+                'pagination': paginated_data['pagination']
+            }
 
-        except Exception as e:
-            return create_error_response(
-                message="Failed to search content",
-                errors={'detail': str(e)},
-                status_code=status.HTTP_400_BAD_REQUEST
-            )
+        return self.handle_service_operation(
+            operation,
+            success_message="Search results retrieved successfully",
+            error_message="Failed to search content"
+        )
 
 
 # Admin endpoints
 @router.register(r"admin/content/pages", name="admin-content-pages")
-class AdminContentPagesView(GenericAPIView):
-    """Admin content pages management endpoint"""
+@extend_schema(
+    tags=["Admin"],
+    summary="Admin Content Pages",
+    description="Manage content pages (admin only) with logging",
+    request=serializers.ContentPageSerializer,
+    responses={200: BaseResponseSerializer}
+)
+class AdminContentPagesView(GenericAPIView, BaseAPIView):
+    """Admin content pages management with logging"""
     serializer_class = serializers.ContentPageSerializer
     permission_classes = [IsAdminUser]
 
-    @extend_schema(
-        tags=["Admin"],
-        summary="Update content page",
-        description="Update content page content (admin only)",
-        request=serializers.ContentPageSerializer,
-        responses={
-            200: OpenApiResponse(description="Content page updated successfully"),
-            400: OpenApiResponse(description="Invalid content data"),
-            403: OpenApiResponse(description="Admin access required"),
-        }
-    )
+    @log_api_call(include_request_data=True)  # Log admin actions
     def put(self, request: Request) -> Response:
-        """Update content page (admin only)"""
-        try:
+        """Update content page with admin logging"""
+        def operation():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
 
@@ -463,53 +396,41 @@ class AdminContentPagesView(GenericAPIView):
             )
 
             # Serialize response
-            response_serializer = serializers.ContentPageSerializer(page)
+            response_serializer = self.get_serializer(page)
+            return response_serializer.data
 
-            return create_success_response(
-                data=response_serializer.data,
-                message="Content page updated successfully"
-            )
-
-        except Exception as e:
-            return create_error_response(
-                message="Failed to update content page",
-                errors={'detail': str(e)},
-                status_code=status.HTTP_400_BAD_REQUEST
-            )
+        return self.handle_service_operation(
+            operation,
+            success_message="Content page updated successfully",
+            error_message="Failed to update content page"
+        )
 
 
 @router.register(r"admin/content/analytics", name="admin-content-analytics")
-class AdminContentAnalyticsView(GenericAPIView):
-    """Admin content analytics endpoint"""
+@extend_schema(
+    tags=["Admin"],
+    summary="Content Analytics",
+    description="Retrieve comprehensive content analytics (admin only) with caching",
+    responses={200: BaseResponseSerializer}
+)
+class AdminContentAnalyticsView(GenericAPIView, BaseAPIView):
+    """Admin content analytics with caching"""
     serializer_class = serializers.ContentAnalyticsSerializer
     permission_classes = [IsAdminUser]
 
-    @extend_schema(
-        tags=["Admin"],
-        summary="Get content analytics",
-        description="Retrieve comprehensive content analytics (admin only)",
-        responses={
-            200: OpenApiResponse(description="Content analytics retrieved successfully"),
-            403: OpenApiResponse(description="Admin access required"),
-        }
-    )
+    @cached_response(timeout=1800)  # 30 minutes cache for analytics
     def get(self, request: Request) -> Response:
-        """Get content analytics (admin only)"""
-        try:
+        """Get content analytics with caching"""
+        def operation():
             from api.content.services import ContentAnalyticsService
             
             service = ContentAnalyticsService()
             analytics = service.get_content_analytics()
+            serializer = self.get_serializer(analytics)
+            return serializer.data
 
-            serializer = serializers.ContentAnalyticsSerializer(analytics)
-
-            return create_success_response(
-                data=serializer.data,
-                message="Content analytics retrieved successfully"
-            )
-
-        except Exception as e:
-            return create_error_response(
-                message="Failed to retrieve content analytics",
-                errors={'detail': str(e)}
-            )
+        return self.handle_service_operation(
+            operation,
+            success_message="Content analytics retrieved successfully",
+            error_message="Failed to retrieve content analytics"
+        )

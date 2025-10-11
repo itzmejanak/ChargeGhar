@@ -5,12 +5,56 @@ from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema_field
 
 from api.social.models import Achievement, UserAchievement, UserLeaderboard
+from api.common.serializers import BaseResponseSerializer
 
 User = get_user_model()
 
 
-class AchievementSerializer(serializers.ModelSerializer):
-    """Serializer for achievements"""
+# MVP Pattern: List vs Detail Serializers
+
+
+class AchievementListSerializer(serializers.ModelSerializer):
+    """Minimal serializer for achievement lists - MVP optimized"""
+    is_user_unlocked = serializers.SerializerMethodField()
+    progress_percentage = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Achievement
+        fields = [
+            'id', 'name', 'criteria_type', 'reward_value', 
+            'is_user_unlocked', 'progress_percentage'
+        ]
+        read_only_fields = ['id']
+    
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_user_unlocked(self, obj) -> bool:
+        """Check if user has unlocked this achievement"""
+        user = self.context.get('user')
+        if not user or not user.is_authenticated:
+            return False
+        
+        try:
+            user_achievement = UserAchievement.objects.get(user=user, achievement=obj)
+            return user_achievement.is_unlocked
+        except UserAchievement.DoesNotExist:
+            return False
+    
+    @extend_schema_field(serializers.FloatField)
+    def get_progress_percentage(self, obj) -> float:
+        """Get user's progress percentage for this achievement"""
+        user = self.context.get('user')
+        if not user or not user.is_authenticated:
+            return 0
+        
+        try:
+            user_achievement = UserAchievement.objects.get(user=user, achievement=obj)
+            return min(100, (user_achievement.current_progress / obj.criteria_value) * 100)
+        except UserAchievement.DoesNotExist:
+            return 0
+
+
+class AchievementDetailSerializer(serializers.ModelSerializer):
+    """Detailed serializer for achievements - Full data"""
     progress_percentage = serializers.SerializerMethodField()
     user_progress = serializers.SerializerMethodField()
     is_user_unlocked = serializers.SerializerMethodField()
@@ -64,6 +108,10 @@ class AchievementSerializer(serializers.ModelSerializer):
             return False
 
 
+# Backward compatibility alias
+AchievementSerializer = AchievementDetailSerializer
+
+
 class UserAchievementSerializer(serializers.ModelSerializer):
     """Serializer for user achievements"""
     achievement_name = serializers.CharField(source='achievement.name', read_only=True)
@@ -87,8 +135,19 @@ class UserAchievementSerializer(serializers.ModelSerializer):
         return min(100, (obj.current_progress / obj.achievement.criteria_value) * 100)
 
 
-class LeaderboardEntrySerializer(serializers.ModelSerializer):
-    """Serializer for leaderboard entries"""
+class LeaderboardEntryListSerializer(serializers.ModelSerializer):
+    """Minimal serializer for leaderboard entries - MVP optimized"""
+    username = serializers.CharField(source='user.username', read_only=True)
+    
+    class Meta:
+        model = UserLeaderboard
+        fields = [
+            'rank', 'username', 'total_points_earned', 'total_rentals'
+        ]
+
+
+class LeaderboardEntryDetailSerializer(serializers.ModelSerializer):
+    """Detailed serializer for leaderboard entries - Full data"""
     username = serializers.CharField(source='user.username', read_only=True)
     profile_picture = serializers.URLField(source='user.profile_picture', read_only=True)
     achievements_count = serializers.SerializerMethodField()
@@ -103,6 +162,10 @@ class LeaderboardEntrySerializer(serializers.ModelSerializer):
     
     def get_achievements_count(self, obj):
         return UserAchievement.objects.filter(user=obj.user, is_unlocked=True).count()
+
+
+# Backward compatibility alias
+LeaderboardEntrySerializer = LeaderboardEntryDetailSerializer
 
 
 class UserLeaderboardSerializer(serializers.ModelSerializer):
@@ -244,3 +307,37 @@ class AchievementAnalyticsSerializer(serializers.Serializer):
     average_achievements_per_user = serializers.FloatField()
     
     last_updated = serializers.DateTimeField()
+
+
+# Response Serializers for Swagger Documentation
+
+class UserAchievementsResponseSerializer(BaseResponseSerializer):
+    """Response serializer for user achievements endpoint"""
+    data = UserAchievementSerializer(many=True)
+
+
+class LeaderboardResponseSerializer(BaseResponseSerializer):
+    """Response serializer for leaderboard endpoint"""
+    class LeaderboardDataSerializer(serializers.Serializer):
+        leaderboard = LeaderboardEntryListSerializer(many=True)
+        user_entry = UserLeaderboardSerializer(allow_null=True)
+        category = serializers.CharField()
+        period = serializers.CharField()
+        total_users = serializers.IntegerField()
+    
+    data = LeaderboardDataSerializer()
+
+
+class SocialStatsResponseSerializer(BaseResponseSerializer):
+    """Response serializer for social stats endpoint"""
+    data = SocialStatsSerializer()
+
+
+class AchievementCreateResponseSerializer(BaseResponseSerializer):
+    """Response serializer for achievement creation endpoint"""
+    data = AchievementDetailSerializer()
+
+
+class AchievementAnalyticsResponseSerializer(BaseResponseSerializer):
+    """Response serializer for achievement analytics endpoint"""
+    data = AchievementAnalyticsSerializer()

@@ -315,15 +315,13 @@ def validate_content_links(self):
             admin_users = User.objects.filter(is_staff=True, is_active=True)
             
             for admin in admin_users:
-                notification_service.create_notification(
+                # Send broken links alert using clean API (manual title/message for admin alerts)
+                from api.notifications.services import NotificationService
+                NotificationService().create_notification(
                     user=admin,
                     title="🔗 Broken Links Detected",
                     message=f"{len(broken_links)} broken links found in content. Please review and update.",
-                    notification_type='system',
-                    data={
-                        'broken_links': broken_links,
-                        'action': 'review_content'
-                    }
+                    notification_type='system'
                 )
         
         self.logger.info(f"Link validation completed. {len(broken_links)} broken links found")

@@ -102,30 +102,14 @@ def send_push_notification_task(self, user_id: str, title: str, message: str, da
 
 @shared_task(base=NotificationTask, bind=True)
 def send_points_notification(self, user_id: str, points: int, source: str, description: str):
-    """Send notification for points awarded"""
-    self.logger.critical("--- EXECUTING POINTS NOTIFICATION TASK ---")
+    """Send notification for points awarded (async task)"""
     try:
         user = User.objects.get(id=user_id)
         
-        from api.notifications.services import NotificationService
-        service = NotificationService()
-        
-        # Create in-app notification
-        service.create_notification(
-            user=user,
-            title="",  # Will be overridden by template
-            message="",  # Will be overridden by template
-            notification_type='achievement',
-            template_slug='points_earned',
-            data={
-                'points': points,
-                'total_points': user.total_points if hasattr(user, 'total_points') else points,
-                'source': source,
-                'description': description,
-                'action': 'view_points'
-            },
-            auto_send=True  # This handles all channels including push notifications
-        )
+        # Use clean notification API in async task
+        from api.notifications.services import notify_points_earned
+        total_points = user.total_points if hasattr(user, 'total_points') else points
+        notify_points_earned(user, points, total_points)
         
         self.logger.info(f"Points notification sent to user: {user.username}")
         return {
@@ -149,25 +133,9 @@ def send_rental_reminder_notification(self, rental_id: str):
         from api.rentals.models import Rental
         rental = Rental.objects.get(id=rental_id)
         
-        from api.notifications.services import NotificationService
-        service = NotificationService()
-        
-        # Create in-app notification
-        service.create_notification(
-            user=rental.user,
-            title="",  # Will be overridden by template
-            message="",  # Will be overridden by template
-            notification_type='rental',
-            template_slug='rental_ending_soon',
-            data={
-                'powerbank_id': rental.powerbank.serial_number,
-                'remaining_hours': 0.25,  # 15 minutes = 0.25 hours
-                'rental_id': str(rental.id),
-                'rental_code': rental.rental_code,
-                'action': 'find_station'
-            },
-            auto_send=True  # This handles all channels including push notifications
-        )
+        # Use clean notification API
+        from api.notifications.services import notify_rental_ending
+        notify_rental_ending(rental.user, rental.powerbank.serial_number, 0.25)  # 15 minutes = 0.25 hours
         
         self.logger.info(f"Rental reminder sent for: {rental.rental_code}")
         return {
@@ -187,38 +155,10 @@ def send_payment_status_notification(self, user_id: str, transaction_id: str, st
     try:
         user = User.objects.get(id=user_id)
         
-        from api.notifications.services import NotificationService
-        service = NotificationService()
-        
-        if status == 'SUCCESS':
-            title = "💳 Payment Successful"
-            message = f"Your payment of NPR {amount} has been processed successfully."
-        else:
-            title = "❌ Payment Failed"
-            message = f"Your payment of NPR {amount} could not be processed. Please try again."
-        
-        # Create in-app notification
-        if status == 'SUCCESS':
-            template_slug = 'payment_success'
-        else:
-            template_slug = 'payment_failed'
-            
-        service.create_notification(
-            user=user,
-            title="",  # Will be overridden by template
-            message="",  # Will be overridden by template
-            notification_type='payment',
-            template_slug=template_slug,
-            data={
-                'amount': amount,
-                'transaction_id': transaction_id,
-                'status': status,
-                'gateway': 'Unknown',  # Could be enhanced to pass actual gateway
-                'failure_reason': 'Unknown' if status != 'SUCCESS' else None,
-                'action': 'view_transaction'
-            },
-            auto_send=True
-        )
+        # Use clean notification API
+        from api.notifications.services import notify_payment
+        payment_status = 'successful' if status == 'SUCCESS' else 'failed'
+        notify_payment(user, payment_status, float(amount), transaction_id)
         
         self.logger.info(f"Payment status notification sent to user: {user.username}")
         return {
@@ -242,38 +182,16 @@ def send_referral_completion_notification(self, referral_id: str):
         from api.points.models import Referral
         referral = Referral.objects.get(id=referral_id)
         
-        from api.notifications.services import NotificationService
-        service = NotificationService()
+        # Use clean notification API for both users
+        from api.notifications.services import notify_points_earned
         
         # Notify inviter
-        service.create_notification(
-            user=referral.inviter,
-            title="🎉 Referral Reward Earned!",
-            message=f"You earned {referral.inviter_points_awarded} points for referring {referral.invitee.username}!",
-            notification_type='achievement',
-            data={
-                'referral_id': str(referral.id),
-                'points': referral.inviter_points_awarded,
-                'invitee_username': referral.invitee.username,
-                'action': 'view_referrals'
-            },
-            channel='in_app'
-        )
+        inviter_total = referral.inviter.total_points if hasattr(referral.inviter, 'total_points') else referral.inviter_points_awarded
+        notify_points_earned(referral.inviter, referral.inviter_points_awarded, inviter_total)
         
-        # Notify invitee
-        service.create_notification(
-            user=referral.invitee,
-            title="🎉 Welcome Bonus!",
-            message=f"You earned {referral.invitee_points_awarded} points as a welcome bonus!",
-            notification_type='achievement',
-            data={
-                'referral_id': str(referral.id),
-                'points': referral.invitee_points_awarded,
-                'inviter_username': referral.inviter.username,
-                'action': 'view_points'
-            },
-            channel='in_app'
-        )
+        # Notify invitee  
+        invitee_total = referral.invitee.total_points if hasattr(referral.invitee, 'total_points') else referral.invitee_points_awarded
+        notify_points_earned(referral.invitee, referral.invitee_points_awarded, invitee_total)
         
         self.logger.info(f"Referral completion notifications sent for: {referral_id}")
         return {
@@ -294,27 +212,17 @@ def send_station_issue_notification(self, issue_id: str):
         from api.stations.models import StationIssue
         issue = StationIssue.objects.get(id=issue_id)
         
-        from api.notifications.services import NotificationService
-        service = NotificationService()
-        
-        # Get admin users
+        # Get admin users and send notifications using clean API
         admin_users = User.objects.filter(is_staff=True, is_active=True)
         
         for admin in admin_users:
-            service.create_notification(
+            # Use backward compatible API for admin alerts with custom titles
+            from api.notifications.services import NotificationService
+            NotificationService().create_notification(
                 user=admin,
                 title="🚨 Station Issue Reported",
                 message=f"Issue reported at {issue.station.station_name}: {issue.get_issue_type_display()}",
-                notification_type='system',
-                data={
-                    'issue_id': str(issue.id),
-                    'station_id': str(issue.station.id),
-                    'station_name': issue.station.station_name,
-                    'issue_type': issue.issue_type,
-                    'priority': issue.priority,
-                    'action': 'view_issue'
-                },
-                channel='in_app'
+                notification_type='system'
             )
         
         self.logger.info(f"Station issue notification sent to {admin_users.count()} admins")
@@ -336,25 +244,17 @@ def send_station_offline_notification(self, station_id: str):
         from api.stations.models import Station
         station = Station.objects.get(id=station_id)
         
-        from api.notifications.services import NotificationService
-        service = NotificationService()
-        
-        # Get admin users
+        # Get admin users and send notifications using clean API
         admin_users = User.objects.filter(is_staff=True, is_active=True)
         
         for admin in admin_users:
-            service.create_notification(
+            # Use backward compatible API for admin alerts with custom titles
+            from api.notifications.services import NotificationService
+            NotificationService().create_notification(
                 user=admin,
                 title="📡 Station Offline",
                 message=f"Station {station.station_name} has gone offline and needs attention.",
-                notification_type='system',
-                data={
-                    'station_id': str(station.id),
-                    'station_name': station.station_name,
-                    'last_heartbeat': station.last_heartbeat.isoformat() if station.last_heartbeat else None,
-                    'action': 'check_station'
-                },
-                channel='in_app'
+                notification_type='system'
             )
         
         self.logger.info(f"Station offline notification sent for: {station.station_name}")
@@ -436,23 +336,9 @@ def send_points_milestone_notification(self, user_id: str, milestone: int):
     try:
         user = User.objects.get(id=user_id)
         
-        from api.notifications.services import NotificationService
-        service = NotificationService()
-        
-        # Create notification with auto-send
-        service.create_notification(
-            user=user,
-            title="",  # Will be overridden by template
-            message="",  # Will be overridden by template
-            notification_type='achievement',
-            template_slug='points_milestone',
-            data={
-                'milestone': milestone,
-                'points': milestone,
-                'action': 'view_achievements'
-            },
-            auto_send=True  # This handles all channels including push notifications
-        )
+        # Use clean notification API
+        from api.notifications.services import notify
+        notify(user, 'points_milestone', milestone=milestone)
         
         self.logger.info(f"Points milestone notification sent to user: {user.username}")
         return {
@@ -550,4 +436,192 @@ def retry_failed_notifications(self):
         
     except Exception as e:
         self.logger.error(f"Failed to retry notifications: {str(e)}")
+        raise
+
+
+
+# ========================================
+# MISSING TASKS - ADDED FOR COMPATIBILITY
+# ========================================
+
+@shared_task(base=NotificationTask, bind=True)
+def send_achievement_unlock_notifications(self, user_id: str, achievements: List[Dict[str, Any]]):
+    """Send notifications for unlocked achievements"""
+    try:
+        user = User.objects.get(id=user_id)
+        
+        for achievement in achievements:
+            # Use clean notification API
+            from api.notifications.services import notify_points_earned
+            notify_points_earned(user, achievement.get('points', 0), user.total_points if hasattr(user, 'total_points') else 0)
+        
+        self.logger.info(f"Achievement notifications sent to user: {user.username}")
+        return {
+            'user_id': user_id,
+            'achievements_count': len(achievements),
+            'status': 'sent'
+        }
+        
+    except User.DoesNotExist:
+        self.logger.error(f"User not found: {user_id}")
+        raise
+    except Exception as e:
+        self.logger.error(f"Failed to send achievement notifications: {str(e)}")
+        raise
+
+
+@shared_task(base=NotificationTask, bind=True)
+def send_refund_request_notification(self, refund_id: str):
+    """Send notification to admin about refund request"""
+    try:
+        from api.payments.models import Refund
+        refund = Refund.objects.get(id=refund_id)
+        
+        # Get admin users and send notifications
+        admin_users = User.objects.filter(is_staff=True, is_active=True)
+        
+        for admin in admin_users:
+            from api.notifications.services import NotificationService
+            NotificationService().create_notification(
+                user=admin,
+                title="💰 Refund Request",
+                message=f"New refund request from {refund.user.username} for ₹{refund.amount}",
+                notification_type='system'
+            )
+        
+        self.logger.info(f"Refund request notification sent for: {refund_id}")
+        return {
+            'refund_id': refund_id,
+            'admins_notified': admin_users.count()
+        }
+        
+    except Exception as e:
+        self.logger.error(f"Failed to send refund request notification: {str(e)}")
+        raise
+
+
+@shared_task(base=NotificationTask, bind=True)
+def send_refund_approved_notification(self, refund_id: str):
+    """Send notification when refund is approved"""
+    try:
+        from api.payments.models import Refund
+        refund = Refund.objects.get(id=refund_id)
+        
+        # Use clean notification API
+        from api.notifications.services import notify_payment
+        notify_payment(refund.user, 'refund_approved', float(refund.amount), refund.transaction_id)
+        
+        self.logger.info(f"Refund approved notification sent for: {refund_id}")
+        return {
+            'refund_id': refund_id,
+            'user_id': str(refund.user.id),
+            'amount': str(refund.amount)
+        }
+        
+    except Exception as e:
+        self.logger.error(f"Failed to send refund approved notification: {str(e)}")
+        raise
+
+
+@shared_task(base=NotificationTask, bind=True)
+def send_refund_rejected_notification(self, refund_id: str):
+    """Send notification when refund is rejected"""
+    try:
+        from api.payments.models import Refund
+        refund = Refund.objects.get(id=refund_id)
+        
+        # Use clean notification API
+        from api.notifications.services import notify_payment
+        notify_payment(refund.user, 'refund_rejected', float(refund.amount), refund.transaction_id)
+        
+        self.logger.info(f"Refund rejected notification sent for: {refund_id}")
+        return {
+            'refund_id': refund_id,
+            'user_id': str(refund.user.id),
+            'amount': str(refund.amount)
+        }
+        
+    except Exception as e:
+        self.logger.error(f"Failed to send refund rejected notification: {str(e)}")
+        raise
+
+
+@shared_task(base=NotificationTask, bind=True)
+def send_wallet_discrepancy_alert(self, discrepancies: List[Dict[str, Any]]):
+    """Send alert to admin about wallet discrepancies"""
+    try:
+        admin_users = User.objects.filter(is_staff=True, is_active=True)
+        
+        for admin in admin_users:
+            from api.notifications.services import NotificationService
+            NotificationService().create_notification(
+                user=admin,
+                title="⚠️ Wallet Discrepancy Alert",
+                message=f"Found {len(discrepancies)} wallet discrepancies that need attention",
+                notification_type='system',
+                data={'discrepancies': discrepancies}
+            )
+        
+        self.logger.info(f"Wallet discrepancy alert sent to {admin_users.count()} admins")
+        return {
+            'discrepancies_count': len(discrepancies),
+            'admins_notified': admin_users.count()
+        }
+        
+    except Exception as e:
+        self.logger.error(f"Failed to send wallet discrepancy alert: {str(e)}")
+        raise
+
+
+@shared_task(base=NotificationTask, bind=True)
+def send_optimization_report(self, optimization_suggestions: List[Dict[str, Any]]):
+    """Send optimization report to admin"""
+    try:
+        admin_users = User.objects.filter(is_staff=True, is_active=True)
+        
+        for admin in admin_users:
+            from api.notifications.services import NotificationService
+            NotificationService().create_notification(
+                user=admin,
+                title="📊 Station Optimization Report",
+                message=f"New optimization report with {len(optimization_suggestions)} suggestions",
+                notification_type='system',
+                data={'suggestions': optimization_suggestions}
+            )
+        
+        self.logger.info(f"Optimization report sent to {admin_users.count()} admins")
+        return {
+            'suggestions_count': len(optimization_suggestions),
+            'admins_notified': admin_users.count()
+        }
+        
+    except Exception as e:
+        self.logger.error(f"Failed to send optimization report: {str(e)}")
+        raise
+
+
+@shared_task(base=NotificationTask, bind=True)
+def send_points_discrepancy_alert(self, discrepancies: List[Dict[str, Any]]):
+    """Send alert to admin about points discrepancies"""
+    try:
+        admin_users = User.objects.filter(is_staff=True, is_active=True)
+        
+        for admin in admin_users:
+            from api.notifications.services import NotificationService
+            NotificationService().create_notification(
+                user=admin,
+                title="⚠️ Points Discrepancy Alert",
+                message=f"Found {len(discrepancies)} points discrepancies that need attention",
+                notification_type='system',
+                data={'discrepancies': discrepancies}
+            )
+        
+        self.logger.info(f"Points discrepancy alert sent to {admin_users.count()} admins")
+        return {
+            'discrepancies_count': len(discrepancies),
+            'admins_notified': admin_users.count()
+        }
+        
+    except Exception as e:
+        self.logger.error(f"Failed to send points discrepancy alert: {str(e)}")
         raise

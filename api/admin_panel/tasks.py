@@ -217,16 +217,13 @@ def monitor_system_health(self):
             admin_users = User.objects.filter(is_staff=True, is_active=True)
             
             for admin in admin_users:
-                notification_service.create_notification(
+                # Send system health alert using clean API (manual title/message for admin alerts)
+                from api.notifications.services import NotificationService
+                NotificationService().create_notification(
                     user=admin,
                     title="🚨 System Health Alert",
                     message=f"{len(alerts)} system issues detected. Please review immediately.",
-                    notification_type='system',
-                    data={
-                        'alerts': alerts,
-                        'health_data': health_data,
-                        'action': 'view_system_health'
-                    }
+                    notification_type='system'
                 )
         
         # Log system health
@@ -440,15 +437,13 @@ System Status: All systems operational
         notification_service = NotificationService()
         
         for admin in admin_users:
-            notification_service.create_notification(
+            # Send daily digest using clean API (manual title/message for admin alerts)
+            from api.notifications.services import NotificationService
+            NotificationService().create_notification(
                 user=admin,
                 title="📊 Daily System Digest",
                 message=digest_message,
-                notification_type='system',
-                data={
-                    'analytics': analytics,
-                    'action': 'view_dashboard'
-                }
+                notification_type='system'
             )
         
         self.logger.info(f"Daily digest sent to {admin_users.count()} admin users")

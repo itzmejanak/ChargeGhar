@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Any, Optional
 from rest_framework import serializers
-from django.contrib.auth import authenticate
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
+# Removed password-related imports for OTP-based authentication
 from drf_spectacular.utils import extend_schema_field
 
 from api.users.models import User, UserProfile, UserKYC, UserDevice, UserPoints
@@ -12,10 +10,9 @@ from api.common.utils.helpers import validate_phone_number, mask_sensitive_data
 
 
 class UserRegistrationSerializer(serializers.Serializer):
-    """Serializer for user registration"""
-    username = serializers.CharField(max_length=150)
-    identifier = serializers.CharField()
-    password = serializers.CharField(write_only=True, min_length=8)
+    """Serializer for OTP-based user registration"""
+    identifier = serializers.CharField(help_text="Email or phone number")
+    username = serializers.CharField(max_length=150, required=False, allow_blank=True)
     referral_code = serializers.CharField(max_length=10, required=False, allow_blank=True)
     verification_token = serializers.CharField(write_only=True)
     
@@ -31,43 +28,42 @@ class UserRegistrationSerializer(serializers.Serializer):
                 raise serializers.ValidationError("Invalid phone number format")
             attrs['email'] = None
             attrs['phone_number'] = identifier
-            
-        # Validate password
-        try:
-            validate_password(attrs['password'])
-        except ValidationError as e:
-            raise serializers.ValidationError({"password": e.messages})
+        
+        # Generate username if not provided
+        if not attrs.get('username'):
+            if attrs.get('email'):
+                attrs['username'] = attrs['email'].split('@')[0]
+            else:
+                attrs['username'] = f"user_{identifier[-4:]}"
         
         return attrs
     
+    def validate_identifier(self, value):
+        """Validate that identifier doesn't already exist"""
+        if '@' in value:
+            if User.objects.filter(email=value).exists():
+                raise serializers.ValidationError("Email already registered")
+        else:
+            if User.objects.filter(phone_number=value).exists():
+                raise serializers.ValidationError("Phone number already registered")
+        return value
+    
     def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
+        if value and User.objects.filter(username=value).exists():
             raise serializers.ValidationError("Username already exists")
-        return value
-    
-    def validate_email(self, value):
-        if value and User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Email already exists")
-        return value
-    
-    def validate_phone_number(self, value):
-        if value and User.objects.filter(phone_number=value).exists():
-            raise serializers.ValidationError("Phone number already exists")
         return value
 
 
 class UserLoginSerializer(serializers.Serializer):
-    """Serializer for user login"""
-    identifier = serializers.CharField()  # email or phone
-    password = serializers.CharField(write_only=True)
-    verification_token = serializers.CharField(write_only=True, required=False)
+    """Serializer for OTP-based user login"""
+    identifier = serializers.CharField(help_text="Email or phone number")
+    verification_token = serializers.CharField(write_only=True)
     
     def validate(self, attrs):
         identifier = attrs.get('identifier')
-        password = attrs.get('password')
         
-        if not identifier or not password:
-            raise serializers.ValidationError("Both identifier and password are required")
+        if not identifier:
+            raise serializers.ValidationError("Identifier is required")
         
         # Try to find user by email or phone
         user = None
@@ -75,19 +71,12 @@ class UserLoginSerializer(serializers.Serializer):
             try:
                 user = User.objects.get(email=identifier)
             except User.DoesNotExist:
-                pass
+                raise serializers.ValidationError("User not found")
         else:
             try:
                 user = User.objects.get(phone_number=identifier)
             except User.DoesNotExist:
-                pass
-        
-        if not user:
-            raise serializers.ValidationError("Invalid credentials")
-        
-        # Authenticate user
-        if not user.check_password(password):
-            raise serializers.ValidationError("Invalid credentials")
+                raise serializers.ValidationError("User not found")
         
         if user.status != 'ACTIVE':
             raise serializers.ValidationError("Account is not active")
@@ -98,8 +87,8 @@ class UserLoginSerializer(serializers.Serializer):
 
 class OTPRequestSerializer(serializers.Serializer):
     """Serializer for OTP request"""
-    identifier = serializers.CharField()  # email or phone
-    purpose = serializers.ChoiceField(choices=['REGISTER', 'RESET_PASSWORD'])
+    identifier = serializers.CharField(help_text="Email or phone number")
+    purpose = serializers.ChoiceField(choices=['REGISTER', 'LOGIN'])
     
     def validate_identifier(self, value):
         # Basic validation for email or phone format
@@ -119,9 +108,9 @@ class OTPRequestSerializer(serializers.Serializer):
 
 class OTPVerificationSerializer(serializers.Serializer):
     """Serializer for OTP verification"""
-    identifier = serializers.CharField()
+    identifier = serializers.CharField(help_text="Email or phone number")
     otp = serializers.CharField(max_length=6, min_length=6)
-    purpose = serializers.ChoiceField(choices=['REGISTER', 'RESET_PASSWORD'])
+    purpose = serializers.ChoiceField(choices=['REGISTER', 'LOGIN'])
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -179,8 +168,57 @@ class UserDeviceSerializer(serializers.ModelSerializer):
         return value.strip()
 
 
+class UserListSerializer(serializers.ModelSerializer):
+    """MVP serializer for user list views - minimal fields for performance"""
+    
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'status', 'date_joined'
+        ]
+        read_only_fields = fields
+
+
 class UserSerializer(serializers.ModelSerializer):
-    """Main user serializer"""
+    """Standard user serializer with essential real-time data"""
+    profile_complete = serializers.SerializerMethodField()
+    kyc_status = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'profile_picture', 'referral_code', 
+            'status', 'date_joined', 'profile_complete', 'kyc_status'
+        ]
+        read_only_fields = [
+            'id', 'referral_code', 'status', 'date_joined'
+        ]
+    
+    @extend_schema_field(serializers.BooleanField)
+    def get_profile_complete(self, obj) -> bool:
+        """Check if profile is complete - real-time from DB"""
+        try:
+            # Use select_related to avoid N+1 queries
+            if hasattr(obj, '_prefetched_objects_cache') and 'profile' in obj._prefetched_objects_cache:
+                return obj.profile.is_profile_complete if obj.profile else False
+            return obj.profile.is_profile_complete if hasattr(obj, 'profile') and obj.profile else False
+        except:
+            return False
+    
+    @extend_schema_field(serializers.CharField)
+    def get_kyc_status(self, obj) -> str:
+        """Get KYC status - real-time from DB"""
+        try:
+            # Use select_related to avoid N+1 queries
+            if hasattr(obj, '_prefetched_objects_cache') and 'kyc' in obj._prefetched_objects_cache:
+                return obj.kyc.status if obj.kyc else 'NOT_SUBMITTED'
+            return obj.kyc.status if hasattr(obj, 'kyc') and obj.kyc else 'NOT_SUBMITTED'
+        except:
+            return 'NOT_SUBMITTED'
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    """Detailed user serializer with full profile data"""
     profile = UserProfileSerializer(read_only=True)
     kyc = UserKYCSerializer(read_only=True)
     points = serializers.SerializerMethodField()
@@ -203,23 +241,37 @@ class UserSerializer(serializers.ModelSerializer):
     
     @extend_schema_field(serializers.DictField)
     def get_points(self, obj) -> Dict[str, int]:
-        """Get user points"""
+        """Get user points - real-time from DB"""
         try:
-            return {
-                'current_points': obj.points.current_points,
-                'total_points': obj.points.total_points
-            }
-        except UserPoints.DoesNotExist:
+            if hasattr(obj, '_prefetched_objects_cache') and 'points' in obj._prefetched_objects_cache:
+                points = obj.points if obj.points else None
+            else:
+                points = getattr(obj, 'points', None)
+            
+            if points:
+                return {
+                    'current_points': points.current_points,
+                    'total_points': points.total_points
+                }
+            return {'current_points': 0, 'total_points': 0}
+        except:
             return {'current_points': 0, 'total_points': 0}
     
     @extend_schema_field(serializers.DictField)
     def get_wallet_balance(self, obj) -> Dict[str, str]:
-        """Get user wallet balance"""
+        """Get user wallet balance - real-time from DB"""
         try:
-            return {
-                'balance': str(obj.wallet.balance),
-                'currency': obj.wallet.currency
-            }
+            if hasattr(obj, '_prefetched_objects_cache') and 'wallet' in obj._prefetched_objects_cache:
+                wallet = obj.wallet if obj.wallet else None
+            else:
+                wallet = getattr(obj, 'wallet', None)
+            
+            if wallet:
+                return {
+                    'balance': str(wallet.balance),
+                    'currency': wallet.currency
+                }
+            return {'balance': '0.00', 'currency': 'NPR'}
         except:
             return {'balance': '0.00', 'currency': 'NPR'}
     
@@ -260,31 +312,32 @@ class UserAnalyticsSerializer(serializers.Serializer):
 
 
 class UserWalletResponseSerializer(serializers.Serializer):
-    """Serializer for user wallet response"""
-    balance = serializers.CharField()
-    currency = serializers.CharField()
+    """MVP serializer for wallet response - real-time data"""
+    balance = serializers.DecimalField(max_digits=10, decimal_places=2)
+    currency = serializers.CharField(max_length=3, default='NPR')
     points = serializers.DictField()
+    last_updated = serializers.DateTimeField(read_only=True)
 
 
-class PasswordChangeSerializer(serializers.Serializer):
-    """Serializer for password change"""
-    old_password = serializers.CharField(write_only=True)
-    new_password = serializers.CharField(write_only=True, min_length=8)
-    confirm_password = serializers.CharField(write_only=True)
+# Password change removed - OTP-based authentication only
+
+
+class UserFilterSerializer(serializers.Serializer):
+    """Serializer for user filtering parameters"""
+    page = serializers.IntegerField(default=1, min_value=1)
+    page_size = serializers.IntegerField(default=20, min_value=1, max_value=100)
+    status = serializers.ChoiceField(choices=User.STATUS_CHOICES, required=False)
+    email_verified = serializers.BooleanField(required=False)
+    phone_verified = serializers.BooleanField(required=False)
+    search = serializers.CharField(required=False, max_length=255)
+    start_date = serializers.DateTimeField(required=False)
+    end_date = serializers.DateTimeField(required=False)
     
     def validate(self, attrs):
-        if attrs['new_password'] != attrs['confirm_password']:
-            raise serializers.ValidationError("New passwords don't match")
+        start_date = attrs.get('start_date')
+        end_date = attrs.get('end_date')
         
-        try:
-            validate_password(attrs['new_password'])
-        except ValidationError as e:
-            raise serializers.ValidationError({"new_password": e.messages})
+        if start_date and end_date and start_date > end_date:
+            raise serializers.ValidationError("start_date cannot be after end_date")
         
         return attrs
-    
-    def validate_old_password(self, value):
-        user = self.context['request'].user
-        if not user.check_password(value):
-            raise serializers.ValidationError("Current password is incorrect")
-        return value

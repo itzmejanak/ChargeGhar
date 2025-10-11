@@ -72,26 +72,9 @@ class RentalService(CRUDService):
                     eta=reminder_time
                 )
             
-            # Send rental start notification
-            from api.notifications.services import NotificationService
-            notification_service = NotificationService()
-            notification_service.create_notification(
-                user=user,
-                title="",  # Will be overridden by template
-                message="",  # Will be overridden by template
-                notification_type='rental',
-                template_slug='rental_started',
-                data={
-                    'powerbank_id': power_bank.serial_number,
-                    'station_name': station.station_name,
-                    'max_hours': 24,  # Default rental duration
-                    'rental_id': str(rental.id),
-                    'rental_code': rental.rental_code,
-                    'due_at': rental.due_at.isoformat(),
-                    'action': 'view_rental'
-                },
-                auto_send=True
-            )
+            # Send rental start notification using clean API
+            from api.notifications.services import notify_rental_started
+            notify_rental_started(user, power_bank.serial_number, station.station_name, 24)
             
             self.log_info(f"Rental started: {rental.rental_code} by {user.username}")
             return rental
@@ -365,23 +348,9 @@ class RentalService(CRUDService):
             from api.notifications.services import NotificationService
             notification_service = NotificationService()
             
-            notification_service.create_notification(
-                user=rental.user,
-                title="",  # Will be overridden by template
-                message="",  # Will be overridden by template
-                notification_type='rental',
-                template_slug='rental_completed',
-                data={
-                    'powerbank_id': rental.power_bank.serial_number,
-                    'total_cost': float(rental.amount_paid),
-                    'rental_id': str(rental.id),
-                    'rental_code': rental.rental_code,
-                    'is_returned_on_time': rental.is_returned_on_time,
-                    'overdue_amount': float(rental.overdue_amount),
-                    'action': 'view_rental' if rental.payment_status == 'PAID' else 'pay_due'
-                },
-                auto_send=True
-            )
+            # Send rental completion notification using clean API
+            from api.notifications.services import notify_rental_completed
+            notify_rental_completed(rental.user, rental.power_bank.serial_number, float(rental.amount_paid))
             
             self.log_info(f"Power bank returned: {rental.rental_code}")
             return rental
@@ -560,18 +529,13 @@ class RentalIssueService(CRUDService):
             admin_users = User.objects.filter(is_staff=True, is_active=True)
             
             for admin in admin_users:
-                notification_service.create_notification(
+                # Send admin notification using clean API (manual title/message for admin alerts)
+                from api.notifications.services import NotificationService
+                NotificationService().create_notification(
                     user=admin,
                     title="🚨 Rental Issue Reported",
                     message=f"Issue reported for rental {rental.rental_code}: {issue.get_issue_type_display()}",
-                    notification_type='system',
-                    data={
-                        'issue_id': str(issue.id),
-                        'rental_id': str(rental.id),
-                        'rental_code': rental.rental_code,
-                        'issue_type': issue.issue_type,
-                        'action': 'view_issue'
-                    }
+                    notification_type='system'
                 )
             
             self.log_info(f"Rental issue reported: {rental.rental_code} - {issue.issue_type}")

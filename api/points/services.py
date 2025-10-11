@@ -139,9 +139,12 @@ class PointsService(CRUDService):
             self.handle_service_error(e, "Failed to adjust points")
     
     def get_points_history(self, user, filters: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Get user's points transaction history"""
+        """Get user's points transaction history - OPTIMIZED with select_related"""
         try:
-            queryset = PointsTransaction.objects.filter(user=user).select_related('related_rental')
+            # Optimized query with select_related for better performance
+            queryset = PointsTransaction.objects.filter(user=user).select_related(
+                'related_rental', 'related_referral'
+            )
             
             # Apply filters
             if filters:
@@ -157,7 +160,7 @@ class PointsService(CRUDService):
                 if filters.get('end_date'):
                     queryset = queryset.filter(created_at__lte=filters['end_date'])
             
-            # Order by latest first
+            # Order by latest first with index optimization
             queryset = queryset.order_by('-created_at')
             
             # Pagination
@@ -421,9 +424,10 @@ class ReferralService(CRUDService):
             self.handle_service_error(e, "Failed to complete referral")
     
     def get_user_referrals(self, user, page: int = 1, page_size: int = 20) -> Dict[str, Any]:
-        """Get referrals sent by user"""
+        """Get referrals sent by user - OPTIMIZED with select_related"""
         try:
-            queryset = Referral.objects.filter(inviter=user).select_related('invitee')
+            # Optimized query with select_related and ordering
+            queryset = Referral.objects.filter(inviter=user).select_related('invitee').order_by('-created_at')
             return paginate_queryset(queryset, page, page_size)
         except Exception as e:
             self.handle_service_error(e, "Failed to get user referrals")
@@ -505,42 +509,56 @@ class PointsLeaderboardService(BaseService):
     """Service for points leaderboard"""
     
     def get_points_leaderboard(self, limit: int = 10, include_user: User = None) -> List[Dict[str, Any]]:
-        """Get points leaderboard"""
+        """Get points leaderboard - OPTIMIZED with bulk queries"""
         try:
-            # Get top users by total points
+            # Get top users by total points with optimized query
             top_users = UserPoints.objects.select_related('user').order_by('-total_points')[:limit]
+            
+            # Bulk fetch all required data to minimize database queries
+            user_ids = [up.user.id for up in top_users]
+            current_month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            
+            # Bulk fetch monthly points
+            monthly_points = dict(
+                PointsTransaction.objects.filter(
+                    user_id__in=user_ids,
+                    transaction_type='EARNED',
+                    created_at__gte=current_month_start
+                ).values('user_id').annotate(total=Sum('points')).values_list('user_id', 'total')
+            )
+            
+            # Bulk fetch referrals count
+            referrals_count = dict(
+                Referral.objects.filter(
+                    inviter_id__in=user_ids,
+                    status='COMPLETED'
+                ).values('inviter_id').annotate(count=Count('id')).values_list('inviter_id', 'count')
+            )
+            
+            # Bulk fetch rentals count (if Rental model exists)
+            rentals_count = {}
+            try:
+                from api.rentals.models import Rental
+                rentals_count = dict(
+                    Rental.objects.filter(
+                        user_id__in=user_ids,
+                        status='COMPLETED'
+                    ).values('user_id').annotate(count=Count('id')).values_list('user_id', 'count')
+                )
+            except ImportError:
+                pass  # Rental model doesn't exist yet
             
             leaderboard = []
             for rank, user_points in enumerate(top_users, 1):
-                # Get points earned this month
-                current_month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-                points_this_month = PointsTransaction.objects.filter(
-                    user=user_points.user,
-                    transaction_type='EARNED',
-                    created_at__gte=current_month_start
-                ).aggregate(total=Sum('points'))['total'] or 0
-                
-                # Get referrals and rentals count
-                referrals_count = Referral.objects.filter(
-                    inviter=user_points.user,
-                    status='COMPLETED'
-                ).count()
-                
-                from api.rentals.models import Rental
-                rentals_count = Rental.objects.filter(
-                    user=user_points.user,
-                    status='COMPLETED'
-                ).count()
-                
                 leaderboard.append({
                     'rank': rank,
                     'user_id': str(user_points.user.id),
                     'username': user_points.user.username,
                     'total_points': user_points.total_points,
                     'current_points': user_points.current_points,
-                    'points_this_month': points_this_month,
-                    'referrals_count': referrals_count,
-                    'rentals_count': rentals_count
+                    'points_this_month': monthly_points.get(user_points.user.id, 0),
+                    'referrals_count': referrals_count.get(user_points.user.id, 0),
+                    'rentals_count': rentals_count.get(user_points.user.id, 0)
                 })
             
             # Include specific user if requested and not in top list

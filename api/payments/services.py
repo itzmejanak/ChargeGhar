@@ -159,6 +159,10 @@ class PaymentCalculationService(BaseService):
                             if overdue_minutes > 0:
                                 late_fee = calculate_late_fee_amount(package_rate_per_minute, overdue_minutes)
                                 amount += late_fee
+                                
+                                # Send fines/dues notification
+                                from api.notifications.services import notify_fines_dues
+                                notify_fines_dues(user, float(late_fee), f"Late return penalty - {overdue_minutes} minutes overdue")
                         else:
                             # Use package price as fallback
                             amount = rental.package.price
@@ -368,6 +372,10 @@ class PaymentIntentService(CRUDService):
                 # Award points for top-up
                 from api.points.tasks import award_topup_points_task
                 award_topup_points_task.delay(intent.user.id, float(intent.amount))
+                
+                # Send payment success notification
+                from api.notifications.services import notify_payment
+                notify_payment(intent.user, 'successful', float(intent.amount), transaction_obj.transaction_id)
                 
                 # Update intent status
                 intent.status = 'COMPLETED'
