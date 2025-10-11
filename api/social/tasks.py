@@ -3,6 +3,7 @@ from __future__ import annotations
 from celery import shared_task
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from typing import List
 
 from api.common.tasks.base import BaseTask, NotificationTask
@@ -129,8 +130,6 @@ def send_achievement_unlock_notifications(self, user_id: str, user_achievement_i
             notify(user, 'achievement_unlocked',
                   achievement_name=user_achievement.achievement.name,
                   points=user_achievement.points_awarded)
-                auto_send=True  # This handles all channels via notification rules
-            )
         
         self.logger.info(f"Sent achievement notifications for {len(user_achievements)} achievements to user {user.username}")
         return {

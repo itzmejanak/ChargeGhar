@@ -122,3 +122,24 @@ print(f'Stations: {Station.objects.count()}')
 docker-compose exec api python manage.py spectacular --color --file openapi-schema.json
 
 docker-compose exec api python manage.py shell -c "from django.db import connection; cursor = connection.cursor(); cursor.execute('SELECT table_name FROM information_schema.tables WHERE table_schema = %s', ['public']); print([row[0] for row in cursor.fetchall()])"
+
+
+
+
+
+
+
+
+
+docker exec -it powerbank_production-powerbank_api-1 python manage.py shell -c "
+from django.contrib.auth import get_user_model
+User = get_user_model()
+user, created = User.objects.get_or_create(username='janak', defaults={'email': 'admin@example.com', 'is_staff': True, 'is_superuser': True})
+user.set_password('admin123')
+user.save()
+print('🔑 Django Admin Access Created:')
+print('URL: http://localhost:8010/admin/')
+print('Username: janak')
+print('Password: admin123')
+print('🆕 Created new user:' if created else '✅ Updated existing user password.')
+"

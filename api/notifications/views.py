@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 router = CustomViewRouter()
 
 
-@router.register(r"", name="notifications-list")
+@router.register(r"notifications", name="notifications-list")
 class NotificationListView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.NotificationListSerializer
     permission_classes = [IsAuthenticated]
@@ -109,7 +109,7 @@ class NotificationListView(GenericAPIView, BaseAPIView):
         )
 
 
-@router.register(r"stats", name="notifications-stats")
+@router.register(r"notifications/stats", name="notifications-stats")
 class NotificationStatsView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.NotificationStatsSerializer
     permission_classes = [IsAuthenticated]
@@ -138,7 +138,7 @@ class NotificationStatsView(GenericAPIView, BaseAPIView):
         )
 
 
-@router.register(r"<str:notification_id>", name="notification-detail")
+@router.register(r"notifications/detail/<str:notification_id>", name="notification-detail")
 class NotificationDetailView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.NotificationDetailSerializer
     permission_classes = [IsAuthenticated]
@@ -246,7 +246,7 @@ class NotificationDetailView(GenericAPIView, BaseAPIView):
         )
 
 
-@router.register(r"mark-all-read", name="notifications-mark-all-read")
+@router.register(r"notifications/mark-all-read", name="notifications-mark-all-read")
 class NotificationMarkAllReadView(GenericAPIView, BaseAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = serializers.NotificationStatsSerializer

@@ -127,7 +127,7 @@ class StationListView(GenericAPIView, BaseAPIView):
         )
 
 
-@router.register(r"stations/{sn}", name="station-detail")
+@router.register(r"stations/detail/{sn}", name="station-detail")
 @extend_schema(
     tags=["Stations"],
     summary="Station Detail",

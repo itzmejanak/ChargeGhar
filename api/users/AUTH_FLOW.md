@@ -57,12 +57,7 @@ curl -X POST http://localhost:8010/api/auth/register \
 ## 🔐 STEP 5: Request OTP for Login
 
 ```bash
-curl -X POST http://localhost:8010/api/auth/otp/request \
-  -H "Content-Type: application/json" \
-  -d '{
-    "identifier": "test@example.com",
-    "purpose": "LOGIN"
-  }' | jq .
+
 ```
 
 ---
@@ -86,7 +81,7 @@ curl -X POST http://localhost:8010/api/auth/otp/verify \
   -H "Content-Type: application/json" \
   -d '{
     "identifier": "test@example.com",
-    "otp": "215598",
+    "otp": "011860",
     "purpose": "LOGIN"
   }' | jq .
 ```
@@ -100,7 +95,7 @@ curl -X POST http://localhost:8010/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "identifier": "test@example.com",
-    "verification_token": "16d2a093-bcf5-4a01-a0aa-2a6a056d2a74"
+    "verification_token": "c926ef6d-2315-4943-9043-4aa590eb065c"
   }' | jq .
 ```
 
