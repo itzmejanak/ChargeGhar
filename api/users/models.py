@@ -92,8 +92,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'  # Default, but we'll handle both email and phone
     REQUIRED_FIELDS = []
     
-    # Override password field to be None (no password authentication)
-    password = None
+    # Password field - enabled for admin users, disabled for regular users
     
     class Meta:
         db_table = 'users_user'
@@ -124,20 +123,36 @@ class User(AbstractBaseUser, PermissionsMixin):
         super().save(*args, **kwargs)
     
     def set_password(self, raw_password):
-        """Override to disable password setting"""
-        pass
+        """Allow password setting for admin users, disable for regular users"""
+        if self.is_staff or self.is_superuser:
+            # Allow password for admin users (Django admin access)
+            super().set_password(raw_password)
+        else:
+            # Disable password for regular users (OTP-only)
+            pass
     
     def check_password(self, raw_password):
-        """Override to disable password checking"""
-        return False
+        """Allow password checking for admin users, disable for regular users"""
+        if self.is_staff or self.is_superuser:
+            # Allow password check for admin users
+            return super().check_password(raw_password)
+        else:
+            # Disable password check for regular users
+            return False
     
     def set_unusable_password(self):
-        """Override to disable password setting"""
-        pass
+        """Allow unusable password setting for admin users"""
+        if self.is_staff or self.is_superuser:
+            super().set_unusable_password()
+        else:
+            pass
     
     def has_usable_password(self):
-        """Override to indicate no password is set"""
-        return False
+        """Check if user has usable password (admin users only)"""
+        if self.is_staff or self.is_superuser:
+            return super().has_usable_password()
+        else:
+            return False
 
 
 class UserProfile(BaseModel):
