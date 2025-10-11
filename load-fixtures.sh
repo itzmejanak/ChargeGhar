@@ -72,21 +72,58 @@ else:
 " 2>/dev/null; then
         print_status "Superuser already exists ✓"
     else
-        print_status "Creating superuser..."
+        print_status "Creating superuser with updated user model..."
         docker exec -i "$API_CONTAINER" python manage.py shell -c "
 from django.contrib.auth import get_user_model
-import os
+from django.utils import timezone
+import uuid
+
 User = get_user_model()
 username = 'janak'
 email = 'janak@powerbank.com'
-password = '5060'
-if not User.objects.filter(username=username).exists():
-    User.objects.create_superuser(username=username, email=email, password=password)
-    print(f'Superuser {username} created successfully')
-else:
+phone_number = '+9779800000000'
+
+# Check if user already exists
+if User.objects.filter(username=username).exists():
     print(f'User {username} already exists')
+    user = User.objects.get(username=username)
+    if not user.is_superuser:
+        user.is_superuser = True
+        user.is_staff = True
+        user.save()
+        print(f'Updated {username} to superuser')
+else:
+    # Create superuser with new user model fields
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        phone_number=phone_number,
+        is_superuser=True,
+        is_staff=True,
+        is_active=True,
+        email_verified=True,
+        phone_verified=True,
+        profile_completed=True,
+        kyc_verified=True,
+        kyc_status='APPROVED',
+        account_status='ACTIVE',
+        created_at=timezone.now(),
+        updated_at=timezone.now()
+    )
+    
+    # Set password for admin access
+    user.set_password('admin123')
+    user.save()
+    
+    print(f'✓ Superuser {username} created successfully')
+    print(f'  - Email: {email}')
+    print(f'  - Phone: {phone_number}')
+    print(f'  - Password: admin123')
+    print(f'  - Profile completed: True')
+    print(f'  - KYC verified: True')
+    print(f'  - Account status: ACTIVE')
 "
-        print_status "✓ Superuser created successfully"
+        print_status "✓ Superuser created successfully with updated user model"
     fi
 }
 
@@ -120,6 +157,39 @@ load_fixtures() {
         done
     else
         print_warning "Fixtures directory not found: $fixtures_dir"
+    fi
+}
+
+# Function to generate admin JWT token
+generate_admin_token() {
+    print_step "Generating admin JWT token for API testing..."
+    
+    local token=$(docker exec -i "$API_CONTAINER" python manage.py shell -c "
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
+import sys
+
+try:
+    User = get_user_model()
+    admin_user = User.objects.get(username='janak')
+    refresh = RefreshToken.for_user(admin_user)
+    print(str(refresh.access_token))
+except Exception as e:
+    print(f'Error generating token: {e}', file=sys.stderr)
+    sys.exit(1)
+" 2>/dev/null)
+    
+    if [[ -n "$token" && "$token" != *"Error"* ]]; then
+        print_status "✓ Admin JWT token generated successfully"
+        echo ""
+        print_status "🎫 Admin JWT Token (for Swagger UI):"
+        echo "$token"
+        echo ""
+        print_status "📋 Copy this token and use it in Swagger UI Authorization header:"
+        print_status "Bearer $token"
+        echo ""
+    else
+        print_warning "⚠ Failed to generate admin JWT token"
     fi
 }
 
@@ -166,6 +236,9 @@ load_fixtures "notifications"
 # 12. Admin Panel - Admin specific data (if exists)
 load_fixtures "admin_panel"
 
+# Generate admin JWT token for immediate testing
+generate_admin_token
+
 echo ""
 print_status "🎉 Fixtures loading completed!"
 print_status "========================================="
@@ -175,7 +248,7 @@ API_PORT=$(grep "API_PORT" .env | cut -d '=' -f2 | tr -d ' ')
 SERVER_IP=$(hostname -I | awk '{print $1}')
 
 print_status "Summary:"
-print_status "- Superuser created (check .env for credentials)"
+print_status "- Superuser created with updated user model (username: janak, password: admin123)"
 print_status "- Common fixtures loaded (countries, late fee configs)"
 print_status "- Config fixtures loaded"
 print_status "- User fixtures loaded"
@@ -195,7 +268,15 @@ print_status "API Documentation: http://$SERVER_IP:${API_PORT:-8010}/docs/"
 print_status "Admin Panel: http://$SERVER_IP:${API_PORT:-8010}/admin/"
 print_status "Health Check: http://$SERVER_IP:${API_PORT:-8010}/api/app/health/"
 echo ""
+print_status "🔐 Authentication System:"
+print_status "- OTP-based registration and login implemented"
+print_status "- Admin credentials: username=janak, password=admin123"
+print_status "- For API testing, use OTP flow as documented in api/users/AUTH_FLOW.md"
+print_status "- Admin JWT token generated above for immediate Swagger UI testing"
+print_status "- Regular users must complete OTP verification for registration/login"
+echo ""
 print_status "🔧 Useful commands:"
-print_status "Django shell: docker-compose -f $DOCKER_COMPOSE_FILE exec powerbank_api python manage.py shell"
-print_status "View logs: docker-compose -f $DOCKER_COMPOSE_FILE logs -f powerbank_api"
-print_status "Restart API: docker-compose -f $DOCKER_COMPOSE_FILE restart powerbank_api"
+print_status "Django shell: docker-compose exec $API_CONTAINER python manage.py shell"
+print_status "View logs: docker-compose logs -f $API_CONTAINER"
+print_status "Restart API: docker-compose restart $API_CONTAINER"
+print_status "Generate admin token: docker-compose exec $API_CONTAINER python manage.py shell -c \"from django.contrib.auth import get_user_model; from rest_framework_simplejwt.tokens import RefreshToken; User = get_user_model(); admin = User.objects.get(username='janak'); print('Admin JWT:', str(RefreshToken.for_user(admin).access_token))\""
