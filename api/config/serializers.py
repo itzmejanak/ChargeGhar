@@ -97,7 +97,7 @@ class AppVersionCheckSerializer(serializers.Serializer):
 
 
 class AppVersionCheckResponseSerializer(serializers.Serializer):
-    """Serializer for app version check responses"""
+    """MVP serializer for app version check responses"""
     
     update_available = serializers.BooleanField()
     is_mandatory = serializers.BooleanField()
@@ -105,6 +105,15 @@ class AppVersionCheckResponseSerializer(serializers.Serializer):
     download_url = serializers.URLField(allow_null=True)
     release_notes = serializers.CharField(allow_null=True)
     current_version = serializers.CharField()
+
+
+class AppConfigListSerializer(serializers.ModelSerializer):
+    """MVP serializer for config list views - minimal fields"""
+    
+    class Meta:
+        model = AppConfig
+        fields = ['key', 'value', 'is_active']
+        read_only_fields = fields
 
 
 class AppConfigPublicSerializer(serializers.ModelSerializer):
@@ -131,7 +140,7 @@ class AppConfigPublicSerializer(serializers.ModelSerializer):
 
 
 class AppHealthSerializer(serializers.Serializer):
-    """Serializer for app health check responses"""
+    """MVP serializer for app health check responses"""
     
     status = serializers.CharField()
     timestamp = serializers.DateTimeField()
@@ -140,3 +149,12 @@ class AppHealthSerializer(serializers.Serializer):
     cache = serializers.CharField()
     celery = serializers.CharField()
     uptime_seconds = serializers.IntegerField()
+
+
+class AppUpdateListSerializer(serializers.ModelSerializer):
+    """MVP serializer for update list views - minimal fields"""
+    
+    class Meta:
+        model = AppUpdate
+        fields = ['id', 'version', 'title', 'is_major', 'released_at']
+        read_only_fields = fields

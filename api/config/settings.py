@@ -11,6 +11,7 @@ include(
     "security.py",
     "storage.py",
     "rest.py",
+    "jwt.py",  # JWT configuration
     "sentry.py",
     "silk.py",
     "spectacular.py",

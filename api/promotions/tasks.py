@@ -22,8 +22,7 @@ def expire_old_coupons(self):
         
         updated_count = expired_coupons.update(status=Coupon.StatusChoices.EXPIRED)
         
-        # Clear active coupons cache
-        cache.delete("active_coupons")
+        # Cache clearing moved to view decorators
         
         self.logger.info(f"Marked {updated_count} coupons as expired")
         return {'expired_count': updated_count}
@@ -64,8 +63,7 @@ def generate_promotion_analytics_report(self):
         service = PromotionAnalyticsService()
         analytics = service.get_coupon_analytics()
         
-        # Cache the analytics report
-        cache.set('promotion_analytics', analytics, timeout=3600)  # 1 hour
+        # Analytics caching moved to view decorators
         
         self.logger.info("Promotion analytics report generated")
         return analytics
@@ -112,22 +110,13 @@ def send_coupon_expiry_reminders(self):
             for user in eligible_users:
                 try:
                     days_until_expiry = (coupon.valid_until - timezone.now()).days
-                    notification_service.create_notification(
-                        user=user,
-                        title="",  # Will be overridden by template
-                        message="",  # Will be overridden by template
-                        notification_type='promotion',
-                        template_slug='coupon_expiring_soon',
-                        data={
-                            'coupon_code': coupon.code,
-                            'coupon_name': coupon.name,
-                            'points_value': coupon.points_value,
-                            'days_until_expiry': days_until_expiry,
-                            'expires_at': coupon.valid_until.isoformat(),
-                            'action': 'apply_coupon'
-                        },
-                        auto_send=True
-                    )
+                    # Send coupon expiring notification using clean API
+                    from api.notifications.services import notify
+                    notify(user, 'coupon_expiring_soon', 
+                          coupon_code=coupon.code, 
+                          coupon_name=coupon.name,
+                          points_value=coupon.points_value,
+                          days_until_expiry=days_until_expiry)
                     notifications_sent += 1
                     
                 except Exception as e:
@@ -173,8 +162,7 @@ def create_seasonal_coupons(self):
             status=Coupon.StatusChoices.ACTIVE
         )
         
-        # Clear cache
-        cache.delete("active_coupons")
+        # Cache clearing moved to view decorators
         
         self.logger.info(f"Created seasonal coupon: {coupon_code}")
         return {
@@ -227,20 +215,9 @@ def analyze_coupon_performance(self):
             admin_users = User.objects.filter(is_staff=True, is_active=True)
             
             for admin in admin_users:
-                notification_service.create_notification(
-                    user=admin,
-                    title="",  # Will be overridden by template
-                    message="",  # Will be overridden by template
-                    notification_type='system',
-                    template_slug='coupon_performance_alert',
-                    data={
-                        'underperforming_count': len(underperforming_coupons),
-                        'underperforming_coupons': underperforming_coupons,
-                        'total_analytics': analytics,
-                        'action': 'review_coupons'
-                    },
-                    auto_send=True
-                )
+                # Send coupon performance alert using clean API
+                from api.notifications.services import notify
+                notify(admin, 'coupon_performance_alert', underperforming_count=len(underperforming_coupons))
         
         self.logger.info(f"Analyzed coupon performance. {len(underperforming_coupons)} underperforming coupons found")
         return {
@@ -307,21 +284,13 @@ def send_new_coupon_notifications(self, coupon_id: str):
         
         for user in eligible_users:
             try:
-                notification_service.create_notification(
-                    user=user,
-                    title="",  # Will be overridden by template
-                    message="",  # Will be overridden by template
-                    notification_type='promotion',
-                    template_slug='new_coupon_available',
-                    data={
-                        'coupon_code': coupon.code,
-                        'coupon_name': coupon.name,
-                        'points_value': coupon.points_value,
-                        'expiry_date': coupon.valid_until.strftime('%B %d, %Y'),
-                        'expires_at': coupon.valid_until.isoformat(),
-                        'action': 'apply_coupon'
-                    }
-                )
+                # Send new coupon notification using clean API
+                from api.notifications.services import notify
+                notify(user, 'new_coupon_available',
+                      coupon_code=coupon.code,
+                      coupon_name=coupon.name,
+                      points_value=coupon.points_value,
+                      expiry_date=coupon.valid_until.strftime('%B %d, %Y'))
                 notifications_sent += 1
                 
             except Exception as e:

@@ -20,6 +20,15 @@ class ContentPageSerializer(serializers.ModelSerializer):
         return value.strip()
 
 
+class ContentPageListSerializer(serializers.ModelSerializer):
+    """MVP serializer for content page lists - minimal fields"""
+    
+    class Meta:
+        model = ContentPage
+        fields = ['page_type', 'title', 'updated_at']
+        read_only_fields = fields
+
+
 class ContentPagePublicSerializer(serializers.ModelSerializer):
     """Public serializer for content pages (no admin fields)"""
     
@@ -132,6 +141,15 @@ class BannerSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("valid_from must be before valid_until")
         
         return attrs
+
+
+class BannerListSerializer(serializers.ModelSerializer):
+    """MVP serializer for banner lists - minimal fields"""
+    
+    class Meta:
+        model = Banner
+        fields = ['id', 'title', 'image_url', 'display_order']
+        read_only_fields = fields
 
 
 class BannerPublicSerializer(serializers.ModelSerializer):

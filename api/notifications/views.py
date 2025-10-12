@@ -10,6 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.common.routers import CustomViewRouter
+from api.common.mixins import BaseAPIView
+from api.common.decorators import cached_response, log_api_call
 from api.notifications import serializers
 from api.notifications.services import NotificationService
 
@@ -19,19 +21,16 @@ if TYPE_CHECKING:
 router = CustomViewRouter()
 
 
-@router.register(r"", name="notifications-list")
-@extend_schema(
-    tags=["Notifications"],
-    summary="User Notifications",
-    description="Get user notifications with filtering and pagination"
-)
-class NotificationListView(GenericAPIView):
+@router.register(r"notifications", name="notifications-list")
+class NotificationListView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.NotificationListSerializer
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
+        tags=["Notifications"],
         summary="Get User Notifications",
         description="Retrieve user notifications with optional filtering by type, channel, read status, and date range",
+        responses={200: serializers.NotificationListResponseSerializer},
         parameters=[
             OpenApiParameter(
                 name="notification_type",
@@ -70,9 +69,10 @@ class NotificationListView(GenericAPIView):
             )
         ]
     )
+    @log_api_call()
     def get(self, request: Request) -> Response:
-        """Get user notifications"""
-        try:
+        """Get user notifications - REAL-TIME (user-specific data)"""
+        def operation():
             service = NotificationService()
             
             # Build filters from query parameters
@@ -94,70 +94,60 @@ class NotificationListView(GenericAPIView):
             
             result = service.get_user_notifications(request.user, filters)
             
-            # Serialize the notifications
-            serializer = self.get_serializer(result['results'], many=True)
+            # Use MVP list serializer for performance
+            serializer = serializers.NotificationListSerializer(result['results'], many=True)
             
-            return Response({
+            return {
                 'notifications': serializer.data,
-                'pagination': {
-                    'count': result['pagination']['total_count'],
-                    'page': result['pagination']['current_page'],
-                    'page_size': result['pagination']['page_size'],
-                    'total_pages': result['pagination']['total_pages'],
-                    'has_next': result['pagination']['has_next'],
-                    'has_previous': result['pagination']['has_previous']
-                }
-            })
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get notifications: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+                'pagination': result['pagination']
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            "Notifications retrieved successfully",
+            "Failed to retrieve notifications"
+        )
 
 
-@router.register(r"stats", name="notifications-stats")
-@extend_schema(
-    tags=["Notifications"],
-    summary="Notification Statistics",
-    description="Get user notification statistics"
-)
-class NotificationStatsView(GenericAPIView):
+@router.register(r"notifications/stats", name="notifications-stats")
+class NotificationStatsView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.NotificationStatsSerializer
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
-        summary="Get Notification Stats",
-        description="Retrieve notification statistics for the authenticated user"
+        tags=["Notifications"],
+        summary="Get Notification Statistics",
+        description="Retrieve notification statistics for the authenticated user",
+        responses={200: serializers.NotificationStatsResponseSerializer}
     )
+    @log_api_call()
+    @cached_response(timeout=300)  # Cache for 5 minutes - stats change slowly
     def get(self, request: Request) -> Response:
-        """Get notification statistics"""
-        try:
+        """Get notification statistics - CACHED for performance"""
+        def operation():
             service = NotificationService()
             stats = service.get_notification_stats(request.user)
-            serializer = self.get_serializer(stats)
-            return Response(serializer.data)
             
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get notification stats: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            serializer = serializers.NotificationStatsSerializer(stats)
+            return serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            "Notification statistics retrieved successfully",
+            "Failed to retrieve notification statistics"
+        )
 
 
-@router.register(r"<str:notification_id>", name="notification-detail")
-@extend_schema(
-    tags=["Notifications"],
-    summary="Notification Detail",
-    description="Get, update, or delete a specific notification"
-)
-class NotificationDetailView(GenericAPIView):
-    serializer_class = serializers.NotificationSerializer
+@router.register(r"notifications/detail/<str:notification_id>", name="notification-detail")
+class NotificationDetailView(GenericAPIView, BaseAPIView):
+    serializer_class = serializers.NotificationDetailSerializer
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
+        tags=["Notifications"],
         summary="Get Notification Detail",
         description="Retrieve details of a specific notification",
+        responses={200: serializers.NotificationDetailResponseSerializer},
         parameters=[
             OpenApiParameter(
                 name="notification_id",
@@ -168,32 +158,34 @@ class NotificationDetailView(GenericAPIView):
             )
         ]
     )
+    @log_api_call()
     def get(self, request: Request, notification_id: str) -> Response:
-        """Get notification detail"""
-        try:
+        """Get notification detail - REAL-TIME (user-specific data)"""
+        def operation():
             service = NotificationService()
             notification = service.get_by_id(notification_id)
             
             # Check if notification belongs to user
             if notification.user != request.user:
-                return Response(
-                    {'error': 'Notification not found'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
+                from api.common.exceptions.custom import NotFoundError
+                raise NotFoundError("Notification not found")
             
-            serializer = self.get_serializer(notification)
-            return Response(serializer.data)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get notification: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            # Use detail serializer for full data
+            serializer = serializers.NotificationDetailSerializer(notification)
+            return serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            "Notification retrieved successfully",
+            "Failed to retrieve notification"
+        )
     
     @extend_schema(
+        tags=["Notifications"],
         summary="Mark Notification as Read",
         description="Mark a specific notification as read",
         request=serializers.NotificationUpdateSerializer,
+        responses={200: serializers.NotificationDetailResponseSerializer},
         parameters=[
             OpenApiParameter(
                 name="notification_id",
@@ -204,22 +196,24 @@ class NotificationDetailView(GenericAPIView):
             )
         ]
     )
+    @log_api_call()
     def post(self, request: Request, notification_id: str) -> Response:
-        """Mark notification as read"""
-        try:
+        """Mark notification as read - REAL-TIME (user action)"""
+        def operation():
             service = NotificationService()
             notification = service.mark_as_read(notification_id, request.user)
             
-            serializer = self.get_serializer(notification)
-            return Response(serializer.data)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to update notification: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            serializer = serializers.NotificationDetailSerializer(notification)
+            return serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            "Notification marked as read successfully",
+            "Failed to mark notification as read"
+        )
     
     @extend_schema(
+        tags=["Notifications"],
         summary="Delete Notification",
         description="Delete a specific notification",
         parameters=[
@@ -232,85 +226,54 @@ class NotificationDetailView(GenericAPIView):
             )
         ]
     )
+    @log_api_call()
     def delete(self, request: Request, notification_id: str) -> Response:
-        """Delete notification"""
-        try:
+        """Delete notification - REAL-TIME (user action)"""
+        def operation():
             service = NotificationService()
             success = service.delete_notification(notification_id, request.user)
             
-            if success:
-                return Response({'message': 'Notification deleted successfully'})
-            else:
-                return Response(
-                    {'error': 'Notification not found'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-                
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to delete notification: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            if not success:
+                from api.common.exceptions.custom import NotFoundError
+                raise NotFoundError("Notification not found")
+            
+            return {'message': 'Notification deleted successfully'}
+        
+        return self.handle_service_operation(
+            operation,
+            "Notification deleted successfully",
+            "Failed to delete notification"
+        )
 
 
-@router.register(r"mark-all-read", name="notifications-mark-all-read")
-@extend_schema(
-    tags=["Notifications"],
-    summary="Mark All Notifications as Read",
-    description="Mark all user notifications as read"
-)
-class NotificationMarkAllReadView(GenericAPIView):
+@router.register(r"notifications/mark-all-read", name="notifications-mark-all-read")
+class NotificationMarkAllReadView(GenericAPIView, BaseAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = serializers.NotificationStatsSerializer  # Dummy serializer to avoid schema error
-    # http_method_names = ['post']  # Explicitly allow POST method
+    serializer_class = serializers.NotificationStatsSerializer
     
     @extend_schema(
-        summary="Mark All as Read",
-        description="Mark all user notifications as read and return count of updated notifications"
+        tags=["Notifications"],
+        summary="Mark All Notifications as Read",
+        description="Mark all user notifications as read and return count of updated notifications",
+        responses={200: serializers.NotificationMarkAllReadResponseSerializer}
     )
+    @log_api_call()
     def post(self, request: Request) -> Response:
-        """Mark all notifications as read"""
-        try:
+        """Mark all notifications as read - REAL-TIME (user action)"""
+        def operation():
             service = NotificationService()
             updated_count = service.mark_all_as_read(request.user)
             
-            return Response({
+            return {
                 'message': 'All notifications marked as read',
                 'updated_count': updated_count
-            })
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to mark all notifications as read: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            "All notifications marked as read successfully",
+            "Failed to mark all notifications as read"
+        )
 
 
-@router.register(r"stats", name="notifications-stats")
-@extend_schema(
-    tags=["Notifications"],
-    summary="Notification Statistics",
-    description="Get user notification statistics"
-)
-class NotificationStatsView(GenericAPIView):
-    serializer_class = serializers.NotificationStatsSerializer
-    permission_classes = [IsAuthenticated]
-    
-    @extend_schema(
-        summary="Get Notification Stats",
-        description="Retrieve notification statistics for the authenticated user"
-    )
-    def get(self, request: Request) -> Response:
-        """Get notification statistics"""
-        try:
-            service = NotificationService()
-            stats = service.get_notification_stats(request.user)
-            
-            serializer = self.get_serializer(stats)
-            return Response(serializer.data)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get notification stats: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+

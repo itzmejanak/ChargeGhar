@@ -32,12 +32,14 @@ DOCUMENTED_ENDPOINTS = [
     
     # Station Features
     '/api/stations',
+    '/api/stations/detail/{sn}',
     '/api/stations/nearby',
     '/api/stations/favorites',
     '/api/stations/my-reports',
     
     # Notification Features
     '/api/notifications',
+    '/api/notifications/detail/{notification_id}',
     '/api/notifications/stats',
     '/api/notifications/mark-all-read',
     
@@ -199,17 +201,42 @@ def fix_operation_ids(result, generator, request, public):
     """
     paths = result.get('paths', {})
     
-    # Fix notifications operation ID collision
-    notifications_fixes = {
-        '/api/notifications/': {
+    # Fix all known operation ID collisions
+    operation_id_fixes = {
+        # Health endpoint collision fix
+        '/api/app/health': {
+            'get': 'api_app_health_check'
+        },
+        '/api/app/health/': {
+            'get': 'api_app_health_check_trailing_slash'
+        },
+        
+        # Notifications collision fix
+        '/api/notifications/mark-all-read': {
+            'post': 'api_notifications_mark_all_read'
+        },
+        '/api/notifications/mark-all-read/': {
+            'post': 'api_notifications_mark_all_read_trailing_slash'
+        },
+        
+        # Stations collision fix
+        '/api/stations': {
+            'get': 'api_stations_list'
+        },
+        '/api/stations/detail/{sn}': {
+            'get': 'api_stations_detail_by_serial'
+        },
+        
+        # Notifications fixes
+        '/api/notifications': {
             'get': 'api_notifications_list'
         },
-        '/api/notifications/{notification_id}': {
+        '/api/notifications/detail/{notification_id}': {
             'get': 'api_notifications_detail'
         }
     }
     
-    for path, methods in notifications_fixes.items():
+    for path, methods in operation_id_fixes.items():
         if path in paths:
             for method, operation_id in methods.items():
                 if method in paths[path]:

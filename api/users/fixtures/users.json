@@ -16,10 +16,7 @@
       "is_staff": false,
       "is_superuser": false,
       "date_joined": "2024-01-15T10:00:00Z",
-      "last_login": "2024-09-06T10:00:00Z",
-      "first_name": "Test",
-      "last_name": "User One",
-      "password": "pbkdf2_sha256$600000$test$hash"
+      "last_login": "2024-09-06T10:00:00Z"
     }
   },
   {
@@ -39,10 +36,7 @@
       "is_staff": false,
       "is_superuser": false,
       "date_joined": "2024-02-01T10:00:00Z",
-      "last_login": "2024-09-05T15:30:00Z",
-      "first_name": "Test",
-      "last_name": "User Two",
-      "password": "pbkdf2_sha256$600000$test$hash"
+      "last_login": "2024-09-05T15:30:00Z"
     }
   },
   {

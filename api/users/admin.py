@@ -35,22 +35,7 @@ class UserAdmin(admin.ModelAdmin):
     search_fields = ("username", "email", "phone_number", "referral_code")
     readonly_fields = ("date_joined", "last_login")
 
-    def save_model(
-        self,
-        request: Any,
-        obj: User,
-        form: None,
-        change: bool,  # noqa: FBT001
-    ) -> None:
-        """Update user password if it is not raw.
-
-        This is needed to hash password when updating user from admin panel.
-        """
-        has_raw_password = obj.password.startswith("pbkdf2_sha256")
-        if not has_raw_password:
-            obj.set_password(obj.password)
-
-        super().save_model(request, obj, form, change)
+    # Removed password handling - OTP-based authentication only
 
 
 @admin.register(UserProfile)

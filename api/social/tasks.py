@@ -3,6 +3,7 @@ from __future__ import annotations
 from celery import shared_task
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from typing import List
 
 from api.common.tasks.base import BaseTask, NotificationTask
@@ -124,22 +125,11 @@ def send_achievement_unlock_notifications(self, user_id: str, user_achievement_i
         notification_service = NotificationService()
         
         for user_achievement in user_achievements:
-            # Send notification (auto-send will handle push via rules)
-            notification_service.create_notification(
-                user=user,
-                title="",  # Will be overridden by template
-                message="",  # Will be overridden by template
-                notification_type='achievement',
-                template_slug='achievement_unlocked',
-                data={
-                    'achievement_name': user_achievement.achievement.name,
-                    'points': user_achievement.points_awarded,
-                    'achievement_id': str(user_achievement.achievement.id),
-                    'points_awarded': user_achievement.points_awarded,
-                    'action': 'view_achievements'
-                },
-                auto_send=True  # This handles all channels via notification rules
-            )
+            # Send achievement notification using clean API
+            from api.notifications.services import notify
+            notify(user, 'achievement_unlocked',
+                  achievement_name=user_achievement.achievement.name,
+                  points=user_achievement.points_awarded)
         
         self.logger.info(f"Sent achievement notifications for {len(user_achievements)} achievements to user {user.username}")
         return {
@@ -164,9 +154,7 @@ def generate_social_analytics_report(self):
         service = SocialAnalyticsService()
         analytics = service.get_achievement_analytics()
         
-        # Cache the analytics report
-        from django.core.cache import cache
-        cache.set('social_analytics', analytics, timeout=3600)  # 1 hour
+        # Analytics caching is now handled by view decorators
         
         self.logger.info("Social analytics report generated")
         return analytics
@@ -223,20 +211,11 @@ def send_leaderboard_position_updates(self):
         
         for leaderboard in top_users:
             try:
-                notification_service.create_notification(
-                    user=leaderboard.user,
-                    title="",  # Will be overridden by template
-                    message="",  # Will be overridden by template
-                    notification_type='achievement',
-                    template_slug='leaderboard_update',
-                    data={
-                        'rank': leaderboard.rank,
-                        'total_points': leaderboard.total_points_earned,
-                        'total_rentals': leaderboard.total_rentals,
-                        'action': 'view_leaderboard'
-                    },
-                    auto_send=True
-                )
+                # Send leaderboard notification using clean API
+                from api.notifications.services import notify
+                notify(leaderboard.user, 'leaderboard_update', 
+                      rank=leaderboard.rank, 
+                      total_points=leaderboard.total_points_earned)
                 notifications_sent += 1
                 
             except Exception as e:

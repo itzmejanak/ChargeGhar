@@ -5,10 +5,32 @@ from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 
 from api.promotions.models import Coupon, CouponUsage
+from api.common.serializers import BaseResponseSerializer
+
+# MVP Pattern: List vs Detail Serializers
 
 
-class CouponSerializer(serializers.ModelSerializer):
-    """Serializer for coupons"""
+class CouponListSerializer(serializers.ModelSerializer):
+    """Minimal serializer for coupon lists - MVP optimized"""
+    is_currently_valid = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Coupon
+        fields = [
+            'id', 'code', 'name', 'points_value', 
+            'valid_until', 'is_currently_valid'
+        ]
+        read_only_fields = ['id']
+    
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_currently_valid(self, obj) -> bool:
+        now = timezone.now()
+        return (obj.status == Coupon.StatusChoices.ACTIVE and 
+                obj.valid_from <= now <= obj.valid_until)
+
+
+class CouponDetailSerializer(serializers.ModelSerializer):
+    """Detailed serializer for coupons - Full data"""
     is_currently_valid = serializers.SerializerMethodField()
     days_remaining = serializers.SerializerMethodField()
     total_uses = serializers.SerializerMethodField()
@@ -54,23 +76,16 @@ class CouponSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class CouponPublicSerializer(serializers.ModelSerializer):
-    """Public serializer for active coupons (limited fields)"""
-    is_currently_valid = serializers.SerializerMethodField()
+# Backward compatibility alias
+CouponSerializer = CouponDetailSerializer
+
+
+class CouponPublicSerializer(CouponListSerializer):
+    """Public serializer for active coupons - inherits from list serializer"""
     days_remaining = serializers.SerializerMethodField()
     
-    class Meta:
-        model = Coupon
-        fields = [
-            'code', 'name', 'points_value', 'max_uses_per_user',
-            'valid_until', 'is_currently_valid', 'days_remaining'
-        ]
-    
-    @extend_schema_field(serializers.BooleanField)
-    def get_is_currently_valid(self, obj):
-        now = timezone.now()
-        return (obj.status == Coupon.StatusChoices.ACTIVE and 
-                obj.valid_from <= now <= obj.valid_until)
+    class Meta(CouponListSerializer.Meta):
+        fields = CouponListSerializer.Meta.fields + ['days_remaining', 'max_uses_per_user']
     
     @extend_schema_field(serializers.IntegerField)
     def get_days_remaining(self, obj):
@@ -142,8 +157,20 @@ class CouponUpdateSerializer(serializers.ModelSerializer):
         return value
 
 
-class CouponUsageSerializer(serializers.ModelSerializer):
-    """Serializer for coupon usage"""
+class CouponUsageListSerializer(serializers.ModelSerializer):
+    """Minimal serializer for coupon usage lists - MVP optimized"""
+    coupon_code = serializers.CharField(source='coupon.code', read_only=True)
+    
+    class Meta:
+        model = CouponUsage
+        fields = [
+            'id', 'coupon_code', 'points_awarded', 'used_at'
+        ]
+        read_only_fields = ['id', 'used_at']
+
+
+class CouponUsageDetailSerializer(serializers.ModelSerializer):
+    """Detailed serializer for coupon usage - Full data"""
     coupon_code = serializers.CharField(source='coupon.code', read_only=True)
     coupon_name = serializers.CharField(source='coupon.name', read_only=True)
     user_username = serializers.CharField(source='user.username', read_only=True)
@@ -155,6 +182,10 @@ class CouponUsageSerializer(serializers.ModelSerializer):
             'points_awarded', 'used_at'
         ]
         read_only_fields = ['id', 'used_at']
+
+
+# Backward compatibility alias
+CouponUsageSerializer = CouponUsageDetailSerializer
 
 
 class CouponApplySerializer(serializers.Serializer):
@@ -177,16 +208,12 @@ class CouponValidationSerializer(serializers.Serializer):
     uses_remaining = serializers.IntegerField()
 
 
-class UserCouponHistorySerializer(serializers.ModelSerializer):
-    """Serializer for user's coupon usage history"""
-    coupon_code = serializers.CharField(source='coupon.code', read_only=True)
+class UserCouponHistorySerializer(CouponUsageListSerializer):
+    """Serializer for user's coupon usage history - inherits from list serializer"""
     coupon_name = serializers.CharField(source='coupon.name', read_only=True)
     
-    class Meta:
-        model = CouponUsage
-        fields = [
-            'id', 'coupon_code', 'coupon_name', 'points_awarded', 'used_at'
-        ]
+    class Meta(CouponUsageListSerializer.Meta):
+        fields = CouponUsageListSerializer.Meta.fields + ['coupon_name']
 
 
 class CouponAnalyticsSerializer(serializers.Serializer):
@@ -255,3 +282,50 @@ class CouponFilterSerializer(serializers.Serializer):
             raise serializers.ValidationError("start_date cannot be after end_date")
         
         return attrs
+
+
+# Response Serializers for Swagger Documentation
+
+class ActiveCouponsResponseSerializer(BaseResponseSerializer):
+    """Response serializer for active coupons endpoint"""
+    data = CouponPublicSerializer(many=True)
+
+
+class CouponApplyResponseSerializer(BaseResponseSerializer):
+    """Response serializer for coupon apply endpoint"""
+    class CouponApplyDataSerializer(serializers.Serializer):
+        success = serializers.BooleanField()
+        coupon_code = serializers.CharField()
+        coupon_name = serializers.CharField()
+        points_awarded = serializers.IntegerField()
+        message = serializers.CharField()
+    
+    data = CouponApplyDataSerializer()
+
+
+class CouponValidationResponseSerializer(BaseResponseSerializer):
+    """Response serializer for coupon validation endpoint"""
+    data = CouponValidationSerializer()
+
+
+class MyCouponsResponseSerializer(BaseResponseSerializer):
+    """Response serializer for my coupons endpoint"""
+    class MyCouponsDataSerializer(serializers.Serializer):
+        results = UserCouponHistorySerializer(many=True)
+        pagination = serializers.DictField()
+    
+    data = MyCouponsDataSerializer()
+
+
+class AdminCouponsResponseSerializer(BaseResponseSerializer):
+    """Response serializer for admin coupons endpoint"""
+    class AdminCouponsDataSerializer(serializers.Serializer):
+        results = CouponDetailSerializer(many=True)
+        pagination = serializers.DictField()
+    
+    data = AdminCouponsDataSerializer()
+
+
+class CouponAnalyticsResponseSerializer(BaseResponseSerializer):
+    """Response serializer for coupon analytics endpoint"""
+    data = CouponAnalyticsSerializer()

@@ -448,15 +448,127 @@
     }
   },
   {
+    "model": "notifications.notificationtemplate",
+    "pk": 28,
+    "fields": {
+      "name": "OTP SMS",
+      "slug": "otp_sms",
+      "notification_type": "system",
+      "title_template": "ChargeGhar OTP",
+      "message_template": "Your ChargeGhar {{purpose}} OTP is: {{otp}}. Valid for {{expiry_minutes}} minutes. Do not share this code.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 29,
+    "fields": {
+      "name": "Profile Completion Reminder",
+      "slug": "profile_completion_reminder",
+      "notification_type": "system",
+      "title_template": "Complete Your Profile",
+      "message_template": "Complete your profile to unlock all ChargeGhar features and start renting power banks!",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 30,
+    "fields": {
+      "name": "Fines and Dues",
+      "slug": "fines_dues",
+      "notification_type": "payment",
+      "title_template": "Payment Due - Late Return Fee",
+      "message_template": "A late return fee of Rs. {{amount}} has been charged. Reason: {{reason}}",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 31,
+    "fields": {
+      "name": "OTP Email",
+      "slug": "otp_email",
+      "notification_type": "system",
+      "title_template": "ChargeGhar Email Verification",
+      "message_template": "Your ChargeGhar {{purpose}} verification code is: {{otp}}. This code is valid for {{expiry_minutes}} minutes. Do not share this code with anyone.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 32,
+    "fields": {
+      "name": "KYC Status Update",
+      "slug": "kyc_status_update",
+      "notification_type": "system",
+      "title_template": "KYC Verification {{kyc_status|title}}",
+      "message_template": "Your KYC verification status has been updated to {{kyc_status}}. {% if rejection_reason %}Reason: {{rejection_reason}}{% endif %}",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 33,
+    "fields": {
+      "name": "Account Status Update",
+      "slug": "account_status_update",
+      "notification_type": "system",
+      "title_template": "Account Status Updated",
+      "message_template": "Your account status has been updated to {{new_status}}. {% if reason %}Reason: {{reason}}{% endif %}",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 34,
+    "fields": {
+      "name": "Payment Status",
+      "slug": "payment_status",
+      "notification_type": "payment",
+      "title_template": "Payment {{status|title}}",
+      "message_template": "Your payment of Rs. {{amount}} has been {{status}}. {% if transaction_id %}Transaction ID: {{transaction_id}}{% endif %}",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
     "model": "notifications.notificationrule",
     "pk": 6,
     "fields": {
-      "notification_type": "system",
-      "send_in_app": true,
-      "send_push": true,
+      "notification_type": "otp_sms",
+      "send_in_app": false,
+      "send_push": false,
+      "send_sms": true,
+      "send_email": false,
+      "is_critical": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationrule",
+    "pk": 7,
+    "fields": {
+      "notification_type": "otp_email",
+      "send_in_app": false,
+      "send_push": false,
       "send_sms": false,
       "send_email": true,
-      "is_critical": false,
+      "is_critical": true,
       "created_at": "2025-09-13T10:00:00Z",
       "updated_at": "2025-09-13T10:00:00Z"
     }

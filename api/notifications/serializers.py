@@ -7,10 +7,44 @@ from drf_spectacular.utils import extend_schema_field
 from api.notifications.models import (
     Notification, NotificationTemplate, NotificationRule, SMS_FCMLog
 )
+from api.common.serializers import BaseResponseSerializer
+
+# MVP Pattern: List vs Detail Serializers
 
 
-class NotificationSerializer(serializers.ModelSerializer):
-    """Serializer for notifications"""
+
+
+
+class NotificationListSerializer(serializers.ModelSerializer):
+    """Minimal serializer for notification lists - MVP optimized"""
+    time_ago = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Notification
+        fields = [
+            'id', 'title', 'notification_type', 'is_read', 
+            'created_at', 'time_ago'
+        ]
+    
+    @extend_schema_field(serializers.CharField)
+    def get_time_ago(self, obj) -> str:
+        now = timezone.now()
+        diff = now - obj.created_at
+        
+        if diff.days > 0:
+            return f"{diff.days}d"
+        elif diff.seconds > 3600:
+            hours = diff.seconds // 3600
+            return f"{hours}h"
+        elif diff.seconds > 60:
+            minutes = diff.seconds // 60
+            return f"{minutes}m"
+        else:
+            return "now"
+
+
+class NotificationDetailSerializer(serializers.ModelSerializer):
+    """Detailed serializer for notifications - Full data"""
     time_ago = serializers.SerializerMethodField()
     is_recent = serializers.SerializerMethodField()
     
@@ -46,32 +80,8 @@ class NotificationSerializer(serializers.ModelSerializer):
         return (timezone.now() - obj.created_at).days == 0
 
 
-class NotificationListSerializer(serializers.ModelSerializer):
-    """Serializer for notification list (minimal data)"""
-    time_ago = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Notification
-        fields = [
-            'id', 'title', 'notification_type', 'is_read', 
-            'created_at', 'time_ago'
-        ]
-    
-    @extend_schema_field(serializers.CharField)
-    def get_time_ago(self, obj) -> str:
-        now = timezone.now()
-        diff = now - obj.created_at
-        
-        if diff.days > 0:
-            return f"{diff.days}d"
-        elif diff.seconds > 3600:
-            hours = diff.seconds // 3600
-            return f"{hours}h"
-        elif diff.seconds > 60:
-            minutes = diff.seconds // 60
-            return f"{minutes}m"
-        else:
-            return "now"
+# Backward compatibility alias
+NotificationSerializer = NotificationDetailSerializer
 
 
 class NotificationUpdateSerializer(serializers.ModelSerializer):
@@ -340,3 +350,43 @@ class NotificationAnalyticsSerializer(serializers.Serializer):
     # Failed notifications
     failed_notifications = serializers.IntegerField()
     failure_rate = serializers.FloatField()
+
+
+# Response Serializers for Swagger Documentation
+
+class NotificationListResponseSerializer(BaseResponseSerializer):
+    """Response serializer for notification list endpoint"""
+    class NotificationListDataSerializer(serializers.Serializer):
+        notifications = NotificationListSerializer(many=True)
+        pagination = serializers.DictField()
+    
+    data = NotificationListDataSerializer()
+
+
+class NotificationDetailResponseSerializer(BaseResponseSerializer):
+    """Response serializer for notification detail endpoint"""
+    data = NotificationDetailSerializer()
+
+
+class NotificationStatsResponseSerializer(BaseResponseSerializer):
+    """Response serializer for notification stats endpoint"""
+    data = NotificationStatsSerializer()
+
+
+class NotificationMarkAllReadResponseSerializer(BaseResponseSerializer):
+    """Response serializer for mark all read endpoint"""
+    class MarkAllReadDataSerializer(serializers.Serializer):
+        message = serializers.CharField()
+        updated_count = serializers.IntegerField()
+    
+    data = MarkAllReadDataSerializer()
+
+
+class NotificationTemplateResponseSerializer(BaseResponseSerializer):
+    """Response serializer for notification template endpoint"""
+    data = NotificationTemplateSerializer(many=True)
+
+
+class NotificationAnalyticsResponseSerializer(BaseResponseSerializer):
+    """Response serializer for notification analytics endpoint"""
+    data = NotificationAnalyticsSerializer()

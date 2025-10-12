@@ -57,37 +57,117 @@ sleep 10
 
 # Function to create superuser if it doesn't exist
 create_superuser() {
-    print_step "Creating superuser..."
+    print_step "Creating superuser with dual authentication support..."
     
-    # Check if superuser already exists
-    if docker exec -i "$API_CONTAINER" python manage.py shell -c "
+    # Always run the superuser setup to ensure proper configuration
+    print_status "Setting up admin user with OTP + Password authentication..."
+    docker exec -i "$API_CONTAINER" python manage.py shell -c "
 from django.contrib.auth import get_user_model
-User = get_user_model()
-if User.objects.filter(is_superuser=True).exists():
-    print('Superuser already exists')
-    exit()
-else:
-    print('No superuser found')
-    exit(1)
-" 2>/dev/null; then
-        print_status "Superuser already exists ✓"
-    else
-        print_status "Creating superuser..."
-        docker exec -i "$API_CONTAINER" python manage.py shell -c "
-from django.contrib.auth import get_user_model
-import os
+from django.utils import timezone
+from axes.models import AccessAttempt, AccessLog
+
 User = get_user_model()
 username = 'janak'
 email = 'janak@powerbank.com'
-password = '5060'
-if not User.objects.filter(username=username).exists():
-    User.objects.create_superuser(username=username, email=email, password=password)
-    print(f'Superuser {username} created successfully')
+admin_password = '5060'
+
+# Clear any existing axes locks for admin
+AccessAttempt.objects.filter(username=username).delete()
+AccessAttempt.objects.filter(username=email).delete()
+AccessLog.objects.filter(username=username).delete()
+AccessLog.objects.filter(username=email).delete()
+
+# Check if user already exists
+if User.objects.filter(username=username).exists():
+    print(f'User {username} already exists - updating...')
+    user = User.objects.get(username=username)
+    
+    # Ensure admin privileges
+    user.is_superuser = True
+    user.is_staff = True
+    user.is_active = True
+    user.email_verified = True
+    user.phone_verified = True
+    user.status = 'ACTIVE'
+    user.save()
+    
+    # Set password for Django admin access
+    user.set_password(admin_password)
+    user.save()
+    
+    print(f'✓ Updated {username} with admin privileges and password')
 else:
-    print(f'User {username} already exists')
+    # Create new superuser
+    user = User.objects.create_user(
+        identifier=email,  # Use identifier for create_user method (email will be parsed)
+        username=username,
+        is_superuser=True,
+        is_staff=True,
+        is_active=True,
+        email_verified=True,
+        phone_verified=True,
+        status='ACTIVE'
+    )
+    
+    # Set password for Django admin access (works because user is staff/superuser)
+    user.set_password(admin_password)
+    user.save()
+    
+    print(f'✓ Superuser {username} created successfully')
+
+print(f'  - Email: {email}')
+print(f'  - Username: {username}')
+print(f'  - Status: ACTIVE')
+print(f'  - Is staff: {user.is_staff}')
+print(f'  - Is superuser: {user.is_superuser}')
+print(f'  - Has password: {user.has_usable_password()}')
+print(f'  - Email verified: True')
+print(f'  - Phone verified: True')
+
+# Create UserProfile for complete profile
+try:
+    from api.users.models import UserProfile
+    profile, created = UserProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            'full_name': 'Janak Admin',
+            'is_profile_complete': True
+        }
+    )
+    if created:
+        print(f'  - Profile created: Complete')
+    else:
+        print(f'  - Profile exists: Complete')
+except Exception as e:
+    print(f'  - Profile creation skipped: {e}')
+
+# Create UserKYC for KYC verification
+try:
+    from api.users.models import UserKYC
+    kyc, created = UserKYC.objects.get_or_create(
+        user=user,
+        defaults={
+            'document_type': 'CITIZENSHIP',
+            'document_number': 'ADMIN001',
+            'document_front_url': 'https://example.com/admin-doc.jpg',
+            'status': 'APPROVED',
+            'verified_at': timezone.now()
+        }
+    )
+    if created:
+        print(f'  - KYC created: APPROVED')
+    else:
+        print(f'  - KYC exists: APPROVED')
+except Exception as e:
+    print(f'  - KYC creation skipped: {e}')
+
+print('')
+print('🎉 Admin user setup completed!')
+print('🔐 Dual Authentication Available:')
+print('   1. Django Admin: Username + Password')
+print('   2. API Access: Email + OTP')
 "
-        print_status "✓ Superuser created successfully"
-    fi
+    print_status "✓ Superuser created/updated with dual authentication support"
 }
 
 # Function to load fixtures for an app
@@ -120,6 +200,38 @@ load_fixtures() {
         done
     else
         print_warning "Fixtures directory not found: $fixtures_dir"
+    fi
+}
+
+# Function to generate admin JWT token
+generate_admin_token() {
+    print_step "Generating admin JWT token for API testing..."
+    
+    local token=$(docker exec -i "$API_CONTAINER" python manage.py shell -c "
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
+import sys
+
+try:
+    User = get_user_model()
+    admin_user = User.objects.get(username='janak')
+    refresh = RefreshToken.for_user(admin_user)
+    print(str(refresh.access_token))
+except Exception as e:
+    print(f'Error generating token: {e}', file=sys.stderr)
+    sys.exit(1)
+" 2>/dev/null)
+    
+    if [[ -n "$token" && "$token" != *"Error"* ]]; then
+        print_status "✓ Admin JWT token generated successfully"
+        echo ""
+        print_status "🎫 Admin JWT Token (for Swagger UI):"
+        echo "Bearer $token"
+        echo ""
+        print_status "📋 Copy the above Bearer token for Swagger UI Authorization"
+        echo ""
+    else
+        print_warning "⚠ Failed to generate admin JWT token"
     fi
 }
 
@@ -166,6 +278,44 @@ load_fixtures "notifications"
 # 12. Admin Panel - Admin specific data (if exists)
 load_fixtures "admin_panel"
 
+# Generate admin JWT token for immediate testing
+generate_admin_token
+
+# Function to verify admin setup
+verify_admin_setup() {
+    print_step "Verifying admin setup..."
+    
+    local verification=$(docker exec -i "$API_CONTAINER" python manage.py shell -c "
+from django.contrib.auth import get_user_model
+from axes.models import AccessAttempt
+
+User = get_user_model()
+try:
+    admin = User.objects.get(username='janak')
+    locks = AccessAttempt.objects.filter(username='janak').count()
+    
+    print(f'✅ Admin user: {admin.username}')
+    print(f'✅ Email: {admin.email}')
+    print(f'✅ Is staff: {admin.is_staff}')
+    print(f'✅ Is superuser: {admin.is_superuser}')
+    print(f'✅ Has password: {admin.has_usable_password()}')
+    print(f'✅ Account locks: {locks}')
+    
+    if admin.is_staff and admin.is_superuser and admin.has_usable_password() and locks == 0:
+        print('🎉 Admin setup is PERFECT!')
+    else:
+        print('⚠️  Admin setup needs attention')
+        
+except Exception as e:
+    print(f'❌ Admin verification failed: {e}')
+" 2>/dev/null)
+    
+    echo "$verification"
+}
+
+# Verify admin setup
+verify_admin_setup
+
 echo ""
 print_status "🎉 Fixtures loading completed!"
 print_status "========================================="
@@ -175,7 +325,7 @@ API_PORT=$(grep "API_PORT" .env | cut -d '=' -f2 | tr -d ' ')
 SERVER_IP=$(hostname -I | awk '{print $1}')
 
 print_status "Summary:"
-print_status "- Superuser created (check .env for credentials)"
+print_status "- Superuser created with OTP-based user model (username: janak, email: janak@powerbank.com)"
 print_status "- Common fixtures loaded (countries, late fee configs)"
 print_status "- Config fixtures loaded"
 print_status "- User fixtures loaded"
@@ -195,7 +345,27 @@ print_status "API Documentation: http://$SERVER_IP:${API_PORT:-8010}/docs/"
 print_status "Admin Panel: http://$SERVER_IP:${API_PORT:-8010}/admin/"
 print_status "Health Check: http://$SERVER_IP:${API_PORT:-8010}/api/app/health/"
 echo ""
+print_status "🔐 Authentication System:"
+print_status "- Dual authentication system implemented"
+print_status "- Regular users: OTP-only authentication (secure, passwordless)"
+print_status "- Admin user: Both password AND OTP authentication available"
+print_status ""
+print_status "🔑 Admin Access Methods:"
+print_status "  1. Django Admin Panel:"
+print_status "     URL: http://$SERVER_IP:${API_PORT:-8010}/admin/"
+print_status "     Username: janak"
+print_status "     Password: PowerBank@2024"
+print_status ""
+print_status "  2. API Access (OTP-based):"
+print_status "     Email: janak@powerbank.com"
+print_status "     Use OTP flow as documented in api/users/AUTH_FLOW.md"
+print_status "     JWT token generated above for immediate Swagger UI testing"
+echo ""
 print_status "🔧 Useful commands:"
-print_status "Django shell: docker-compose -f $DOCKER_COMPOSE_FILE exec powerbank_api python manage.py shell"
-print_status "View logs: docker-compose -f $DOCKER_COMPOSE_FILE logs -f powerbank_api"
-print_status "Restart API: docker-compose -f $DOCKER_COMPOSE_FILE restart powerbank_api"
+print_status "Django shell: docker-compose exec $API_CONTAINER python manage.py shell"
+print_status "View logs: docker-compose logs -f $API_CONTAINER"
+print_status "Restart API: docker-compose restart $API_CONTAINER"
+print_status "Unlock admin: python unlock_admin.py (if account gets locked)"
+print_status "Reset admin password: docker-compose exec $API_CONTAINER python manage.py shell -c \"from django.contrib.auth import get_user_model; User = get_user_model(); admin = User.objects.get(username='janak'); admin.set_password('PowerBank@2024'); admin.save(); print('Password reset!')\""
+print_status "Generate admin token: docker-compose exec $API_CONTAINER python manage.py shell -c \"from django.contrib.auth import get_user_model; from rest_framework_simplejwt.tokens import RefreshToken; User = get_user_model(); admin = User.objects.get(username='janak'); print('Admin JWT:', str(RefreshToken.for_user(admin).access_token))\""
+print_status "Clear axes locks: docker-compose exec $API_CONTAINER python manage.py axes_reset"

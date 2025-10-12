@@ -10,7 +10,7 @@
 
 ### **Description**
 
-'Sends OTP via SMS or Email for authentication'
+'Sends OTP via SMS or Email for registration or login'
 
 ---
 
@@ -70,7 +70,7 @@
 
 ### **Description**
 
-'Validates OTP and returns verification token'
+'Validates OTP and returns verification token for registration or login'
 
 ---
 
@@ -130,7 +130,7 @@
 
 ### **Description**
 
-'Creates new user account after OTP verification'
+'Creates new user account after OTP verification (no password required)'
 
 ---
 
@@ -190,7 +190,7 @@
 
 ### **Description**
 
-'Completes login after OTP verification'
+'Completes login after OTP verification (no password required)'
 
 ---
 
@@ -423,7 +423,7 @@
 
 ### **Description**
 
-"Returns authenticated user's basic data"
+"Returns authenticated user's real-time data"
 
 ---
 
@@ -531,7 +531,7 @@
 
 ### **Description**
 
-'Get and update user profile'
+'Get and update user profile with real-time data'
 
 ---
 
@@ -654,7 +654,7 @@
 
 ### **Description**
 
-'Returns KYC verification status'
+'Returns real-time KYC verification status'
 
 ---
 
@@ -706,7 +706,7 @@
 
 ### **Description**
 
-'Display wallet balance and points'
+'Display real-time wallet balance and points'
 
 ---
 
@@ -758,7 +758,7 @@
 
 ### **Description**
 
-'Provides usage statistics and analytics'
+'Provides real-time usage statistics and analytics'
 
 ---
 
@@ -812,7 +812,7 @@
 
 ### **Description**
 
-Admin-only user management ViewSet
+Admin-only user management ViewSet with optimized pagination and real-time data
 
 ---
 

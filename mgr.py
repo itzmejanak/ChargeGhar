@@ -213,8 +213,8 @@ class PowerBankManager:
         
         # Check API endpoint (try both with and without trailing slash)
         health_urls = [
-            "https://main.chargeghar.com/api/app/health",
-            "https://main.chargeghar.com/api/app/health/"
+            "http://localhost:8010/api/app/health",
+            "http://localhost:8010/api/app/health/"
         ]
         
         health_passed = False

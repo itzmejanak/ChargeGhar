@@ -107,7 +107,6 @@ chmod +x deploy-production.sh
 
 
 
-
 🔧 To Check if Fixtures Loaded:
 # Check if data exists in database
 docker-compose -f docker-compose.prod.yml exec powerbank_api python manage.py shell -c "
@@ -117,4 +116,54 @@ print(f'Users: {User.objects.count()}')
 
 from api.stations.models import Station
 print(f'Stations: {Station.objects.count()}')
+"
+
+docker-compose exec api python manage.py spectacular --color --file openapi-schema.json
+
+docker-compose exec api python manage.py shell -c "from django.db import connection; cursor = connection.cursor(); cursor.execute('SELECT table_name FROM information_schema.tables WHERE table_schema = %s', ['public']); print([row[0] for row in cursor.fetchall()])"
+
+
+
+docker exec powerbank_production-powerbank_api-1 python manage.py shell -c " # Clear the account lock (django-axes) from axes.models import AccessAttempt AccessAttempt.objects.filter(username='janak').delete() print('✅ Account lock cleared for janak') # Set password for admin user from django.contrib.auth import get_user_model User = get_user_model() admin_user = User.objects.get(username='janak') admin_user.set_password('PowerBank@2024') admin_user.save() print('✅ Password set for admin user') print('🌐 Django Admin: https://main.chargeghar.com/admin/') print('👤 Username: janak') print('🔑 Password: PowerBank@2024') print('') print('📧 Email (for OTP): janak@powerbank.com') print('🔐 OTP flow still works for API authentication') "
+
+
+
+
+
+docker exec powerbank_local_api_1 python manage.py shell -c "
+# Clear ALL axes locks for the admin user
+from axes.models import AccessAttempt, AccessLog
+from django.contrib.auth import get_user_model
+
+# Clear by username
+AccessAttempt.objects.filter(username='janak').delete()
+AccessLog.objects.filter(username='janak').delete()
+
+# Clear by email (in case it's locked by email)
+AccessAttempt.objects.filter(username='janak@powerbank.com').delete()
+AccessLog.objects.filter(username='janak@powerbank.com').delete()
+
+# Clear by IP (if locked by IP)
+AccessAttempt.objects.all().delete()
+AccessLog.objects.all().delete()
+
+print('✅ All axes locks cleared')
+
+# Verify admin user exists and has password
+User = get_user_model()
+try:
+    admin_user = User.objects.get(username='janak')
+    print(f'✅ Admin user found: {admin_user.username}')
+    print(f'   Email: {admin_user.email}')
+    print(f'   Is staff: {admin_user.is_staff}')
+    print(f'   Is superuser: {admin_user.is_superuser}')
+    print(f'   Has usable password: {admin_user.has_usable_password()}')
+    
+    # Set password again to be sure
+    admin_user.set_password('PowerBank@2024')
+    admin_user.save()
+    print('✅ Password reset successfully')
+    
+except User.DoesNotExist:
+    print('❌ Admin user not found')
 "

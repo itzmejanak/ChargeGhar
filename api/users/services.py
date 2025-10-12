@@ -18,7 +18,7 @@ from api.common.utils.helpers import (
 )
 from api.users.models import User, UserProfile, UserKYC, UserDevice, UserPoints, UserAuditLog
 from api.payments.models import Wallet
-from api.notifications.services.main import NotificationService
+from api.notifications.services import NotificationService
 
 
 User = get_user_model()
@@ -48,16 +48,15 @@ class AuthService(BaseService):
                     detail="User already exists. Use login instead.",
                     code="user_already_exists"
                 )
-        elif purpose == 'RESET_PASSWORD':
+        elif purpose == 'LOGIN':
             if not user_exists:
                 raise ServiceException(
                     detail="User not found. Please register first.",
                     code="user_not_found"
                 )
         else:
-            # For any other purpose (like LOGIN), reject the request
             raise ServiceException(
-                detail="OTP is only available for registration and password reset.",
+                detail="Invalid purpose. Use 'REGISTER' or 'LOGIN'.",
                 code="invalid_purpose"
             )
     
@@ -86,9 +85,22 @@ class AuthService(BaseService):
             cache.set(cache_key, otp, timeout=self.otp_expiry_minutes * 60)
             cache.set(attempts_key, attempts + 1, timeout=3600)  # 1 hour
             
-            # Send OTP (will be handled by Celery task)
+            # Send OTP using clean notification system
+            from api.notifications.services import notify_otp
+            
+            # Try to find existing user for notification
+            user = None
+            try:
+                if '@' in identifier:
+                    user = User.objects.get(email=identifier)
+                else:
+                    user = User.objects.get(phone_number=identifier)
+            except User.DoesNotExist:
+                pass  # User not found, will handle via direct service
+            
+            # Send OTP asynchronously via task (better performance)
             from api.notifications.tasks import send_otp_task
-            send_otp_task.delay(identifier, otp, purpose)
+            send_otp_task.delay(identifier, otp, purpose.lower())
             
             self.log_info(f"OTP generated for {identifier} - Purpose: {purpose}")
             return {
@@ -154,16 +166,11 @@ class AuthService(BaseService):
                     code="invalid_token"
                 )
             
-            # Create user
-            user_data = {
-                'username': validated_data['username'],
-                'email': validated_data.get('email'),
-                'phone_number': validated_data.get('phone_number'),
-            }
-            
+            # Create user with OTP-based authentication (no password)
             user = User.objects.create_user(
-                password=validated_data['password'],
-                **user_data
+                email=validated_data.get('email'),
+                phone_number=validated_data.get('phone_number'),
+                username=validated_data.get('username'),
             )
             
             # Set verification status
@@ -210,8 +217,21 @@ class AuthService(BaseService):
             self.handle_service_error(e, "Failed to register user")
     
     def login_user(self, validated_data: Dict[str, Any], request) -> Dict[str, Any]:
-        """Login user"""
+        """Login user with OTP verification"""
         try:
+            identifier = validated_data['identifier']
+            
+            # Validate verification token
+            if not self.validate_verification_token(
+                identifier,
+                validated_data['verification_token'],
+                'LOGIN'
+            ):
+                raise ServiceException(
+                    detail="Invalid verification token",
+                    code="invalid_token"
+                )
+            
             user = validated_data['user']
             
             # Update last login
@@ -224,7 +244,7 @@ class AuthService(BaseService):
             # Log audit
             self._log_user_audit(user, 'LOGIN', 'USER', str(user.id), request)
             
-            self.log_info(f"User logged in successfully: {user.username}")
+            self.log_info(f"User logged in successfully: {user.get_identifier()}")
             
             return {
                 'user_id': str(user.id),
@@ -282,6 +302,24 @@ class AuthService(BaseService):
             )
         except Exception as e:
             self.log_error(f"Failed to log audit: {str(e)}")
+    
+    def update_account_status(self, user: User, new_status: str, reason: str = None) -> bool:
+        """Update user account status and send notification"""
+        try:
+            old_status = user.status
+            user.status = new_status
+            user.save(update_fields=['status'])
+            
+            # Send account status notification
+            from api.notifications.services import notify_account_status
+            notify_account_status(user, new_status, reason)
+            
+            self.log_info(f"Account status updated: {user.username} {old_status} -> {new_status}")
+            return True
+            
+        except Exception as e:
+            self.log_error(f"Failed to update account status: {str(e)}")
+            return False
 
 
 class UserProfileService(BaseService):
@@ -304,6 +342,15 @@ class UserProfileService(BaseService):
             )
             
             profile.save()
+            
+            # Send profile completion reminder if still incomplete (async)
+            if not profile.is_profile_complete:
+                from api.notifications.tasks import send_push_notification_task
+                send_push_notification_task.delay(
+                    str(user.id),
+                    "Complete Your Profile", 
+                    "Complete your profile to unlock all ChargeGhar features!"
+                )
             
             self.log_info(f"Profile updated for user: {user.username}")
             
@@ -392,6 +439,31 @@ class UserKYCService(BaseService):
             
         except Exception as e:
             self.handle_service_error(e, "Failed to submit KYC")
+    
+    def update_kyc_status(self, user: User, status: str, rejection_reason: str = None) -> bool:
+        """Update KYC status and send notification"""
+        try:
+            kyc = UserKYC.objects.get(user=user)
+            kyc.status = status
+            if rejection_reason:
+                kyc.rejection_reason = rejection_reason
+            if status == 'APPROVED':
+                kyc.verified_at = timezone.now()
+            kyc.save()
+            
+            # Send KYC status notification
+            from api.notifications.services import notify_kyc_status
+            notify_kyc_status(user, status.lower(), rejection_reason)
+            
+            self.log_info(f"KYC status updated: {user.username} -> {status}")
+            return True
+            
+        except UserKYC.DoesNotExist:
+            self.log_error(f"KYC not found for user {user.username}")
+            return False
+        except Exception as e:
+            self.log_error(f"Failed to update KYC status: {str(e)}")
+            return False
 
 
 class UserDeviceService(BaseService):

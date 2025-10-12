@@ -5,7 +5,7 @@ from django.db import transaction
 from django.utils import timezone
 from django.db.models import Count, Sum, Q, F
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
+
 
 from api.common.services.base import BaseService, CRUDService, ServiceException
 from api.common.utils.helpers import paginate_queryset
@@ -169,12 +169,7 @@ class LeaderboardService(CRUDService):
                        limit: int = 10, include_user: User = None) -> Dict[str, Any]:
         """Get leaderboard with filtering"""
         try:
-            # Check cache first
-            cache_key = f"leaderboard:{category}:{period}:{limit}"
-            cached_leaderboard = cache.get(cache_key)
-            
-            if cached_leaderboard and not include_user:
-                return cached_leaderboard
+            # Caching is now handled by view decorators
             
             # Get base queryset
             queryset = UserLeaderboard.objects.select_related('user')
@@ -217,9 +212,7 @@ class LeaderboardService(CRUDService):
                 'total_users': UserLeaderboard.objects.count()
             }
             
-            # Cache for 5 minutes
-            if not include_user:
-                cache.set(cache_key, result, timeout=300)
+            # Caching is now handled by view decorators
             
             return result
             
@@ -297,17 +290,7 @@ class LeaderboardService(CRUDService):
                     leaderboard.save(update_fields=['rank', 'last_updated'])
                     updated_count += 1
             
-            # Clear leaderboard caches
-            cache_keys = [
-                'leaderboard:overall:all_time:10',
-                'leaderboard:points:all_time:10',
-                'leaderboard:rentals:all_time:10',
-                'leaderboard:referrals:all_time:10',
-                'leaderboard:timely_returns:all_time:10'
-            ]
-            
-            for key in cache_keys:
-                cache.delete(key)
+            # Cache clearing is now handled by view decorators
             
             self.log_info(f"Recalculated ranks for {updated_count} users")
             return updated_count

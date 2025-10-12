@@ -109,9 +109,9 @@
   },
   {
     "model": "stations.powerbank",
-    "pk": "550e8400-e29b-41d4-a716-446655440501",
+    "pk": "550e8400-e29b-41d4-a716-446655440502",
     "fields": {
-      "serial_number": "PB001",
+      "serial_number": "PB002",
       "model": "PowerBank Pro 10000",
       "capacity_mah": 10000,
       "status": "AVAILABLE",

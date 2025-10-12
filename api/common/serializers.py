@@ -7,6 +7,40 @@ from django.conf import settings
 from api.common.models import Country, MediaUpload
 
 
+# Base Response Serializers
+class BaseResponseSerializer(serializers.Serializer):
+    """Standard response format for all API endpoints"""
+    success = serializers.BooleanField()
+    message = serializers.CharField()
+    data = serializers.JSONField()
+    timestamp = serializers.DateTimeField()
+
+
+class PaginatedResponseSerializer(serializers.Serializer):
+    """Standard paginated response format"""
+    success = serializers.BooleanField()
+    message = serializers.CharField()
+    data = serializers.JSONField()
+    pagination = serializers.DictField()
+    timestamp = serializers.DateTimeField()
+
+
+class HealthCheckSerializer(serializers.Serializer):
+    """Health check response serializer"""
+    status = serializers.CharField()
+    database = serializers.CharField()
+    cache = serializers.CharField()
+    timestamp = serializers.DateTimeField()
+
+
+class AppVersionSerializer(serializers.Serializer):
+    """App version response serializer"""
+    current_version = serializers.CharField()
+    latest_version = serializers.CharField()
+    update_required = serializers.BooleanField()
+    update_url = serializers.URLField(required=False)
+
+
 class CountrySerializer(serializers.ModelSerializer):
     """Serializer for Country model"""
     
@@ -74,8 +108,9 @@ class MediaUploadResponseSerializer(serializers.ModelSerializer):
 
 class AppInitDataSerializer(serializers.Serializer):
     """Serializer for app initialization data"""
-    version = serializers.CharField()
-    settings = serializers.DictField()
+    configs = serializers.DictField()
     countries = serializers.ListField()
-    banners = serializers.ListField()
+    constants = serializers.DictField()
+    app_version = serializers.CharField()
+    api_version = serializers.CharField()
 

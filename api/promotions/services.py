@@ -6,7 +6,7 @@ from typing import Dict, Any, List
 from django.db import transaction
 from django.utils import timezone
 from django.db.models import Count, Sum, Q
-from django.core.cache import cache
+
 
 from api.common.services.base import BaseService, CRUDService, ServiceException
 from api.common.utils.helpers import paginate_queryset
@@ -20,36 +20,12 @@ class CouponService(CRUDService):
     def get_active_coupons(self) -> List[Coupon]:
         """Get currently active and valid coupons"""
         try:
-            # Check cache first
-            cache_key = "active_coupons"
-            cached_coupons = cache.get(cache_key)
-            
-            if cached_coupons:
-                return Coupon.objects.filter(id__in=[data['id'] for data in cached_coupons])
-            
             now = timezone.now()
             coupons = Coupon.objects.filter(
                 status=Coupon.StatusChoices.ACTIVE,
                 valid_from__lte=now,
                 valid_until__gte=now
             ).order_by('-points_value')
-            
-            # Convert queryset to list of dictionaries for caching
-            coupons_data = []
-            for coupon in coupons:
-                coupons_data.append({
-                    'id': str(coupon.id),
-                    'code': coupon.code,
-                    'name': coupon.name,
-                    'points_value': coupon.points_value,
-                    'max_uses_per_user': coupon.max_uses_per_user,
-                    'valid_from': coupon.valid_from.isoformat(),
-                    'valid_until': coupon.valid_until.isoformat(),
-                    'status': coupon.status
-                })
-            
-            # Cache for 15 minutes
-            cache.set(cache_key, coupons_data, timeout=900)
             
             return coupons
 
@@ -166,24 +142,12 @@ class CouponService(CRUDService):
                 }
             )
             
-            # Send notification
-            from api.notifications.services import NotificationService
-            notification_service = NotificationService()
-            
-            notification_service.create_notification(
-                user=user,
-                title="",  # Will be overridden by template
-                message="",  # Will be overridden by template
-                notification_type='promotion',
-                template_slug='coupon_applied',
-                data={
-                    'coupon_code': coupon.code,
-                    'coupon_name': coupon.name,
-                    'points_awarded': coupon.points_value,
-                    'points': coupon.points_value,
-                    'action': 'view_points'
-                },
-                auto_send=True
+            # Send coupon notification asynchronously via task
+            from api.notifications.tasks import send_push_notification_task
+            send_push_notification_task.delay(
+                str(user.id),
+                "🎉 Coupon Applied!",
+                f"You've successfully applied coupon '{coupon.code}' and received {coupon.points_value} points!"
             )
             
             self.log_info(f"Coupon applied: {coupon.code} by {user.username}")
@@ -231,8 +195,7 @@ class CouponService(CRUDService):
                 status=Coupon.StatusChoices.ACTIVE
             )
             
-            # Clear active coupons cache
-            cache.delete("active_coupons")
+            # Cache clearing moved to view decorators
             
             # Log admin action
             from api.admin_panel.models import AdminActionLog
@@ -287,8 +250,7 @@ class CouponService(CRUDService):
             # Bulk create
             Coupon.objects.bulk_create(created_coupons)
             
-            # Clear cache
-            cache.delete("active_coupons")
+            # Cache clearing moved to view decorators
             
             # Log admin action
             from api.admin_panel.models import AdminActionLog

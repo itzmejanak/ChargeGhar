@@ -7,10 +7,32 @@ from drf_spectacular.utils import extend_schema_field
 from api.points.models import PointsTransaction, Referral
 from api.users.models import UserPoints, User
 from api.common.utils.helpers import convert_points_to_amount
+from api.common.serializers import BaseResponseSerializer
 
 
-class PointsTransactionSerializer(serializers.ModelSerializer):
-    """Serializer for points transactions"""
+# MVP Pattern: List vs Detail Serializers
+
+class PointsTransactionListSerializer(serializers.ModelSerializer):
+    """Minimal serializer for points transaction lists - MVP optimized"""
+    formatted_points = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = PointsTransaction
+        fields = [
+            'id', 'transaction_type', 'source', 'points', 
+            'description', 'created_at', 'formatted_points'
+        ]
+        read_only_fields = ['id', 'created_at']
+    
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_points(self, obj) -> str:
+        """Get formatted points display"""
+        sign = "+" if obj.transaction_type == 'EARNED' else "-"
+        return f"{sign}{abs(obj.points)} points"
+
+
+class PointsTransactionDetailSerializer(serializers.ModelSerializer):
+    """Detailed serializer for points transactions - Full data"""
     points_value = serializers.SerializerMethodField()
     formatted_points = serializers.SerializerMethodField()
     rental_code = serializers.CharField(source='related_rental.rental_code', read_only=True)
@@ -20,7 +42,7 @@ class PointsTransactionSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'transaction_type', 'source', 'points', 'balance_before',
             'balance_after', 'description', 'created_at', 'points_value',
-            'formatted_points', 'rental_code'
+            'formatted_points', 'rental_code', 'metadata'
         ]
         read_only_fields = ['id', 'created_at']
     
@@ -34,6 +56,10 @@ class PointsTransactionSerializer(serializers.ModelSerializer):
         """Get formatted points display"""
         sign = "+" if obj.transaction_type == 'EARNED' else "-"
         return f"{sign}{abs(obj.points)} points"
+
+
+# Backward compatibility alias
+PointsTransactionSerializer = PointsTransactionDetailSerializer
 
 
 class UserPointsSerializer(serializers.ModelSerializer):
@@ -61,8 +87,26 @@ class UserPointsSerializer(serializers.ModelSerializer):
         return f"{obj.total_points:,} points"
 
 
-class ReferralSerializer(serializers.ModelSerializer):
-    """Serializer for referrals"""
+class ReferralListSerializer(serializers.ModelSerializer):
+    """Minimal serializer for referral lists - MVP optimized"""
+    invitee_username = serializers.CharField(source='invitee.username', read_only=True)
+    is_expired = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Referral
+        fields = [
+            'id', 'status', 'invitee_username', 'inviter_points_awarded',
+            'created_at', 'is_expired'
+        ]
+        read_only_fields = ['id', 'created_at']
+    
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_expired(self, obj) -> bool:
+        return timezone.now() > obj.expires_at
+
+
+class ReferralDetailSerializer(serializers.ModelSerializer):
+    """Detailed serializer for referrals - Full data"""
     inviter_username = serializers.CharField(source='inviter.username', read_only=True)
     invitee_username = serializers.CharField(source='invitee.username', read_only=True)
     is_expired = serializers.SerializerMethodField()
@@ -78,7 +122,8 @@ class ReferralSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'completed_at']
     
-    def get_is_expired(self, obj):
+    @extend_schema_field(serializers.BooleanField)
+    def get_is_expired(self, obj) -> bool:
         return timezone.now() > obj.expires_at
     
     def get_days_until_expiry(self, obj):
@@ -86,6 +131,10 @@ class ReferralSerializer(serializers.ModelSerializer):
             return 0
         delta = obj.expires_at - timezone.now()
         return delta.days
+
+
+# Backward compatibility alias
+ReferralSerializer = ReferralDetailSerializer
 
 
 class ReferralCodeValidationSerializer(serializers.Serializer):
@@ -231,8 +280,16 @@ class ReferralAnalyticsSerializer(serializers.Serializer):
     monthly_breakdown = serializers.ListField()
 
 
-class PointsLeaderboardSerializer(serializers.Serializer):
-    """Serializer for points leaderboard"""
+class PointsLeaderboardListSerializer(serializers.Serializer):
+    """Minimal serializer for leaderboard lists - MVP optimized"""
+    rank = serializers.IntegerField()
+    username = serializers.CharField()
+    total_points = serializers.IntegerField()
+    points_this_month = serializers.IntegerField()
+
+
+class PointsLeaderboardDetailSerializer(serializers.Serializer):
+    """Detailed serializer for leaderboard - Full data"""
     rank = serializers.IntegerField()
     user_id = serializers.UUIDField()
     username = serializers.CharField()
@@ -241,6 +298,10 @@ class PointsLeaderboardSerializer(serializers.Serializer):
     points_this_month = serializers.IntegerField()
     referrals_count = serializers.IntegerField()
     rentals_count = serializers.IntegerField()
+
+
+# Backward compatibility alias
+PointsLeaderboardSerializer = PointsLeaderboardDetailSerializer
 
 
 class BulkPointsAwardSerializer(serializers.Serializer):
@@ -264,3 +325,91 @@ class BulkPointsAwardSerializer(serializers.Serializer):
         if len(value.strip()) < 5:
             raise serializers.ValidationError("Description must be at least 5 characters")
         return value.strip()
+
+
+# Response Serializers for Swagger Documentation
+
+class PointsHistoryResponseSerializer(BaseResponseSerializer):
+    """Response serializer for points history endpoint"""
+    class PointsHistoryDataSerializer(serializers.Serializer):
+        results = PointsTransactionListSerializer(many=True)
+        pagination = serializers.DictField()
+    
+    data = PointsHistoryDataSerializer()
+
+
+class PointsSummaryResponseSerializer(BaseResponseSerializer):
+    """Response serializer for points summary endpoint"""
+    data = PointsSummarySerializer()
+
+
+class UserReferralCodeResponseSerializer(BaseResponseSerializer):
+    """Response serializer for user referral code endpoint"""
+    class ReferralCodeDataSerializer(serializers.Serializer):
+        referral_code = serializers.CharField()
+        user_id = serializers.UUIDField()
+        username = serializers.CharField()
+    
+    data = ReferralCodeDataSerializer()
+
+
+class ReferralValidationResponseSerializer(BaseResponseSerializer):
+    """Response serializer for referral validation endpoint"""
+    class ValidationDataSerializer(serializers.Serializer):
+        valid = serializers.BooleanField()
+        referrer = serializers.CharField()
+        message = serializers.CharField()
+    
+    data = ValidationDataSerializer()
+
+
+class ReferralClaimResponseSerializer(BaseResponseSerializer):
+    """Response serializer for referral claim endpoint"""
+    class ClaimDataSerializer(serializers.Serializer):
+        points_awarded = serializers.IntegerField()
+        referral_id = serializers.UUIDField()
+        completed_at = serializers.DateTimeField()
+    
+    data = ClaimDataSerializer()
+
+
+class UserReferralsResponseSerializer(BaseResponseSerializer):
+    """Response serializer for user referrals endpoint"""
+    class UserReferralsDataSerializer(serializers.Serializer):
+        results = ReferralListSerializer(many=True)
+        pagination = serializers.DictField()
+    
+    data = UserReferralsDataSerializer()
+
+
+class PointsLeaderboardResponseSerializer(BaseResponseSerializer):
+    """Response serializer for points leaderboard endpoint"""
+    data = PointsLeaderboardListSerializer(many=True)
+
+
+class PointsAdjustmentResponseSerializer(BaseResponseSerializer):
+    """Response serializer for points adjustment endpoint"""
+    class AdjustmentDataSerializer(serializers.Serializer):
+        transaction_id = serializers.UUIDField()
+        user_id = serializers.UUIDField()
+        points_adjusted = serializers.IntegerField()
+        adjustment_type = serializers.CharField()
+        new_balance = serializers.IntegerField()
+    
+    data = AdjustmentDataSerializer()
+
+
+class BulkPointsAwardResponseSerializer(BaseResponseSerializer):
+    """Response serializer for bulk points award endpoint"""
+    class BulkAwardDataSerializer(serializers.Serializer):
+        total_users = serializers.IntegerField()
+        awarded_count = serializers.IntegerField()
+        failed_count = serializers.IntegerField()
+        total_points_awarded = serializers.IntegerField()
+    
+    data = BulkAwardDataSerializer()
+
+
+class ReferralAnalyticsResponseSerializer(BaseResponseSerializer):
+    """Response serializer for referral analytics endpoint"""
+    data = ReferralAnalyticsSerializer()
