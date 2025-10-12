@@ -120,8 +120,8 @@ SPARROW_SMS_FROM = getenv("SPARROW_SMS_FROM", "Demo")
 SPARROW_SMS_BASE_URL = getenv("SPARROW_SMS_BASE_URL", "https://sms.sparrowsms.com/v2/sms/")
 
 # Email Configuration
-EMAIL_BACKEND = getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = getenv('EMAIL_HOST', 'stmp.gmail.com')
+EMAIL_BACKEND = getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = getenv('EMAIL_HOST', 'smtp.hostinger.com')
 EMAIL_PORT = int(getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = getenv('EMAIL_USE_TLS', 'TRUE').lower() == 'true'
 EMAIL_HOST_USER = getenv('EMAIL_HOST_USER', 'nikeshshrestha405@gmail.com')
