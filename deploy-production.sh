@@ -146,7 +146,8 @@ sed -i 's/RABBITMQ_HOST=rabbitmq/RABBITMQ_HOST=powerbank_rabbitmq/' .env
 sed -i 's/USE_S3_FOR_MEDIA=false/USE_S3_FOR_MEDIA=true/' .env
 sed -i 's/USE_S3_FOR_STATIC=false/USE_S3_FOR_STATIC=true/' .env
 sed -i 's/USE_REDIS_FOR_CACHE=false/USE_REDIS_FOR_CACHE=true/' .env
-sed -i 's/USE_SENTRY=false/USE_SENTRY=true/' .env
+# Keep Sentry disabled until properly configured
+# sed -i 's/USE_SENTRY=false/USE_SENTRY=true/' .env
 
 sed -i 's/CORS_ORIGIN_ALLOW_ALL=true/CORS_ORIGIN_ALLOW_ALL=false/' .env
 sed -i 's/CORS_ALLOW_CREDENTIALS=false/CORS_ALLOW_CREDENTIALS=true/' .env
