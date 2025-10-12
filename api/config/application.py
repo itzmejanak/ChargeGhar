@@ -124,6 +124,6 @@ EMAIL_BACKEND = getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBac
 EMAIL_HOST = getenv('EMAIL_HOST', 'smtp.hostinger.com')
 EMAIL_PORT = int(getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = getenv('EMAIL_USE_TLS', 'TRUE').lower() == 'true'
-EMAIL_HOST_USER = getenv('EMAIL_HOST_USER', 'nikeshshrestha405@gmail.com')
-EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD', 'vuautbzfearumtym')
-DEFAULT_FROM_EMAIL = getenv('DEFAULT_FROM_EMAIL', 'nikeshshrestha405@gmail.com')
+EMAIL_HOST_USER = getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = getenv('DEFAULT_FROM_EMAIL')
