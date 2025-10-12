@@ -32,3 +32,9 @@ CORS_ALLOW_CREDENTIALS = getenv("CORS_ALLOW_CREDENTIALS", "False").lower() == "t
 CORS_ALLOWED_ORIGINS = getenv("CORS_ALLOWED_ORIGINS", "http://localhost").split(
     ",",
 )
+
+# HTTPS enforcement for production - minimal settings
+ENVIRONMENT = getenv("ENVIRONMENT", "local")
+if ENVIRONMENT == "production":
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True

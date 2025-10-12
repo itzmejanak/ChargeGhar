@@ -278,6 +278,32 @@ class AppleLoginView(GenericAPIView, BaseAPIView):
         )
 
 
+@router.register(r"auth/debug/headers", name="auth-debug-headers")
+@extend_schema(
+    tags=["App"],
+    summary="Debug Headers",
+    description="Show request headers for debugging",
+    responses={200: BaseResponseSerializer}
+)
+class DebugHeadersView(GenericAPIView, BaseAPIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request: Request) -> Response:
+        """Show request headers for debugging"""
+        headers = dict(request.META)
+        filtered_headers = {k: v for k, v in headers.items() if k.startswith('HTTP_')}
+        
+        return Response({
+            'success': True,
+            'data': {
+                'headers': filtered_headers,
+                'is_secure': request.is_secure(),
+                'scheme': request.scheme,
+                'host': request.get_host(),
+            }
+        })
+
+
 @router.register(r"auth/social/success", name="auth-social-success")
 @extend_schema(
     tags=["Authentication"],
