@@ -92,6 +92,24 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'  # Default, but we'll handle both email and phone
     REQUIRED_FIELDS = []
     
+    # Social authentication fields (from migration 0006)
+    google_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    apple_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    social_provider = models.CharField(
+        max_length=20,
+        choices=[
+            ('EMAIL', 'Email'),
+            ('PHONE', 'Phone'),
+            ('GOOGLE', 'Google'),
+            ('APPLE', 'Apple')
+        ],
+        default='EMAIL',
+        help_text='Primary authentication method used by the user'
+    )
+    
+    # Social profile data storage
+    social_profile_data = models.JSONField(default=dict, blank=True)
+    
     # Password field - enabled for admin users, disabled for regular users
     
     class Meta:
@@ -100,8 +118,16 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = 'Users'
         constraints = [
             models.CheckConstraint(
-                check=models.Q(email__isnull=False) | models.Q(phone_number__isnull=False),
-                name='user_must_have_email_or_phone'
+                check=models.Q(
+                    ('email__isnull', False)
+                ) | models.Q(
+                    ('phone_number__isnull', False)
+                ) | models.Q(
+                    ('google_id__isnull', False)
+                ) | models.Q(
+                    ('apple_id__isnull', False)
+                ),
+                name='user_must_have_identifier'
             )
         ]
     

@@ -185,7 +185,11 @@ def sync_user_data_with_external_services(self, user_id: str):
             'phone_number': user.phone_number,
             'status': user.status,
             'date_joined': user.date_joined.isoformat(),
-            'last_login': user.last_login.isoformat() if user.last_login else None
+            'last_login': user.last_login.isoformat() if user.last_login else None,
+            'social_provider': user.social_provider,
+            'google_id': user.google_id,
+            'apple_id': user.apple_id,
+            'social_profile_data': user.social_profile_data
         }
         
         # Here you would integrate with external services
@@ -199,4 +203,68 @@ def sync_user_data_with_external_services(self, user_id: str):
         raise
     except Exception as e:
         self.logger.error(f"Failed to sync user data: {str(e)}")
+        raise
+
+
+@shared_task(base=NotificationTask, bind=True)
+def send_social_auth_welcome_message(self, user_id: str, provider: str):
+    """Send welcome message for social auth users"""
+    try:
+        user = User.objects.get(id=user_id)
+        
+        # Send welcome notification
+        from api.notifications.models import Notification
+        Notification.objects.create(
+            user=user,
+            title=f"Welcome to ChargeGhar!",
+            message=f"Thanks for signing up with {provider.title()}! Complete your profile to start renting power banks.",
+            notification_type="SOCIAL_WELCOME",
+            data={
+                'action': 'complete_profile',
+                'provider': provider,
+                'signup_method': 'social'
+            }
+        )
+        
+        self.logger.info(f"Social auth welcome message sent to user: {user.username} via {provider}")
+        return {'status': 'welcome_sent', 'user_id': user_id, 'provider': provider}
+        
+    except User.DoesNotExist:
+        self.logger.error(f"User not found: {user_id}")
+        raise
+    except Exception as e:
+        self.logger.error(f"Failed to send social auth welcome message: {str(e)}")
+        raise
+
+
+@shared_task(base=BaseTask, bind=True)
+def cleanup_unlinked_social_accounts(self):
+    """Clean up social accounts that are not properly linked"""
+    try:
+        from allauth.socialaccount.models import SocialAccount
+        
+        # Find social accounts without corresponding user social IDs
+        unlinked_count = 0
+        social_accounts = SocialAccount.objects.all()
+        
+        for social_account in social_accounts:
+            user = social_account.user
+            provider = social_account.provider
+            provider_id_field = f'{provider}_id'
+            
+            # Check if user has the corresponding provider ID
+            if hasattr(user, provider_id_field):
+                if not getattr(user, provider_id_field):
+                    # Link the account
+                    setattr(user, provider_id_field, social_account.uid)
+                    user.social_provider = provider.upper()
+                    user.social_profile_data = social_account.extra_data
+                    user.save()
+                    unlinked_count += 1
+        
+        self.logger.info(f"Linked {unlinked_count} previously unlinked social accounts")
+        return {'linked_count': unlinked_count}
+        
+    except Exception as e:
+        self.logger.error(f"Failed to cleanup unlinked social accounts: {str(e)}")
         raise

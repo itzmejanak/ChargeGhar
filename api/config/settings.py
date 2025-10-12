@@ -7,6 +7,7 @@ include(
     "logging.py",
     "application.py",
     "auth.py",
+    "social_auth.py",  # Social authentication configuration
     "database.py",
     "security.py",
     "storage.py",

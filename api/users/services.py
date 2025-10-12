@@ -288,9 +288,17 @@ class AuthService(BaseService):
             # Invalid referral code - log but don't fail registration
             self.log_warning(f"Invalid referral code used: {referral_code}")
     
-    def _log_user_audit(self, user: User, action: str, entity_type: str, entity_id: str, request) -> None:
+    def _log_user_audit(self, user: User, action: str, entity_type: str, entity_id: str, request, additional_data: Dict[str, Any] = None) -> None:
         """Log user audit trail"""
         try:
+            # Include social auth context in audit data
+            audit_data = {
+                'social_provider': user.social_provider,
+                'authentication_method': user.social_provider
+            }
+            if additional_data:
+                audit_data.update(additional_data)
+            
             UserAuditLog.objects.create(
                 user=user,
                 action=action,
@@ -298,7 +306,8 @@ class AuthService(BaseService):
                 entity_id=entity_id,
                 ip_address=get_client_ip(request),
                 user_agent=request.META.get('HTTP_USER_AGENT', ''),
-                session_id=request.session.session_key
+                session_id=request.session.session_key,
+                new_values=audit_data
             )
         except Exception as e:
             self.log_error(f"Failed to log audit: {str(e)}")
@@ -320,6 +329,102 @@ class AuthService(BaseService):
         except Exception as e:
             self.log_error(f"Failed to update account status: {str(e)}")
             return False
+    
+    @transaction.atomic
+    def create_social_user(self, social_data: Dict[str, Any], provider: str) -> User:
+        """Create user from social authentication data"""
+        try:
+            # Extract user data from social provider
+            email = social_data.get('email')
+            name = social_data.get('name', '')
+            picture = social_data.get('picture', '')
+            provider_id = social_data.get('id') or social_data.get('sub')
+            
+            # Create user with unique username
+            base_username = email.split('@')[0] if email else f"{provider}_{provider_id}"
+            username = base_username
+            counter = 1
+            
+            # Ensure username uniqueness
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}_{counter}"
+                counter += 1
+            
+            user = User.objects.create_user(
+                email=email,
+                username=username,
+            )
+            
+            # Set social auth fields
+            user.profile_picture = picture
+            user.email_verified = True  # Social providers verify email
+            user.social_provider = provider.upper()
+            user.social_profile_data = social_data
+            setattr(user, f'{provider}_id', provider_id)
+            
+            # Generate referral code
+            user.referral_code = generate_unique_code("REF", 6)
+            user.save()
+            
+            # Create related objects
+            UserProfile.objects.create(
+                user=user,
+                full_name=name,
+                avatar_url=picture
+            )
+            UserPoints.objects.create(user=user)
+            Wallet.objects.create(user=user)
+            
+            # Award signup points
+            from api.points.tasks import award_points_task
+            award_points_task.delay(user.id, 50, 'SOCIAL_SIGNUP', f'New user signup via {provider}')
+            
+            # Mark user as created via service to avoid duplicate processing
+            user._created_via_service = True
+            
+            self.log_info(f"Social user created successfully: {user.username} via {provider}")
+            
+            return user
+            
+        except Exception as e:
+            self.handle_service_error(e, f"Failed to create social user via {provider}")
+    
+    def link_social_account(self, user: User, social_data: Dict[str, Any], provider: str) -> User:
+        """Link social account to existing user"""
+        try:
+            provider_id = social_data.get('id') or social_data.get('sub')
+            
+            # Update user with social data
+            if not getattr(user, f'{provider}_id'):
+                setattr(user, f'{provider}_id', provider_id)
+                user.social_provider = provider.upper()
+                user.social_profile_data = social_data
+                
+                # Update profile picture if not set
+                if not user.profile_picture and social_data.get('picture'):
+                    user.profile_picture = social_data.get('picture')
+                
+                user.save()
+                
+                # Update profile with social data if incomplete
+                try:
+                    profile = user.profile
+                    if not profile.full_name and social_data.get('name'):
+                        profile.full_name = social_data.get('name')
+                        profile.save()
+                except UserProfile.DoesNotExist:
+                    UserProfile.objects.create(
+                        user=user,
+                        full_name=social_data.get('name', ''),
+                        avatar_url=social_data.get('picture', '')
+                    )
+            
+            self.log_info(f"Social account linked: {user.username} with {provider}")
+            
+            return user
+            
+        except Exception as e:
+            self.handle_service_error(e, f"Failed to link social account via {provider}")
 
 
 class UserProfileService(BaseService):

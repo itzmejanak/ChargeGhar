@@ -188,7 +188,8 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'profile_picture', 'referral_code', 
-            'status', 'date_joined', 'profile_complete', 'kyc_status'
+            'status', 'date_joined', 'profile_complete', 'kyc_status',
+            'social_provider'
         ]
         read_only_fields = [
             'id', 'referral_code', 'status', 'date_joined'
@@ -232,7 +233,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
             'id', 'username', 'email', 'phone_number', 'profile_picture',
             'referral_code', 'status', 'email_verified', 'phone_verified',
             'date_joined', 'last_login', 'profile', 'kyc', 'points',
-            'wallet_balance', 'masked_phone', 'masked_email'
+            'wallet_balance', 'masked_phone', 'masked_email', 'social_provider',
+            'social_profile_data'
         ]
         read_only_fields = [
             'id', 'referral_code', 'status', 'email_verified', 'phone_verified',
@@ -320,7 +322,6 @@ class UserWalletResponseSerializer(serializers.Serializer):
 
 
 # Password change removed - OTP-based authentication only
-
 
 class UserFilterSerializer(serializers.Serializer):
     """Serializer for user filtering parameters"""

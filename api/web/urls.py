@@ -61,6 +61,9 @@ urlpatterns = [
     path("", lambda _request: redirect("docs/"), name="home"),
     path("admin/", admin.site.urls),
     
+    # Django Allauth URLs
+    path("accounts/", include("allauth.urls")),
+    
     # API app includes
     path("api/", include("api.users.urls")),
     path("api/", include("api.stations.urls")),
