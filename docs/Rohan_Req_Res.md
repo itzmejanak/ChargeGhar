@@ -608,18 +608,10 @@ This is not required
 -------------------------------------------------------------------------
 
 
-`[METHOD] /api/referrals/validate`
+[METHOD] /api/referrals/validate`
 
 ### **Description**
 Validate a referral code and return referrer information
-
-
-
-
-
-
-
-
 
 ### **Request**
 POST
@@ -1085,27 +1077,3 @@ this is not required
 }
 
 ----------------------------------------------------------------------
-when will FCM will send notification in Which condition
-   1. Rental Reminders:
-       * Condition: 15 minutes before a rental period is due to expire.
-       * Purpose: To warn the user to return the power bank to avoid overdue fees.
-       * Implementation: The send_rental_reminder_notification Celery task is triggered for this.
-
-   2. Fines and Dues:
-       * Condition: When a user incurs a fine, for example, by returning a power bank late.
-       * Purpose: To immediately notify the user about any deductions from their wallet or pending dues.
-
-   3. Rental Status Changes:
-       * Condition: When a user successfully starts a rental (power bank is ejected) or successfully returns a power bank.
-       * Purpose: To confirm the start and end of the rental lifecycle.
-
-   4. Payment Status:
-       * Condition: After a user attempts a payment (e.g., wallet top-up).
-       * Purpose: To confirm if the payment was successful or failed.
-       * Implementation: The send_payment_status_notification task handles this.
-
-   5. Achievement & Points Milestones:
-       * Condition: When a user earns points or reaches a significant milestone.
-       * Purpose: To engage the user with positive reinforcement.
-       * Implementation: Tasks like send_points_notification and send_points_milestone_notification are used.
-
