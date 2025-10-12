@@ -30,6 +30,7 @@ from api.users.services import (
     UserKYCService, 
     UserDeviceService
 )
+from api.common.services.base import ServiceException
 
 if TYPE_CHECKING:
     from rest_framework.request import Request
@@ -285,13 +286,20 @@ class AppleLoginView(GenericAPIView, BaseAPIView):
     responses={200: BaseResponseSerializer}
 )
 class SocialAuthSuccessView(GenericAPIView, BaseAPIView):
-    permission_classes = [IsAuthenticated]  # User should be authenticated by allauth
+    permission_classes = [AllowAny]  # Allow any since allauth handles session auth
     
     def get(self, request: Request) -> Response:
         """Generate JWT tokens after successful social authentication"""
         def operation():
             from rest_framework_simplejwt.tokens import RefreshToken
             from django.utils import timezone
+            
+            # Check if user is authenticated via session (from allauth)
+            if not request.user.is_authenticated:
+                raise ServiceException(
+                    detail="User not authenticated via social login",
+                    code="not_authenticated"
+                )
             
             user = request.user
             
