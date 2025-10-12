@@ -694,16 +694,16 @@ GET
 `````
 
 **Query Parameters (if any)**
-This is not required
 
 ```json
 {
-  "key": "include_me",
-  "key": "limit"
+  "key": "code",
+ 
 }
 ```
 
 **Request Body (if any)**
+This is not required
 
 ```json
 {
@@ -979,7 +979,7 @@ This is not required
 
 ### **Endpoint**
 
-`/api/promotions/coupons/activate`
+`/api/promotions/coupons/active`
 
 ### **Description**
 Returns list of currently active and valid coupons
