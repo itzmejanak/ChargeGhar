@@ -33,6 +33,8 @@ Your Django PowerBank project now supports **Google and Apple login** alongside 
    Development: http://localhost:8010/accounts/google/login/callback/
    Production:  https://main.chargeghar.com/accounts/google/login/callback/
    ```
+   
+   **Important**: These are the exact URLs that django-allauth uses. Do NOT use custom callback URLs.
 7. Click **CREATE**
 8. Copy the **Client ID** and **Client Secret**
 
@@ -66,8 +68,10 @@ GOOGLE_OAUTH_CLIENT_SECRET=GOCSPX-your_actual_client_secret_here
 4. Click **Configure** next to Sign In with Apple
 5. Select your App ID as **Primary App ID**
 6. Add **Website URLs**:
-   - **Domains**: `main.chargeghar.com`
-   - **Return URLs**: `https://main.chargeghar.com/accounts/apple/login/callback/`
+   - **Domains**: `main.chargeghar.com`, `localhost:8010`
+   - **Return URLs**: 
+     - `https://main.chargeghar.com/accounts/apple/login/callback/`
+     - `http://localhost:8010/accounts/apple/login/callback/`
 7. Click **Save** → **Continue** → **Register**
 
 ### 2.3 Create Private Key

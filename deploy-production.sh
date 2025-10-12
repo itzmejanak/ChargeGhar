@@ -129,7 +129,7 @@ sed -i 's/DJANGO_DEBUG=true/DJANGO_DEBUG=false/' .env
 sed -i 's/CELERY_TASK_ALWAYS_EAGER=true/CELERY_TASK_ALWAYS_EAGER=false/' .env
 sed -i 's/CELERY_TASK_EAGER_PROPAGATES=true/CELERY_TASK_EAGER_PROPAGATES=false/' .env
 
-sed -i 's|HOST=.*|HOST=main.chargeghar.com|' .env
+sed -i 's|^HOST=.*|HOST=main.chargeghar.com|' .env
 sed -i 's|ALLOWED_HOSTS=.*|ALLOWED_HOSTS=main.chargeghar.com,127.0.0.1,localhost|' .env
 sed -i 's|CORS_ALLOWED_ORIGINS=.*|CORS_ALLOWED_ORIGINS=https://main.chargeghar.com,http://main.chargeghar.com|' .env
 sed -i 's|CSRF_TRUSTED_ORIGINS=.*|CSRF_TRUSTED_ORIGINS=https://main.chargeghar.com,http://main.chargeghar.com|' .env
@@ -140,11 +140,14 @@ sed -i 's|SOCIAL_AUTH_LOGIN_ERROR_URL=.*|SOCIAL_AUTH_LOGIN_ERROR_URL=/api/auth/s
 
 sed -i 's/POSTGRES_HOST=pgbouncer/POSTGRES_HOST=powerbank_db/' .env
 sed -i 's/POSTGRES_HOST=db/POSTGRES_HOST=powerbank_db/' .env
+sed -i 's/POSTGRES_HOST=main.chargeghar.com/POSTGRES_HOST=powerbank_db/' .env
 sed -i 's/REDIS_HOST=redis/REDIS_HOST=powerbank_redis/' .env
 sed -i 's/RABBITMQ_HOST=rabbitmq/RABBITMQ_HOST=powerbank_rabbitmq/' .env
+sed -i 's/RABBITMQ_HOST=main.chargeghar.com/RABBITMQ_HOST=powerbank_rabbitmq/' .env
 
-sed -i 's/USE_S3_FOR_MEDIA=false/USE_S3_FOR_MEDIA=true/' .env
-sed -i 's/USE_S3_FOR_STATIC=false/USE_S3_FOR_STATIC=true/' .env
+# Keep S3 disabled until properly configured (placeholder credentials)
+# sed -i 's/USE_S3_FOR_MEDIA=false/USE_S3_FOR_MEDIA=true/' .env
+# sed -i 's/USE_S3_FOR_STATIC=false/USE_S3_FOR_STATIC=true/' .env
 sed -i 's/USE_REDIS_FOR_CACHE=false/USE_REDIS_FOR_CACHE=true/' .env
 # Keep Sentry disabled until properly configured
 # sed -i 's/USE_SENTRY=false/USE_SENTRY=true/' .env

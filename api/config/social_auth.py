@@ -33,11 +33,11 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-# Social auth URLs
-SOCIAL_AUTH_REDIRECT_URL = getenv('SOCIAL_AUTH_REDIRECT_URL', 'http://localhost:8010/auth/social/callback/')
-SOCIAL_AUTH_LOGIN_REDIRECT_URL = getenv('SOCIAL_AUTH_LOGIN_REDIRECT_URL', '/api/auth/social/success/')
-SOCIAL_AUTH_LOGIN_ERROR_URL = getenv('SOCIAL_AUTH_LOGIN_ERROR_URL', '/api/auth/social/error/')
-
 # Django-allauth login redirect settings
-LOGIN_REDIRECT_URL = SOCIAL_AUTH_LOGIN_REDIRECT_URL
+LOGIN_REDIRECT_URL = getenv('SOCIAL_AUTH_LOGIN_REDIRECT_URL', '/api/auth/social/success/')
+LOGIN_ERROR_URL = getenv('SOCIAL_AUTH_LOGIN_ERROR_URL', '/api/auth/social/error/')
 SOCIALACCOUNT_LOGIN_ON_GET = True  # Allow GET requests to login URLs
+
+# Additional allauth settings for proper redirect handling
+SOCIALACCOUNT_LOGIN_ON_POST = True
+SOCIALACCOUNT_STORE_TOKENS = True
