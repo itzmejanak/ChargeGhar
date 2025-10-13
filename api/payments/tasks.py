@@ -265,144 +265,144 @@ def process_pending_refunds(self):
         raise
 
     def _process_gateway_refund(self, refund: Refund) -> bool:
-    """Process refund with payment gateway"""
-    try:
-        transaction = refund.transaction
-        
-        # Skip gateway verification if payment was from wallet or points
-        if transaction.payment_method_type in ['WALLET', 'POINTS']:
-            self.logger.info(f"Refund {refund.id} is for wallet/points payment, no gateway verification needed")
-            return True
+        """Process refund with payment gateway"""
+        try:
+            transaction = refund.transaction
             
-        # Get gateway reference
-        gateway_reference = transaction.gateway_reference
-        
-        if not gateway_reference:
-            self.logger.error(f"No gateway reference found for transaction {transaction.transaction_id}")
+            # Skip gateway verification if payment was from wallet or points
+            if transaction.payment_method_type in ['WALLET', 'POINTS']:
+                self.logger.info(f"Refund {refund.id} is for wallet/points payment, no gateway verification needed")
+                return True
+                
+            # Get gateway reference
+            gateway_reference = transaction.gateway_reference
+            
+            if not gateway_reference:
+                self.logger.error(f"No gateway reference found for transaction {transaction.transaction_id}")
+                return False
+                
+            # Determine gateway from reference or transaction metadata
+            # This is a simplified approach since payment_method table is missing
+            gateway = None
+            if gateway_reference.startswith('khalti_'):
+                gateway = 'khalti'
+            elif gateway_reference.startswith('esewa_'):
+                gateway = 'esewa'
+            else:
+                # Try to extract from transaction metadata if available
+                if hasattr(transaction, 'metadata') and transaction.metadata and 'gateway' in transaction.metadata:
+                    gateway = transaction.metadata.get('gateway')
+            
+            if not gateway:
+                self.logger.error(f"Could not determine gateway for transaction {transaction.transaction_id}")
+                return False
+                
+            # Process based on gateway type
+            if gateway == 'khalti':
+                return self._process_khalti_refund(transaction, refund)
+            elif gateway == 'esewa':
+                return self._process_esewa_refund(transaction, refund)
+            else:
+                self.logger.error(f"Unsupported gateway: {gateway}")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Error processing gateway refund: {str(e)}")
             return False
-            
-        # Determine gateway from reference or transaction metadata
-        # This is a simplified approach since payment_method table is missing
-        gateway = None
-        if gateway_reference.startswith('khalti_'):
-            gateway = 'khalti'
-        elif gateway_reference.startswith('esewa_'):
-            gateway = 'esewa'
-        else:
-            # Try to extract from transaction metadata if available
-            if hasattr(transaction, 'metadata') and transaction.metadata and 'gateway' in transaction.metadata:
-                gateway = transaction.metadata.get('gateway')
-        
-        if not gateway:
-            self.logger.error(f"Could not determine gateway for transaction {transaction.transaction_id}")
-            return False
-            
-        # Process based on gateway type
-        if gateway == 'khalti':
-            return self._process_khalti_refund(transaction, refund)
-        elif gateway == 'esewa':
-            return self._process_esewa_refund(transaction, refund)
-        else:
-            self.logger.error(f"Unsupported gateway: {gateway}")
-            return False
-            
-    except Exception as e:
-        self.logger.error(f"Error processing gateway refund: {str(e)}")
-        return False
 
     def _process_khalti_refund(self, transaction, refund):
-    """Process refund through Khalti gateway"""
-    try:
-        import requests
-        import os
-        
-        # Get Khalti configuration from environment variables instead of payment_method
-        secret_key = os.environ.get('KHALTI_SECRET_KEY')
-        if not secret_key:
-            self.logger.error("Khalti secret key not found in environment variables")
-            return False
+        """Process refund through Khalti gateway"""
+        try:
+            import requests
+            import os
             
-        # Verify transaction exists and is refundable in Khalti
-        if not transaction.gateway_reference:
-            self.logger.error("No Khalti reference to refund")
-            return False
+            # Get Khalti configuration from environment variables instead of payment_method
+            secret_key = os.environ.get('KHALTI_SECRET_KEY')
+            if not secret_key:
+                self.logger.error("Khalti secret key not found in environment variables")
+                return False
+                
+            # Verify transaction exists and is refundable in Khalti
+            if not transaction.gateway_reference:
+                self.logger.error("No Khalti reference to refund")
+                return False
+                
+            self.logger.info(f"Processing Khalti refund for transaction {transaction.transaction_id}")
             
-        self.logger.info(f"Processing Khalti refund for transaction {transaction.transaction_id}")
-        
-        # Make API call to Khalti refund endpoint
-        khalti_response = requests.post(
-            "https://khalti.com/api/v2/refund/",
-            headers={"Authorization": f"Key {secret_key}"},
-            json={
-                "transaction_id": transaction.gateway_reference, 
-                "amount": float(refund.amount),
-                "refund_id": str(refund.id)
-            }
-        )
-        
-        if khalti_response.status_code == 200:
-            response_data = khalti_response.json()
-            # Store the response for reference
-            refund.gateway_response = response_data
-            refund.save(update_fields=['gateway_response'])
-            return True
-        else:
-            self.logger.error(f"Khalti refund failed: {khalti_response.text}")
-            refund.gateway_response = {"error": khalti_response.text}
-            refund.save(update_fields=['gateway_response'])
+            # Make API call to Khalti refund endpoint
+            khalti_response = requests.post(
+                "https://khalti.com/api/v2/refund/",
+                headers={"Authorization": f"Key {secret_key}"},
+                json={
+                    "transaction_id": transaction.gateway_reference, 
+                    "amount": float(refund.amount),
+                    "refund_id": str(refund.id)
+                }
+            )
+            
+            if khalti_response.status_code == 200:
+                response_data = khalti_response.json()
+                # Store the response for reference
+                refund.gateway_response = response_data
+                refund.save(update_fields=['gateway_response'])
+                return True
+            else:
+                self.logger.error(f"Khalti refund failed: {khalti_response.text}")
+                refund.gateway_response = {"error": khalti_response.text}
+                refund.save(update_fields=['gateway_response'])
+                return False
+            
+        except Exception as e:
+            self.logger.error(f"Khalti refund error: {str(e)}")
             return False
-        
-    except Exception as e:
-        self.logger.error(f"Khalti refund error: {str(e)}")
-        return False
 
     def _process_esewa_refund(self, transaction, refund):
-    """Process refund through eSewa gateway"""
-    try:
-        import requests
-        
-        # Get eSewa configuration
-        config = transaction.payment_method.configuration
-        if not config or 'merchant_id' not in config or 'secret_key' not in config:
-            self.logger.error("eSewa configuration missing")
-            return False
+        """Process refund through eSewa gateway"""
+        try:
+            import requests
             
-        # Verify transaction exists and is refundable in eSewa
-        if not transaction.gateway_reference:
-            self.logger.error("No eSewa reference to refund")
-            return False
+            # Get eSewa configuration
+            config = transaction.payment_method.configuration
+            if not config or 'merchant_id' not in config or 'secret_key' not in config:
+                self.logger.error("eSewa configuration missing")
+                return False
+                
+            # Verify transaction exists and is refundable in eSewa
+            if not transaction.gateway_reference:
+                self.logger.error("No eSewa reference to refund")
+                return False
+                
+            self.logger.info(f"Processing eSewa refund for transaction {transaction.transaction_id}")
             
-        self.logger.info(f"Processing eSewa refund for transaction {transaction.transaction_id}")
-        
-        # Make API call to eSewa refund endpoint
-        esewa_response = requests.post(
-            "https://esewa.com.np/api/refund/",
-            headers={
-                "Authorization": f"Bearer {config['secret_key']}",
-                "merchantId": config['merchant_id']
-            },
-            json={
-                "transactionId": transaction.gateway_reference,
-                "amount": float(refund.amount),
-                "refundId": str(refund.id)
-            }
-        )
-        
-        if esewa_response.status_code == 200:
-            response_data = esewa_response.json()
-            # Store the response for reference
-            refund.gateway_response = response_data
-            refund.save(update_fields=['gateway_response'])
-            return True
-        else:
-            self.logger.error(f"eSewa refund failed: {esewa_response.text}")
-            refund.gateway_response = {"error": esewa_response.text}
-            refund.save(update_fields=['gateway_response'])
+            # Make API call to eSewa refund endpoint
+            esewa_response = requests.post(
+                "https://esewa.com.np/api/refund/",
+                headers={
+                    "Authorization": f"Bearer {config['secret_key']}",
+                    "merchantId": config['merchant_id']
+                },
+                json={
+                    "transactionId": transaction.gateway_reference,
+                    "amount": float(refund.amount),
+                    "refundId": str(refund.id)
+                }
+            )
+            
+            if esewa_response.status_code == 200:
+                response_data = esewa_response.json()
+                # Store the response for reference
+                refund.gateway_response = response_data
+                refund.save(update_fields=['gateway_response'])
+                return True
+            else:
+                self.logger.error(f"eSewa refund failed: {esewa_response.text}")
+                refund.gateway_response = {"error": esewa_response.text}
+                refund.save(update_fields=['gateway_response'])
+                return False
+            
+        except Exception as e:
+            self.logger.error(f"eSewa refund error: {str(e)}")
             return False
-        
-    except Exception as e:
-        self.logger.error(f"eSewa refund error: {str(e)}")
-        return False
         
 
 @shared_task(base=BaseTask, bind=True)

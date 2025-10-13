@@ -1,0 +1,431 @@
+============================================================
+🚀 PowerBank Django Deployment Manager
+============================================================
+Current Time: 2025-10-13 19:52:30
+Project Directory: /opt/powerbank
+============================================================
+
+Available Actions:
+
+ 1. 🔄 Restart Services   - Restart all PowerBank containers
+ 2. ⏹️  Stop Services    - Stop all PowerBank containers
+ 3. 🗑️  Delete All       - Stop and remove all containers, volumes, images
+ 4. 📊 Service Status     - Show current status of all services
+ 5. 📋 View Logs          - View logs for all services or specific service
+ 6. 🔧 Load Fixtures      - Load sample data into the database
+ 7. 🏥 Health Check       - Check API health and connectivity
+ 8. 🔄 Full Redeploy      - Complete redeployment (git pull + rebuild)
+ 9. 💾 Database Backup    - Create database backup
+10. 🧹 Clean Docker       - Clean unused Docker resources
+11. 🔓 Clear Port Conflicts - Fix port conflicts (8010)
+ 0. ❌ Exit               - Exit the manager
+
+Enter your choice (0-11): 5
+
+📋 Available Services:
+1. all
+2. powerbank_api
+3. powerbank_db
+4. powerbank_redis
+5. powerbank_rabbitmq
+6. powerbank_celery
+
+Select service (1-6): 1
+Showing logs for all (Press Ctrl+C to exit)...
+powerbank_redis-1          | 1:C 13 Oct 2025 19:49:54.058 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+powerbank_redis-1          | 1:C 13 Oct 2025 19:49:54.059 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+powerbank_redis-1          | 1:C 13 Oct 2025 19:49:54.059 * Redis version=7.4.5, bits=64, commit=00000000, modified=0, pid=1, just started
+powerbank_redis-1          | 1:C 13 Oct 2025 19:49:54.059 * Configuration loaded
+powerbank_redis-1          | 1:M 13 Oct 2025 19:49:54.059 * monotonic clock: POSIX clock_gettime
+powerbank_redis-1          | 1:M 13 Oct 2025 19:49:54.062 * Running mode=standalone, port=6379.
+powerbank_redis-1          | 1:M 13 Oct 2025 19:49:54.063 * Server initialized
+powerbank_redis-1          | 1:M 13 Oct 2025 19:49:54.063 * Ready to accept connections tcp
+powerbank_db-1             | fixing permissions on existing directory /var/lib/postgresql/data ... ok
+powerbank_db-1             | creating subdirectories ... ok
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.502164+00:00 [info] <0.643.0> Message store "628WB79CIFDYO9LJI6DKMI09L/msg_store_transient": using rabbit_msg_store_ets_index to provide index
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.503509+00:00 [info] <0.634.0> Started message store of type transient for vhost '/'
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.503685+00:00 [info] <0.647.0> Message store "628WB79CIFDYO9LJI6DKMI09L/msg_store_persistent": using rabbit_msg_store_ets_index to provide index
+powerbank_celery-1         |     return f(ctx, *args, **kwargs)
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.504349+00:00 [warning] <0.647.0> Message store "628WB79CIFDYO9LJI6DKMI09L/msg_store_persistent": rebuilding indices from scratch
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.505056+00:00 [info] <0.634.0> Started message store of type persistent for vhost '/'
+powerbank_api-1            | fatal: not a git repository (or any of the parent directories): .git
+powerbank_api-1            | 2025-10-13 19:50:30 INFO api.config.settings Serving static files locally
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/bin/worker.py", line 348, in worker
+powerbank_celery-1         |     worker = app.Worker(
+powerbank_celery-1         |              ^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/worker/worker.py", line 94, in __init__
+powerbank_celery-1         |     self.app.loader.init_worker()
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.505143+00:00 [info] <0.634.0> Recovering 0 queues of type rabbit_classic_queue took 11ms
+powerbank_migrations-1     |   Applying admin_interface.0027_theme_list_filter_removal_links... OK
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.505182+00:00 [info] <0.634.0> Recovering 0 queues of type rabbit_quorum_queue took 0ms
+powerbank_collectstatic-1  | fatal: not a git repository (or any of the parent directories): .git
+powerbank_collectstatic-1  | 2025-10-13 19:50:21 INFO api.config.settings Serving static files locally
+powerbank_collectstatic-1  | 2025-10-13 19:50:21 INFO api.config.settings Serving media files locally
+powerbank_api-1            | 2025-10-13 19:50:30 INFO api.config.settings Serving media files locally
+powerbank_api-1            | 2025-10-13 19:50:30 INFO api.config.settings Sentry is not initialized
+powerbank_api-1            | 2025-10-13 19:50:30 INFO api.config.settings Using Redis for cache
+powerbank_migrations-1     |   Applying admin_interface.0028_theme_show_fieldsets_as_tabs_and_more... OK
+powerbank_migrations-1     |   Applying admin_interface.0029_theme_css_generic_link_active_color... OK
+powerbank_migrations-1     |   Applying admin_interface.0030_theme_collapsible_stacked_inlines_and_more... OK
+powerbank_collectstatic-1  | 2025-10-13 19:50:22 INFO api.config.settings Sentry is not initialized
+powerbank_collectstatic-1  | 2025-10-13 19:50:22 INFO api.config.settings Using Redis for cache
+powerbank_collectstatic-1  | 2025-10-13 19:50:22 INFO api.config.settings Redis cache configured - connection will be tested on first use
+powerbank_collectstatic-1  | 2025-10-14 01:35:23 INFO axes.apps AXES: BEGIN version 8.0.0, blocking by ip_address
+powerbank_collectstatic-1  | Found another file with the destination path 'admin/js/popup_response.js'. It will be ignored since only the first encountered file is collected. If this is not what you want, make sure every static file has a unique path.
+powerbank_collectstatic-1  | Found another file with the destination path 'admin/js/cancel.js'. It will be ignored since only the first encountered file is collected. If this is not what you want, make sure every static file has a unique path.
+powerbank_collectstatic-1  | 
+powerbank_db-1             | selecting dynamic shared memory implementation ... posix
+powerbank_db-1             | selecting default max_connections ... 100
+powerbank_db-1             | selecting default shared_buffers ... 128MB
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.505220+00:00 [info] <0.634.0> Recovering 0 queues of type rabbit_stream_queue took 0ms
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.507675+00:00 [info] <0.254.0> Created user 'powerbank'
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.509100+00:00 [info] <0.254.0> Successfully set user tags for user 'powerbank' to [administrator]
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.510299+00:00 [info] <0.254.0> Successfully set permissions for user 'powerbank' in virtual host '/' to '.*', '.*', '.*'
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.510345+00:00 [info] <0.254.0> Running boot step rabbit_observer_cli defined by app rabbit
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.510523+00:00 [info] <0.254.0> Running boot step rabbit_looking_glass defined by app rabbit
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.510564+00:00 [info] <0.254.0> Running boot step rabbit_core_metrics_gc defined by app rabbit
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.510736+00:00 [info] <0.254.0> Running boot step background_gc defined by app rabbit
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.510907+00:00 [info] <0.254.0> Running boot step routing_ready defined by app rabbit
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.510970+00:00 [info] <0.254.0> Running boot step pre_flight defined by app rabbit
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.511010+00:00 [info] <0.254.0> Running boot step notify_cluster defined by app rabbit
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.511062+00:00 [info] <0.254.0> Running boot step networking defined by app rabbit
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.511087+00:00 [info] <0.254.0> Running boot step rabbit_quorum_queue_periodic_membership_reconciliation defined by app rabbit
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.511240+00:00 [info] <0.254.0> Running boot step definition_import_worker_pool defined by app rabbit
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.511315+00:00 [info] <0.315.0> Starting worker pool 'definition_import_pool' with 8 processes in it
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.511847+00:00 [info] <0.254.0> Running boot step cluster_name defined by app rabbit
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.511953+00:00 [info] <0.254.0> Initialising internal cluster ID to 'rabbitmq-cluster-id-4foDiLzKCs7mL6LEltyDgQ'
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.513169+00:00 [info] <0.254.0> Running boot step virtual_host_reconciliation defined by app rabbit
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.513359+00:00 [info] <0.254.0> Running boot step direct_client defined by app rabbit
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.513452+00:00 [info] <0.254.0> Running boot step rabbit_federation_exchange defined by app rabbitmq_federation
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.513616+00:00 [info] <0.254.0> Running boot step rabbit_management_load_definitions defined by app rabbitmq_management
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.513716+00:00 [info] <0.688.0> Resetting node maintenance status
+powerbank_api-1            | 2025-10-13 19:50:30 INFO api.config.settings Redis cache configured - connection will be tested on first use
+powerbank_api-1            | 2025-10-14 01:35:31 INFO axes.apps AXES: BEGIN version 8.0.0, blocking by ip_address
+powerbank_collectstatic-1  | 230 static files copied to '/application/staticfiles'.
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/loaders/base.py", line 110, in init_worker
+powerbank_celery-1         |     self.import_default_modules()
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/loaders/base.py", line 104, in import_default_modules
+powerbank_celery-1         |     raise response
+powerbank_migrations-1     |   Applying admin_panel.0001_initial... OK
+powerbank_migrations-1     |   Applying axes.0001_initial... OK
+powerbank_migrations-1     |   Applying axes.0002_auto_20151217_2044... OK
+powerbank_migrations-1     |   Applying axes.0003_auto_20160322_0929... OK
+powerbank_migrations-1     |   Applying axes.0004_auto_20181024_1538... OK
+powerbank_migrations-1     |   Applying axes.0005_remove_accessattempt_trusted... OK
+powerbank_migrations-1     |   Applying axes.0006_remove_accesslog_trusted... OK
+powerbank_migrations-1     |   Applying axes.0007_alter_accessattempt_unique_together... OK
+powerbank_migrations-1     |   Applying axes.0008_accessfailurelog... OK
+powerbank_migrations-1     |   Applying axes.0009_add_session_hash... OK
+powerbank_migrations-1     |   Applying common.0001_initial... OK
+powerbank_migrations-1     |   Applying common.0002_initial... OK
+powerbank_migrations-1     |   Applying common.0003_add_late_fee_configuration... OK
+powerbank_migrations-1     |   Applying common.0004_update_late_fee_help_text... OK
+powerbank_migrations-1     |   Applying common.0005_add_cloud_storage_fields... OK
+powerbank_migrations-1     |   Applying config.0001_initial... OK
+powerbank_migrations-1     |   Applying content.0001_initial... OK
+powerbank_api-1            | Found another file with the destination path 'admin/js/popup_response.js'. It will be ignored since only the first encountered file is collected. If this is not what you want, make sure every static file has a unique path.
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.762699+00:00 [warning] <0.719.0> Deprecated features: `management_metrics_collection`: Feature `management_metrics_collection` is deprecated.
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.762699+00:00 [warning] <0.719.0> By default, this feature can still be used for now.
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.762699+00:00 [warning] <0.719.0> Its use will not be permitted by default in a future minor RabbitMQ version and the feature will be removed from a future major RabbitMQ version; actual versions to be determined.
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.762699+00:00 [warning] <0.719.0> To continue using this feature when it is not permitted by default, set the following parameter in your configuration:
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.762699+00:00 [warning] <0.719.0>     "deprecated_features.permit.management_metrics_collection = true"
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.762699+00:00 [warning] <0.719.0> To test RabbitMQ as if the feature was removed, set this in your configuration:
+powerbank_rabbitmq-1       | 2025-10-13 19:49:59.762699+00:00 [warning] <0.719.0>     "deprecated_features.permit.management_metrics_collection = false"
+powerbank_rabbitmq-1       | 2025-10-13 19:50:06.074325+00:00 [info] <0.756.0> Management plugin: HTTP (non-TLS) listener started on port 15672
+powerbank_rabbitmq-1       | 2025-10-13 19:50:06.074456+00:00 [info] <0.786.0> Statistics database started.
+powerbank_rabbitmq-1       | 2025-10-13 19:50:06.074516+00:00 [info] <0.785.0> Starting worker pool 'management_worker_pool' with 3 processes in it
+powerbank_rabbitmq-1       | 2025-10-13 19:50:06.086677+00:00 [info] <0.804.0> Prometheus metrics: HTTP (non-TLS) listener started on port 15692
+powerbank_rabbitmq-1       | 2025-10-13 19:50:06.086968+00:00 [info] <0.688.0> Ready to start client connection listeners
+powerbank_rabbitmq-1       | 2025-10-13 19:50:06.089906+00:00 [info] <0.848.0> started TCP listener on [::]:5672
+powerbank_migrations-1     |   Applying notifications.0001_initial... OK
+powerbank_migrations-1     |   Applying rentals.0001_initial... OK
+powerbank_migrations-1     |   Applying stations.0001_initial... OK
+powerbank_migrations-1     |   Applying rentals.0002_initial... OK
+powerbank_migrations-1     |   Applying payments.0001_initial... OK
+powerbank_migrations-1     |   Applying payments.0002_refund_admin_notes_alter_refund_reason... OK
+powerbank_migrations-1     |   Applying payments.0003_remove_transaction_payment_method_and_more... OK
+powerbank_migrations-1     |   Applying payments.0004_remove_payment_method_from_transaction... OK
+powerbank_migrations-1     |   Applying payments.0004_auto_20251008_1023... OK
+powerbank_migrations-1     |   Applying payments.0005_merge_20251008_migration... OK
+powerbank_migrations-1     |   Applying payments.0006_paymentmethod_alter_refund_reason... OK
+powerbank_migrations-1     |   Applying payments.0007_remove_paymentwebhook_model... OK
+powerbank_migrations-1     |   Applying points.0001_initial... OK
+powerbank_db-1             | selecting default time zone ... Etc/UTC
+powerbank_db-1             | creating configuration files ... ok
+powerbank_db-1             | running bootstrap script ... ok
+powerbank_db-1             | performing post-bootstrap initialization ... ok
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/utils/dispatch/signal.py", line 280, in send
+powerbank_celery-1         |     response = receiver(signal=self, sender=sender, **named)
+powerbank_celery-1         |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/vine/promises.py", line 161, in __call__
+powerbank_celery-1         |     return self.throw()
+powerbank_celery-1         |            ^^^^^^^^^^^^
+powerbank_rabbitmq-1       |  completed with 5 plugins.
+powerbank_rabbitmq-1       | 2025-10-13 19:50:06.245111+00:00 [info] <0.688.0> Server startup complete; 5 plugins started.
+powerbank_rabbitmq-1       | 2025-10-13 19:50:06.245111+00:00 [info] <0.688.0>  * rabbitmq_prometheus
+powerbank_rabbitmq-1       | 2025-10-13 19:50:06.245111+00:00 [info] <0.688.0>  * rabbitmq_federation
+powerbank_rabbitmq-1       | 2025-10-13 19:50:06.245111+00:00 [info] <0.688.0>  * rabbitmq_management
+powerbank_rabbitmq-1       | 2025-10-13 19:50:06.245111+00:00 [info] <0.688.0>  * rabbitmq_management_agent
+powerbank_rabbitmq-1       | 2025-10-13 19:50:06.245111+00:00 [info] <0.688.0>  * rabbitmq_web_dispatch
+powerbank_rabbitmq-1       | 2025-10-13 19:50:06.362690+00:00 [info] <0.9.0> Time to start RabbitMQ: 11886 ms
+powerbank_migrations-1     |   Applying promotions.0001_initial... OK
+powerbank_migrations-1     |   Applying sessions.0001_initial... OK
+powerbank_migrations-1     |   Applying sites.0001_initial... OK
+powerbank_migrations-1     |   Applying sites.0002_alter_domain_unique... OK
+powerbank_migrations-1     |   Applying social.0001_initial... OK
+powerbank_migrations-1     |   Applying socialaccount.0001_initial... OK
+powerbank_migrations-1     |   Applying socialaccount.0002_token_max_lengths... OK
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/vine/promises.py", line 158, in __call__
+powerbank_celery-1         |     retval = fun(*final_args, **final_kwargs)
+powerbank_celery-1         |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/app/base.py", line 787, in _autodiscover_tasks
+powerbank_api-1            | Found another file with the destination path 'admin/js/cancel.js'. It will be ignored since only the first encountered file is collected. If this is not what you want, make sure every static file has a unique path.
+powerbank_api-1            | 
+powerbank_migrations-1     |   Applying socialaccount.0003_extra_data_default_dict... OK
+powerbank_migrations-1     |   Applying socialaccount.0004_app_provider_id_settings... OK
+powerbank_migrations-1     |   Applying socialaccount.0005_socialtoken_nullable_app... OK
+powerbank_api-1            | 0 static files copied to '/application/staticfiles', 230 unmodified.
+powerbank_api-1            | [2025-10-13 19:50:32 +0000] [10] [INFO] Starting gunicorn 23.0.0
+powerbank_api-1            | [2025-10-13 19:50:32 +0000] [10] [INFO] Listening at: http://0.0.0.0:80 (10)
+powerbank_api-1            | [2025-10-13 19:50:32 +0000] [10] [INFO] Using worker: gthread
+powerbank_api-1            | [2025-10-13 19:50:32 +0000] [11] [INFO] Booting worker with pid: 11
+powerbank_api-1            | [2025-10-13 19:50:32 +0000] [12] [INFO] Booting worker with pid: 12
+powerbank_api-1            | fatal: not a git repository (or any of the parent directories): .git
+powerbank_api-1            | fatal: not a git repository (or any of the parent directories): .git
+powerbank_api-1            | [2025-10-13 19:50:32 +0000] [17] [INFO] Booting worker with pid: 17
+powerbank_api-1            | fatal: not a git repository (or any of the parent directories): .git
+powerbank_api-1            | [2025-10-13 19:50:32 +0000] [20] [INFO] Booting worker with pid: 20
+powerbank_migrations-1     |   Applying users.0002_remove_password_otp_auth... OK
+powerbank_migrations-1     |   Applying users.0003_auto_20251011_1354... OK
+powerbank_migrations-1     |   Applying users.0004_alter_user_options_alter_user_managers_and_more... OK
+powerbank_migrations-1     |   Applying users.0005_add_password_field... OK
+powerbank_migrations-1     |   Applying users.0006_add_social_auth_fields... OK
+powerbank_migrations-1     |   Applying users.0007_add_social_profile_data... OK
+powerbank_db-1             | syncing data to disk ... ok
+powerbank_db-1             | 
+powerbank_celery-1         |     return self._autodiscover_tasks_from_names(packages, related_name)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/app/base.py", line 792, in _autodiscover_tasks_from_names
+powerbank_celery-1         |     return self.loader.autodiscover_tasks(
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/loaders/base.py", line 220, in autodiscover_tasks
+powerbank_celery-1         |     mod.__name__ for mod in autodiscover_tasks(packages or (),
+powerbank_celery-1         |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/loaders/base.py", line 246, in autodiscover_tasks
+powerbank_celery-1         |     return [find_related_module(pkg, related_name) for pkg in packages]
+powerbank_celery-1         |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/loaders/base.py", line 270, in find_related_module
+powerbank_celery-1         |     return importlib.import_module(module_name)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/usr/local/lib/python3.12/importlib/__init__.py", line 90, in import_module
+powerbank_celery-1         |     return _bootstrap._gcd_import(name[level:], package, level)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+powerbank_api-1            | fatal: not a git repository (or any of the parent directories): .git
+powerbank_api-1            | 2025-10-13 19:50:32 INFO api.config.settings Serving static files locally
+powerbank_api-1            | 2025-10-13 19:50:32 INFO api.config.settings Serving media files locally
+powerbank_db-1             | Success. You can now start the database server using:
+powerbank_db-1             | 
+powerbank_db-1             |     pg_ctl -D /var/lib/postgresql/data -l logfile start
+powerbank_db-1             | 
+powerbank_db-1             | waiting for server to start....2025-10-13 19:49:55.613 UTC [48] LOG:  starting PostgreSQL 15.14 (Debian 15.14-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+powerbank_db-1             | 2025-10-13 19:49:55.614 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+powerbank_db-1             | 2025-10-13 19:49:55.620 UTC [51] LOG:  database system was shut down at 2025-10-13 19:49:55 UTC
+powerbank_db-1             | 2025-10-13 19:49:55.625 UTC [48] LOG:  database system is ready to accept connections
+powerbank_db-1             |  done
+powerbank_db-1             | server started
+powerbank_db-1             | CREATE DATABASE
+powerbank_db-1             | 
+powerbank_db-1             | 
+powerbank_db-1             | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+powerbank_db-1             | 
+powerbank_api-1            | 2025-10-13 19:50:32 INFO api.config.settings Serving static files locally
+powerbank_api-1            | 2025-10-13 19:50:32 INFO api.config.settings Serving media files locally
+powerbank_api-1            | 2025-10-13 19:50:32 INFO api.config.settings Serving static files locally
+powerbank_api-1            | 2025-10-13 19:50:32 INFO api.config.settings Serving media files locally
+powerbank_api-1            | 2025-10-13 19:50:32 INFO api.config.settings Serving static files locally
+powerbank_api-1            | 2025-10-13 19:50:32 INFO api.config.settings Serving media files locally
+powerbank_db-1             | 2025-10-13 19:49:55.948 UTC [48] LOG:  received fast shutdown request
+powerbank_db-1             | waiting for server to shut down....2025-10-13 19:49:55.950 UTC [48] LOG:  aborting any active transactions
+powerbank_db-1             | 2025-10-13 19:49:55.954 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+powerbank_db-1             | 2025-10-13 19:49:55.954 UTC [49] LOG:  shutting down
+powerbank_db-1             | 2025-10-13 19:49:55.955 UTC [49] LOG:  checkpoint starting: shutdown immediate
+powerbank_db-1             | 2025-10-13 19:49:55.995 UTC [49] LOG:  checkpoint complete: wrote 922 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.020 s, sync=0.017 s, total=0.041 s; sync files=301, longest=0.001 s, average=0.001 s; distance=4239 kB, estimate=4239 kB
+powerbank_db-1             | 2025-10-13 19:49:56.004 UTC [48] LOG:  database system is shut down
+powerbank_db-1             |  done
+powerbank_db-1             | server stopped
+powerbank_db-1             | 
+powerbank_db-1             | PostgreSQL init process complete; ready for start up.
+powerbank_db-1             | 
+powerbank_db-1             | 2025-10-13 19:49:56.075 UTC [1] LOG:  starting PostgreSQL 15.14 (Debian 15.14-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+powerbank_db-1             | 2025-10-13 19:49:56.076 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+powerbank_db-1             | 2025-10-13 19:49:56.076 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+powerbank_db-1             | 2025-10-13 19:49:56.078 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+powerbank_db-1             | 2025-10-13 19:49:56.081 UTC [64] LOG:  database system was shut down at 2025-10-13 19:49:55 UTC
+powerbank_db-1             | 2025-10-13 19:49:56.087 UTC [1] LOG:  database system is ready to accept connections
+powerbank_db-1             | 2025-10-13 19:52:05.933 UTC [187] ERROR:  insert or update on table "station_slots" violates foreign key constraint "station_slots_station_id_41710204_fk_stations_id"
+powerbank_db-1             | 2025-10-13 19:52:05.933 UTC [187] DETAIL:  Key (station_id)=(550e8400-e29b-41d4-a716-446655440301) is not present in table "stations".
+powerbank_db-1             | 2025-10-13 19:52:05.933 UTC [187] STATEMENT:  SET CONSTRAINTS ALL IMMEDIATE
+powerbank_db-1             | 2025-10-13 19:52:08.075 UTC [189] ERROR:  insert or update on table "station_amenity_mappings" violates foreign key constraint "station_amenity_mappings_station_id_c8434126_fk_stations_id"
+powerbank_db-1             | 2025-10-13 19:52:08.075 UTC [189] DETAIL:  Key (station_id)=(550e8400-e29b-41d4-a716-446655440301) is not present in table "stations".
+powerbank_db-1             | 2025-10-13 19:52:08.075 UTC [189] STATEMENT:  SET CONSTRAINTS ALL IMMEDIATE
+powerbank_celery-1         |   File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+powerbank_celery-1         |   File "<frozen importlib._bootstrap_external>", line 1133, in get_code
+powerbank_celery-1         |   File "<frozen importlib._bootstrap_external>", line 1063, in source_to_code
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+powerbank_celery-1         |   File "/application/api/payments/tasks.py", line 268
+powerbank_api-1            | 2025-10-13 19:50:32 INFO api.config.settings Sentry is not initialized
+powerbank_api-1            | 2025-10-13 19:50:32 INFO api.config.settings Using Redis for cache
+powerbank_api-1            | 2025-10-13 19:50:32 INFO api.config.settings Redis cache configured - connection will be tested on first use
+powerbank_api-1            | 2025-10-13 19:50:32 INFO api.config.settings Sentry is not initialized
+powerbank_api-1            | 2025-10-13 19:50:32 INFO api.config.settings Sentry is not initialized
+powerbank_api-1            | 2025-10-13 19:50:33 INFO api.config.settings Using Redis for cache
+powerbank_api-1            | 2025-10-13 19:50:33 INFO api.config.settings Redis cache configured - connection will be tested on first use
+powerbank_api-1            | 2025-10-13 19:50:33 INFO api.config.settings Using Redis for cache
+powerbank_api-1            | 2025-10-13 19:50:33 INFO api.config.settings Redis cache configured - connection will be tested on first use
+powerbank_api-1            | 2025-10-13 19:50:33 INFO api.config.settings Sentry is not initialized
+powerbank_api-1            | 2025-10-13 19:50:33 INFO api.config.settings Using Redis for cache
+powerbank_api-1            | 2025-10-13 19:50:33 INFO api.config.settings Redis cache configured - connection will be tested on first use
+powerbank_api-1            | 2025-10-14 01:35:33 INFO axes.apps AXES: BEGIN version 8.0.0, blocking by ip_address
+powerbank_api-1            | 2025-10-14 01:35:33 INFO axes.apps AXES: BEGIN version 8.0.0, blocking by ip_address
+powerbank_api-1            | 2025-10-14 01:35:33 INFO axes.apps AXES: BEGIN version 8.0.0, blocking by ip_address
+powerbank_api-1            | 2025-10-14 01:35:33 INFO axes.apps AXES: BEGIN version 8.0.0, blocking by ip_address
+powerbank_celery-1         |     """Process refund with payment gateway"""
+powerbank_celery-1         |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         | IndentationError: expected an indented block after function definition on line 267
+powerbank_celery-1         | fatal: not a git repository (or any of the parent directories): .git
+powerbank_celery-1         | 2025-10-13 19:52:43 INFO api.config.settings Serving static files locally
+powerbank_celery-1         | 2025-10-13 19:52:43 INFO api.config.settings Serving media files locally
+powerbank_celery-1         | 2025-10-13 19:52:43 INFO api.config.settings Sentry is not initialized
+powerbank_celery-1         | 2025-10-13 19:52:43 INFO api.config.settings Using Redis for cache
+powerbank_celery-1         | 2025-10-13 19:52:43 INFO api.config.settings Redis cache configured - connection will be tested on first use
+powerbank_celery-1         | 2025-10-14 01:37:43 INFO axes.apps AXES: BEGIN version 8.0.0, blocking by ip_address
+powerbank_celery-1         | 2025-10-14 01:37:44 INFO api.config.storage Serving static files locally
+powerbank_celery-1         | 2025-10-14 01:37:44 INFO api.config.storage Serving media files locally
+powerbank_celery-1         | 2025-10-14 01:37:44 WARNING api.web.urls S3 is disabled, serving media files locally. Consider using S3.
+powerbank_celery-1         | 2025-10-14 01:37:44 ERROR celery.utils.dispatch.signal Signal handler <promise@0x7d1c09de32f0 --> <bound method Celery._autodiscover_tasks of <Celery main at 0x7d1c067cef30>>> raised: IndentationError('expected an indented block after function definition on line 267', ('/application/api/payments/tasks.py', 268, 5, '    """Process refund with payment gateway"""\n', 268, 46))
+powerbank_celery-1         | Traceback (most recent call last):
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/utils/dispatch/signal.py", line 280, in send
+powerbank_celery-1         |     response = receiver(signal=self, sender=sender, **named)
+powerbank_celery-1         |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/vine/promises.py", line 161, in __call__
+powerbank_celery-1         |     return self.throw()
+powerbank_celery-1         |            ^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/vine/promises.py", line 158, in __call__
+powerbank_celery-1         |     retval = fun(*final_args, **final_kwargs)
+powerbank_celery-1         |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/app/base.py", line 787, in _autodiscover_tasks
+powerbank_celery-1         |     return self._autodiscover_tasks_from_names(packages, related_name)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/app/base.py", line 792, in _autodiscover_tasks_from_names
+powerbank_celery-1         |     return self.loader.autodiscover_tasks(
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/loaders/base.py", line 220, in autodiscover_tasks
+powerbank_celery-1         |     mod.__name__ for mod in autodiscover_tasks(packages or (),
+powerbank_celery-1         |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/loaders/base.py", line 246, in autodiscover_tasks
+powerbank_celery-1         |     return [find_related_module(pkg, related_name) for pkg in packages]
+powerbank_celery-1         |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/loaders/base.py", line 270, in find_related_module
+powerbank_celery-1         |     return importlib.import_module(module_name)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/usr/local/lib/python3.12/importlib/__init__.py", line 90, in import_module
+powerbank_celery-1         |     return _bootstrap._gcd_import(name[level:], package, level)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+powerbank_celery-1         |   File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+powerbank_celery-1         |   File "<frozen importlib._bootstrap_external>", line 1133, in get_code
+powerbank_celery-1         |   File "<frozen importlib._bootstrap_external>", line 1063, in source_to_code
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+powerbank_celery-1         |   File "/application/api/payments/tasks.py", line 268
+powerbank_celery-1         |     """Process refund with payment gateway"""
+powerbank_celery-1         |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         | IndentationError: expected an indented block after function definition on line 267
+powerbank_celery-1         | Traceback (most recent call last):
+powerbank_celery-1         |   File "<frozen runpy>", line 198, in _run_module_as_main
+powerbank_celery-1         |   File "<frozen runpy>", line 88, in _run_code
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/__main__.py", line 19, in <module>
+powerbank_celery-1         |     main()
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/__main__.py", line 15, in main
+powerbank_celery-1         |     sys.exit(_main())
+powerbank_celery-1         |              ^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/bin/celery.py", line 231, in main
+powerbank_celery-1         |     return celery(auto_envvar_prefix="CELERY")
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/click/core.py", line 1157, in __call__
+powerbank_celery-1         |     return self.main(*args, **kwargs)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/click/core.py", line 1078, in main
+powerbank_celery-1         |     rv = self.invoke(ctx)
+powerbank_celery-1         |          ^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/click/core.py", line 1688, in invoke
+powerbank_celery-1         |     return _process_result(sub_ctx.command.invoke(sub_ctx))
+powerbank_celery-1         |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/click/core.py", line 1434, in invoke
+powerbank_celery-1         |     return ctx.invoke(self.callback, **ctx.params)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/click/core.py", line 783, in invoke
+powerbank_celery-1         |     return __callback(*args, **kwargs)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/click/decorators.py", line 33, in new_func
+powerbank_celery-1         |     return f(get_current_context(), *args, **kwargs)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/bin/base.py", line 135, in caller
+powerbank_celery-1         |     return f(ctx, *args, **kwargs)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/bin/worker.py", line 348, in worker
+powerbank_celery-1         |     worker = app.Worker(
+powerbank_celery-1         |              ^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/worker/worker.py", line 94, in __init__
+powerbank_celery-1         |     self.app.loader.init_worker()
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/loaders/base.py", line 110, in init_worker
+powerbank_celery-1         |     self.import_default_modules()
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/loaders/base.py", line 104, in import_default_modules
+powerbank_celery-1         |     raise response
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/utils/dispatch/signal.py", line 280, in send
+powerbank_celery-1         |     response = receiver(signal=self, sender=sender, **named)
+powerbank_celery-1         |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/vine/promises.py", line 161, in __call__
+powerbank_celery-1         |     return self.throw()
+powerbank_celery-1         |            ^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/vine/promises.py", line 158, in __call__
+powerbank_celery-1         |     retval = fun(*final_args, **final_kwargs)
+powerbank_celery-1         |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/app/base.py", line 787, in _autodiscover_tasks
+powerbank_celery-1         |     return self._autodiscover_tasks_from_names(packages, related_name)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/app/base.py", line 792, in _autodiscover_tasks_from_names
+powerbank_celery-1         |     return self.loader.autodiscover_tasks(
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/loaders/base.py", line 220, in autodiscover_tasks
+powerbank_celery-1         |     mod.__name__ for mod in autodiscover_tasks(packages or (),
+powerbank_celery-1         |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/loaders/base.py", line 246, in autodiscover_tasks
+powerbank_celery-1         |     return [find_related_module(pkg, related_name) for pkg in packages]
+powerbank_celery-1         |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/application/.venv/lib/python3.12/site-packages/celery/loaders/base.py", line 270, in find_related_module
+powerbank_celery-1         |     return importlib.import_module(module_name)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "/usr/local/lib/python3.12/importlib/__init__.py", line 90, in import_module
+powerbank_celery-1         |     return _bootstrap._gcd_import(name[level:], package, level)
+powerbank_celery-1         |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+powerbank_celery-1         |   File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+powerbank_celery-1         |   File "<frozen importlib._bootstrap_external>", line 1133, in get_code
+powerbank_celery-1         |   File "<frozen importlib._bootstrap_external>", line 1063, in source_to_code
+powerbank_celery-1         |   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+powerbank_celery-1         |   File "/application/api/payments/tasks.py", line 268
+powerbank_celery-1         |     """Process refund with payment gateway"""
+powerbank_celery-1         |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+powerbank_celery-1         | IndentationError: expected an indented block after function definition on line 267
+powerbank_celery-1 exited with code 1 (restarting)
