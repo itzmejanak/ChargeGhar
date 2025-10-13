@@ -578,37 +578,6 @@ class ESewaWebhookView(GenericAPIView):
             )
 
 
-@router.register(r"payments/webhooks/stripe", name="payment-webhook-stripe")
-@extend_schema(
-    tags=["Payments"],
-    summary="Stripe Webhook",
-    description="Handle Stripe payment gateway webhooks"
-)
-class StripeWebhookView(GenericAPIView):
-    permission_classes = [AllowAny]
-    serializer_class = serializers.PaymentWebhookSerializer  # Dummy serializer for schema
-    
-    def post(self, request: Request) -> Response:
-        """Handle Stripe webhook"""
-        try:
-            from api.payments.tasks import process_payment_webhook
-            
-            webhook_data = {
-                'gateway': 'stripe',
-                'payload': request.data,
-                'headers': dict(request.headers)
-            }
-            
-            # Process webhook asynchronously
-            process_payment_webhook.delay(webhook_data)
-            
-            return Response({'status': 'received'}, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Webhook processing failed: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
 @router.register(r"admin/refunds", name="admin-refunds")
 @extend_schema(

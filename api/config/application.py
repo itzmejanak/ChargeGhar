@@ -7,9 +7,22 @@ from api.config.silk import SILKY_MIDDLEWARE_CLASS, USE_SILK
 PROJECT_NAME = getenv("PROJECT_NAME", "django_template")
 PROJECT_VERBOSE_NAME = getenv("PROJECT_VERBOSE_NAME", "Django Template").strip("'\"")
 
-#Stripe API keys
-'''STRIPE_PUBLIC_KEY = getenv("STRIPE_PUBLIC_KEY", "")
-STRIPE_SECRET_KEY = getenv("STRIPE_SECRET_KEY", "")'''
+# Nepal Gateways Configuration
+NEPAL_GATEWAYS_CONFIG = {
+    'esewa': {
+        'product_code': getenv('ESEWA_PRODUCT_CODE', 'EPAYTEST'),
+        'secret_key': getenv('ESEWA_SECRET_KEY', '8gBm/:&EnhH.1/q'),
+        'success_url': getenv('ESEWA_SUCCESS_URL'),
+        'failure_url': getenv('ESEWA_FAILURE_URL'),
+        'mode': getenv('ESEWA_MODE', 'sandbox'),
+    },
+    'khalti': {
+        'live_secret_key': getenv('KHALTI_LIVE_SECRET_KEY'),
+        'return_url_config': getenv('KHALTI_RETURN_URL'),
+        'website_url_config': getenv('KHALTI_WEBSITE_URL'),
+        'mode': getenv('KHALTI_MODE', 'sandbox'),
+    }
+}
 
 ENVIRONMENT = getenv("ENVIRONMENT", "local")
 HOST = getenv("HOST", "localhost")

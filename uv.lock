@@ -1012,6 +1012,18 @@ wheels = [
 ]
 
 [[package]]
+name = "nepal-gateways"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/dd/e4/e63f131d734720baa0528a158727118783d668d9251d53dce1a30c94d22b/nepal_gateways-0.2.0.tar.gz", hash = "sha256:d00a4a72016c61ff15b59363333969c1ae378fee670fa433f79cb0f4f4cf4ec9", size = 78217, upload-time = "2025-06-23T14:05:20.031Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d4/a5/21ba5d3dfe62548c93087a389b6d8061e236643f10a601d96350c6123b1c/nepal_gateways-0.2.0-py3-none-any.whl", hash = "sha256:2c1746349506175bdcb78896928f6372a9071178ccea421a5a504a664ba4841b", size = 24862, upload-time = "2025-06-23T14:05:17.163Z" },
+]
+
+[[package]]
 name = "nodeenv"
 version = "1.9.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1328,6 +1340,7 @@ dependencies = [
     { name = "drf-spectacular" },
     { name = "firebase-admin" },
     { name = "gunicorn" },
+    { name = "nepal-gateways" },
     { name = "psycopg2-binary" },
     { name = "pyjwt" },
     { name = "python-dotenv" },
@@ -1372,6 +1385,7 @@ requires-dist = [
     { name = "drf-spectacular", specifier = "==0.28.0" },
     { name = "firebase-admin", specifier = "==6.5.0" },
     { name = "gunicorn", specifier = "==23.0.0" },
+    { name = "nepal-gateways", specifier = ">=0.1.0" },
     { name = "psycopg2-binary", specifier = "==2.9.9" },
     { name = "pyjwt", specifier = "==2.10.1" },
     { name = "python-dotenv", specifier = "==1.1.1" },

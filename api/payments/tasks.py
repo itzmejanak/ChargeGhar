@@ -29,8 +29,6 @@ def process_payment_webhook(self, webhook_data: Dict[str, Any]):
             result = self._process_khalti_webhook(webhook_data)
         elif webhook_data['gateway'] == 'esewa':
             result = self._process_esewa_webhook(webhook_data)
-        elif webhook_data['gateway'] == 'stripe':
-            result = self._process_stripe_webhook(webhook_data)
         else:
             raise ValueError(f"Unsupported gateway: {webhook_data['gateway']}")
         
@@ -80,19 +78,7 @@ def process_payment_webhook(self, webhook_data: Dict[str, Any]):
             self.logger.warning(f"Unhandled eSewa event: {event_type}")
             return {'status': 'ignored', 'reason': 'unhandled_event'}
     
-    def _process_stripe_webhook(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Process Stripe webhook"""
-        payload = webhook_data['payload']
-        event_type = webhook_data['event_type']
-        
-        if event_type == 'payment_intent.succeeded':
-            return self._handle_payment_completed(payload, 'stripe')
-        elif event_type == 'payment_intent.payment_failed':
-            return self._handle_payment_failed(payload, 'stripe')
-        else:
-            self.logger.warning(f"Unhandled Stripe event: {event_type}")
-            return {'status': 'ignored', 'reason': 'unhandled_event'}
-    
+
     def _handle_payment_completed(self, payload: Dict[str, Any], gateway: str) -> Dict[str, Any]:
         """Handle successful payment"""
         try:
@@ -146,8 +132,6 @@ def process_payment_webhook(self, webhook_data: Dict[str, Any]):
             return payload.get('merchant_reference') or payload.get('order_id')
         elif gateway == 'esewa':
             return payload.get('product_code') or payload.get('reference')
-        elif gateway == 'stripe':
-            return payload.get('metadata', {}).get('intent_id')
         else:
             raise ValueError(f"Unknown gateway: {gateway}")
 
@@ -368,8 +352,6 @@ def _process_gateway_refund(self, refund: Refund) -> bool:
             gateway = 'khalti'
         elif gateway_reference.startswith('esewa_'):
             gateway = 'esewa'
-        elif gateway_reference.startswith('stripe_'):
-            gateway = 'stripe'
         else:
             # Try to extract from transaction metadata if available
             if hasattr(transaction, 'metadata') and transaction.metadata and 'gateway' in transaction.metadata:
@@ -384,8 +366,6 @@ def _process_gateway_refund(self, refund: Refund) -> bool:
             return self._process_khalti_refund(transaction, refund)
         elif gateway == 'esewa':
             return self._process_esewa_refund(transaction, refund)
-        elif gateway == 'stripe':
-            return self._process_stripe_refund(transaction, refund)
         else:
             self.logger.error(f"Unsupported gateway: {gateway}")
             return False
@@ -488,53 +468,6 @@ def _process_esewa_refund(self, transaction, refund):
         self.logger.error(f"eSewa refund error: {str(e)}")
         return False
         
-def _process_stripe_refund(self, transaction, refund):
-    """Process refund through Stripe gateway"""
-    try:
-        # Get Stripe configuration
-        config = transaction.payment_method.configuration
-        if not config or 'secret_key' not in config:
-            self.logger.error("Stripe configuration missing")
-            return False
-            
-        # Verify transaction exists and is refundable in Stripe
-        if not transaction.gateway_reference:
-            self.logger.error("No Stripe charge ID to refund")
-            return False
-            
-        self.logger.info(f"Processing Stripe refund for transaction {transaction.transaction_id}")
-        
-        # Use Stripe SDK to process refund
-        import stripe
-        stripe.api_key = config['secret_key']
-        
-        try:
-            refund_response = stripe.Refund.create(
-                charge=transaction.gateway_reference,
-                amount=int(refund.amount * 100),  # Stripe uses cents
-                metadata={"refund_id": str(refund.id)}
-            )
-            
-            # Store the response for reference
-            refund.gateway_response = {
-                "id": refund_response.id,
-                "status": refund_response.status,
-                "amount": refund_response.amount / 100  # Convert back to dollars
-            }
-            refund.save(update_fields=['gateway_response'])
-            
-            return refund_response.status == 'succeeded'
-            
-        except stripe.error.StripeError as e:
-            self.logger.error(f"Stripe API error: {str(e)}")
-            refund.gateway_response = {"error": str(e)}
-            refund.save(update_fields=['gateway_response'])
-            return False
-        
-    except Exception as e:
-        self.logger.error(f"Stripe refund error: {str(e)}")
-        return False
-
 
 @shared_task(base=BaseTask, bind=True)
 def cleanup_old_payment_data(self):

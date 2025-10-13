@@ -149,7 +149,7 @@ class PaymentWebhook(BaseModel):
         ('FAILED', 'Failed'),
     ]
 
-    gateway = models.CharField(max_length=255)  # khalti, esewa, stripe
+    gateway = models.CharField(max_length=255)  # khalti, esewa
     event_type = models.CharField(max_length=255)
     payload = models.JSONField(default=dict)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='RECEIVED')
