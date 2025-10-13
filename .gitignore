@@ -159,5 +159,6 @@ update-env-domains.sh
 DOMAIN_SETUP_GUIDE.md
 
 
-smpt_config.txt
-firebase_chargeGhar.json
+
+admin_endpoint_analysis_report.md
+firebase-credentials.json
