@@ -135,16 +135,16 @@ fi
 # Configure environment for production
 print_step "Configuring production environment..."
 cp .env .env.backup 2>/dev/null || true
-sed -i 's/ENVIRONMENT=local/ENVIRONMENT=production/' .env
-sed -i 's/DJANGO_DEBUG=true/DJANGO_DEBUG=false/' .env
-sed -i 's/CELERY_TASK_ALWAYS_EAGER=true/CELERY_TASK_ALWAYS_EAGER=false/' .env
-sed -i 's/CELERY_TASK_EAGER_PROPAGATES=true/CELERY_TASK_EAGER_PROPAGATES=false/' .env
+sed -i 's|ENVIRONMENT=local|ENVIRONMENT=production|' .env
+sed -i 's|DJANGO_DEBUG=true|DJANGO_DEBUG=false|' .env
+sed -i 's|CELERY_TASK_ALWAYS_EAGER=true|CELERY_TASK_ALWAYS_EAGER=false|' .env
+sed -i 's|CELERY_TASK_EAGER_PROPAGATES=true|CELERY_TASK_EAGER_PROPAGATES=false|' .env
 # Update service names to match production docker-compose
-sed -i 's/POSTGRES_HOST=pgbouncer/POSTGRES_HOST=powerbank_db/' .env
-sed -i 's/POSTGRES_HOST=db/POSTGRES_HOST=powerbank_db/' .env
-sed -i 's/REDIS_HOST=redis/REDIS_HOST=powerbank_redis/' .env
-sed -i 's/RABBITMQ_HOST=rabbitmq/RABBITMQ_HOST=powerbank_rabbitmq/' .env
-sed -i 's/BASE_URL=http://localhost:8010/BASE_URL=https://main.chargeghar.com/' .env
+sed -i 's|POSTGRES_HOST=pgbouncer|POSTGRES_HOST=powerbank_db|' .env
+sed -i 's|POSTGRES_HOST=db|POSTGRES_HOST=powerbank_db|' .env
+sed -i 's|REDIS_HOST=redis|REDIS_HOST=powerbank_redis|' .env
+sed -i 's|RABBITMQ_HOST=rabbitmq|RABBITMQ_HOST=powerbank_rabbitmq|' .env
+sed -i 's|BASE_URL=http://localhost:8010|BASE_URL=https://main.chargeghar.com|' .env
 print_status "Environment configured"
 
 # Create directories
