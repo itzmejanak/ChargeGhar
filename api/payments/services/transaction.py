@@ -14,7 +14,7 @@ class TransactionService(CRUDService):
     def get_user_transactions(self, user, filters: Dict[str, Any] = None) -> Dict[str, Any]:
         """Get user's transaction history with filters"""
         try:
-            queryset = Transaction.objects.filter(user=user).select_related('related_rental')
+            queryset = self.get_user_transactions_queryset(user)
 
             # Apply filters
             if filters:
@@ -30,9 +30,6 @@ class TransactionService(CRUDService):
                 if filters.get('end_date'):
                     queryset = queryset.filter(created_at__lte=filters['end_date'])
 
-            # Order by latest first
-            queryset = queryset.order_by('-created_at')
-
             # Pagination
             page = filters.get('page', 1) if filters else 1
             page_size = filters.get('page_size', 20) if filters else 20
@@ -41,3 +38,7 @@ class TransactionService(CRUDService):
 
         except Exception as e:
             self.handle_service_error(e, "Failed to get user transactions")
+    
+    def get_user_transactions_queryset(self, user):
+        """Get base queryset for user transactions"""
+        return Transaction.objects.filter(user=user).select_related('related_rental').order_by('-created_at')

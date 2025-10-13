@@ -5,7 +5,7 @@ from django.contrib.admin import ModelAdmin
 
 from api.payments.models import (
     Transaction, Wallet, WalletTransaction, PaymentIntent, 
-    PaymentWebhook, Refund, PaymentMethod
+    Refund, PaymentMethod
 )
 
 
@@ -39,15 +39,6 @@ class PaymentIntentAdmin(ModelAdmin):
     list_filter = ['intent_type', 'status', 'created_at']
     search_fields = ['user__username', 'intent_id']
     readonly_fields = ['created_at', 'completed_at']
-
-
-@admin.register(PaymentWebhook)
-class PaymentWebhookAdmin(ModelAdmin):
-    list_display = ['gateway', 'event_type', 'status', 'received_at', 'processed_at']
-    list_filter = ['gateway', 'status', 'received_at']
-    search_fields = ['gateway', 'event_type']
-    readonly_fields = ['received_at', 'processed_at']
-
 
 @admin.register(Refund)
 class RefundAdmin(ModelAdmin):

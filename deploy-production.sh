@@ -144,6 +144,7 @@ sed -i 's/POSTGRES_HOST=pgbouncer/POSTGRES_HOST=powerbank_db/' .env
 sed -i 's/POSTGRES_HOST=db/POSTGRES_HOST=powerbank_db/' .env
 sed -i 's/REDIS_HOST=redis/REDIS_HOST=powerbank_redis/' .env
 sed -i 's/RABBITMQ_HOST=rabbitmq/RABBITMQ_HOST=powerbank_rabbitmq/' .env
+sed -i 's/BASE_URL=http://localhost:8010/BASE_URL=https://main.chargeghar.com/' .env
 print_status "Environment configured"
 
 # Create directories

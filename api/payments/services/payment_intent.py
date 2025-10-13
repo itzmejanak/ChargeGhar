@@ -18,7 +18,7 @@ class PaymentIntentService(CRUDService):
     model = PaymentIntent
 
     @transaction.atomic
-    def create_topup_intent(self, user, amount: Decimal, payment_method_id: str) -> PaymentIntent:
+    def create_topup_intent(self, user, amount: Decimal, payment_method_id: str, request=None) -> PaymentIntent:
         """Create payment intent for wallet top-up"""
         try:
             payment_method = PaymentMethod.objects.get(id=payment_method_id, is_active=True)
@@ -50,9 +50,9 @@ class PaymentIntentService(CRUDService):
                 }
             )
 
-            # Generate payment URL using nepal-gateways
+            # Generate payment URL using nepal-gateways with dynamic URLs
             gateway_service = NepalGatewayService()
-            gateway_result = self._initiate_gateway_payment(intent, payment_method, gateway_service)
+            gateway_result = self._initiate_gateway_payment(intent, payment_method, gateway_service, request)
 
             intent.gateway_url = gateway_result.get('redirect_url')
             intent.intent_metadata.update({
@@ -72,13 +72,14 @@ class PaymentIntentService(CRUDService):
         except Exception as e:
             self.handle_service_error(e, "Failed to create top-up intent")
 
-    def _initiate_gateway_payment(self, intent: PaymentIntent, payment_method: PaymentMethod, gateway_service: NepalGatewayService) -> Dict[str, Any]:
+    def _initiate_gateway_payment(self, intent: PaymentIntent, payment_method: PaymentMethod, gateway_service: NepalGatewayService, request=None) -> Dict[str, Any]:
         """Initiate payment with actual gateway"""
         try:
             if payment_method.gateway == 'esewa':
                 return gateway_service.initiate_esewa_payment(
                     amount=intent.amount,
                     order_id=intent.intent_id,
+                    description=f"Wallet top-up - NPR {intent.amount}",
                     tax_amount=Decimal('0'),
                     product_service_charge=Decimal('0'),
                     product_delivery_charge=Decimal('0')
@@ -103,7 +104,7 @@ class PaymentIntentService(CRUDService):
             raise
 
     @transaction.atomic
-    def verify_topup_payment(self, intent_id: str, gateway_reference: str = None) -> Dict[str, Any]:
+    def verify_topup_payment(self, intent_id: str, callback_data: Dict[str, Any]) -> Dict[str, Any]:
         """Verify top-up payment and update wallet"""
         try:
             intent = PaymentIntent.objects.get(intent_id=intent_id)
@@ -122,7 +123,7 @@ class PaymentIntentService(CRUDService):
 
             # Verify payment with gateway using nepal-gateways
             gateway_service = NepalGatewayService()
-            verification_result = self._verify_with_gateway(intent, gateway_reference, gateway_service)
+            verification_result = self._verify_with_gateway(intent, callback_data, gateway_service)
             payment_verified = verification_result.get('success', False)
 
             if payment_verified:
@@ -134,7 +135,8 @@ class PaymentIntentService(CRUDService):
                     amount=intent.amount,
                     status='SUCCESS',
                     payment_method_type='GATEWAY',
-                    gateway_reference=gateway_reference
+                    gateway_reference=verification_result.get('transaction_id'),
+                    gateway_response=verification_result.get('gateway_response', {})
                 )
 
                 # Add balance to wallet
@@ -187,8 +189,8 @@ class PaymentIntentService(CRUDService):
         except Exception as e:
             self.handle_service_error(e, "Failed to verify top-up payment")
 
-    def _verify_with_gateway(self, intent: PaymentIntent, gateway_reference: str, gateway_service: NepalGatewayService) -> Dict[str, Any]:
-        """Verify payment with actual gateway"""
+    def _verify_with_gateway(self, intent: PaymentIntent, callback_data: Dict[str, Any], gateway_service: NepalGatewayService) -> Dict[str, Any]:
+        """Verify payment with actual gateway using callback data"""
         try:
             gateway = intent.intent_metadata.get('gateway')
             if not gateway:
@@ -198,20 +200,26 @@ class PaymentIntentService(CRUDService):
                 )
             
             if gateway == 'esewa':
-                # For eSewa, gateway_reference should contain the callback data
-                if isinstance(gateway_reference, str):
-                    transaction_data = {'data': gateway_reference}
-                else:
-                    transaction_data = gateway_reference
-                return gateway_service.verify_esewa_payment(transaction_data)
+                # For eSewa, callback_data contains: {"data": "base64_encoded_json"}
+                verification = gateway_service.verify_esewa_payment(callback_data)
+                return {
+                    'success': verification.get('success', False),
+                    'transaction_id': verification.get('transaction_id'),
+                    'order_id': verification.get('order_id'),
+                    'amount': verification.get('amount'),
+                    'gateway_response': verification.get('gateway_response', {})
+                }
                 
             elif gateway == 'khalti':
-                # For Khalti, gateway_reference should contain query parameters
-                if isinstance(gateway_reference, str):
-                    transaction_data = {'pidx': gateway_reference}
-                else:
-                    transaction_data = gateway_reference
-                return gateway_service.verify_khalti_payment(transaction_data)
+                # For Khalti, callback_data contains: {"pidx": "...", "status": "...", "txnId": "..."}
+                verification = gateway_service.verify_khalti_payment(callback_data)
+                return {
+                    'success': verification.get('success', False),
+                    'transaction_id': verification.get('transaction_id'),
+                    'order_id': verification.get('order_id'),
+                    'amount': verification.get('amount'),
+                    'gateway_response': verification.get('gateway_response', {})
+                }
             else:
                 raise ServiceException(
                     detail=f"Unsupported gateway for verification: {gateway}",

@@ -1385,7 +1385,7 @@ requires-dist = [
     { name = "drf-spectacular", specifier = "==0.28.0" },
     { name = "firebase-admin", specifier = "==6.5.0" },
     { name = "gunicorn", specifier = "==23.0.0" },
-    { name = "nepal-gateways", specifier = ">=0.1.0" },
+    { name = "nepal-gateways", specifier = "==0.2.0" },
     { name = "psycopg2-binary", specifier = "==2.9.9" },
     { name = "pyjwt", specifier = "==2.10.1" },
     { name = "python-dotenv", specifier = "==1.1.1" },

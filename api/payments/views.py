@@ -11,7 +11,10 @@ from rest_framework.response import Response
 from django.core.exceptions import ValidationError
 
 from api.common.routers import CustomViewRouter
+from api.common.mixins import BaseAPIView
+from api.common.serializers import BaseResponseSerializer
 from api.common.services.base import ServiceException
+from api.common.decorators import log_api_call
 from api.payments import serializers
 from api.payments.services import (
     TransactionService, PaymentIntentService, PaymentCalculationService,
@@ -31,10 +34,11 @@ router = CustomViewRouter()
 @extend_schema(
     tags=["Payments"],
     summary="User Transactions",
-    description="Get user transaction history with filtering"
+    description="Get user transaction history with filtering",
+    responses={200: BaseResponseSerializer}
 )
-class TransactionListView(GenericAPIView):
-    serializer_class = serializers.TransactionSerializer
+class TransactionListView(GenericAPIView, BaseAPIView):
+    serializer_class = serializers.TransactionListSerializer  # Use List serializer for MVP
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
@@ -85,9 +89,10 @@ class TransactionListView(GenericAPIView):
             )
         ]
     )
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get user transaction history"""
-        try:
+        def operation():
             service = TransactionService()
             
             # Build filters from query parameters
@@ -98,33 +103,20 @@ class TransactionListView(GenericAPIView):
             if request.query_params.get('status'):
                 filters['status'] = request.query_params.get('status')
             
-            if request.query_params.get('start_date'):
-                filters['start_date'] = request.query_params.get('start_date')
+            # Use FilterMixin for date filtering
+            queryset = service.get_user_transactions_queryset(request.user)
+            queryset = self.apply_date_filters(queryset, request)
+            queryset = self.apply_status_filter(queryset, request)
             
-            if request.query_params.get('end_date'):
-                filters['end_date'] = request.query_params.get('end_date')
-            
-            if request.query_params.get('page'):
-                filters['page'] = int(request.query_params.get('page'))
-            
-            if request.query_params.get('page_size'):
-                filters['page_size'] = int(request.query_params.get('page_size'))
-            
-            result = service.get_user_transactions(request.user, filters)
-            
-            # Serialize the transactions
-            serializer = self.get_serializer(result['results'], many=True)
-            
-            return Response({
-                'transactions': serializer.data,
-                'pagination': result['pagination']
-            })
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get transactions: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            # Use PaginationMixin for pagination
+            result = self.paginate_response(queryset, request, self.serializer_class)
+            return result
+        
+        return self.handle_service_operation(
+            operation,
+            "Transactions retrieved successfully",
+            "Failed to get transactions"
+        )
 
 
 @router.register(r"payments/packages", name="payment-packages")
@@ -163,11 +155,12 @@ class RentalPackageListView(GenericAPIView):
 @extend_schema(
     tags=["Payments"],
     summary="Payment Methods",
-    description="Get available payment gateways"
+    description="Get available payment gateways",
+    responses={200: BaseResponseSerializer}
 )
-class PaymentMethodListView(GenericAPIView):
-    serializer_class = serializers.PaymentMethodSerializer
-    permission_classes = [AllowAny] #no auth needed
+class PaymentMethodListView(GenericAPIView, BaseAPIView):
+    serializer_class = serializers.PaymentMethodListSerializer  # Use List serializer
+    permission_classes = [AllowAny]
     
     @extend_schema(
         summary="Get Payment Methods",
@@ -175,20 +168,19 @@ class PaymentMethodListView(GenericAPIView):
     )
     def get(self, request: Request) -> Response:
         """Get available payment methods"""
-        try:
+        def operation():
             methods = PaymentMethod.objects.filter(is_active=True).order_by('name')
-
             serializer = self.get_serializer(methods, many=True)
-            return Response({
+            return {
                 'payment_methods': serializer.data,
                 'count': methods.count()
-            })
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get payment methods: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            "Payment methods retrieved successfully",
+            "Failed to get payment methods"
+        )
 
 # done the testing part
 
@@ -196,9 +188,10 @@ class PaymentMethodListView(GenericAPIView):
 @extend_schema(
     tags=["Payments"],
     summary="Create Top-up Intent",
-    description="Create payment intent for wallet top-up"
+    description="Create payment intent for wallet top-up",
+    responses={200: BaseResponseSerializer}
 )
-class TopupIntentCreateView(GenericAPIView):
+class TopupIntentCreateView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.TopupIntentCreateSerializer
     permission_classes = [IsAuthenticated]
     
@@ -208,8 +201,8 @@ class TopupIntentCreateView(GenericAPIView):
         request=serializers.TopupIntentCreateSerializer
     )
     def post(self, request: Request) -> Response:
-        """Create payment intent for wallet top-up"""
-        try:
+        """Create payment intent for wallet top-up with complete gateway data"""
+        def operation():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
@@ -220,50 +213,72 @@ class TopupIntentCreateView(GenericAPIView):
                 payment_method_id=serializer.validated_data['payment_method_id']
             )
             
-            response_serializer = serializers.PaymentIntentSerializer(intent)
-            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+            # Get gateway data from intent metadata
+            gateway_result = intent.intent_metadata.get('gateway_result', {})
+            gateway = intent.intent_metadata.get('gateway')
             
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to create payment intent: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            # Return complete payment data
+            return {
+                'intent_id': intent.intent_id,
+                'amount': str(intent.amount),
+                'currency': intent.currency,
+                'gateway': gateway,
+                'gateway_url': intent.gateway_url,
+                'redirect_url': gateway_result.get('redirect_url'),
+                'redirect_method': gateway_result.get('redirect_method', 'POST'),
+                'form_fields': gateway_result.get('form_fields', {}),
+                'payment_instructions': gateway_result.get('payment_instructions'),
+                'expires_at': intent.expires_at.isoformat(),
+                'status': intent.status
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            "Payment intent created successfully with gateway data",
+            "Failed to create payment intent",
+            status.HTTP_201_CREATED
+        )
 
-
-@router.register(r"payments/verify-topup", name="payment-verify-topup")
+@router.register(r"payments/verify", name="payment-verify")
 @extend_schema(
     tags=["Payments"],
-    summary="Verify Top-up Payment",
-    description="Verify and complete wallet top-up payment"
+    summary="Verify Payment",
+    description="Verify and complete payment (supports both authenticated and public access)",
+    responses={200: BaseResponseSerializer}
 )
-class VerifyTopupView(GenericAPIView):
+class PaymentVerifyView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.VerifyTopupSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]  # Allow both authenticated and public access
     
     @extend_schema(
-        summary="Verify Top-up Payment",
-        description="Verify payment with gateway and update wallet balance",
+        summary="Verify Payment",
+        description="Verify payment with gateway and update wallet balance. Supports both web and mobile flows.",
         request=serializers.VerifyTopupSerializer
     )
     def post(self, request: Request) -> Response:
-        """Verify top-up payment and update wallet"""
-        try:
+        """Verify payment and update wallet"""
+        def operation():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
             service = PaymentIntentService()
             result = service.verify_topup_payment(
                 intent_id=serializer.validated_data['intent_id'],
-                gateway_reference=serializer.validated_data.get('gateway_reference')
+                callback_data=serializer.validated_data.get('callback_data', {})
             )
             
-            return Response(result)
+            # Add user context if authenticated
+            if request.user.is_authenticated:
+                result['user_authenticated'] = True
+                result['username'] = request.user.username
             
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to verify payment: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return result
+        
+        return self.handle_service_operation(
+            operation,
+            "Payment verified successfully",
+            "Failed to verify payment"
+        )
 
 # testing part done
 @router.register(r"payments/calculate-options", name="payment-calculate-options")
@@ -310,43 +325,34 @@ class CalculatePaymentOptionsView(GenericAPIView):
             )
 
 
-@router.register(r"payments/status/<str:intent_id>", name="payment-status")
+# REMOVED: PaymentStatusView - Status available through payment-form endpoint
+
+@router.register(r"payments/wallet/balance", name="wallet-balance")
 @extend_schema(
     tags=["Payments"],
-    summary="Payment Status",
-    description="Get payment intent status"
+    summary="Get Wallet Balance",
+    description="Get current user wallet balance",
+    responses={200: BaseResponseSerializer}
 )
-class PaymentStatusView(GenericAPIView):
-    serializer_class = serializers.PaymentStatusSerializer
+class WalletBalanceView(GenericAPIView, BaseAPIView):
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
-        summary="Get Payment Status",
-        description="Retrieve the current status of a payment intent",
-        parameters=[
-            OpenApiParameter(
-                name="intent_id",
-                type=OpenApiTypes.STR,
-                location=OpenApiParameter.PATH,
-                description="Payment Intent ID",
-                required=True
-            )
-        ]
+        summary="Get Wallet Balance",
+        description="Retrieve current user's wallet balance and recent transactions"
     )
-    def get(self, request: Request, intent_id: str) -> Response:
-        """Get payment status"""
-        try:
-            service = PaymentIntentService()
-            status_data = service.get_payment_status(intent_id)
-            
-            serializer = self.get_serializer(status_data)
-            return Response(serializer.data)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get payment status: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+    def get(self, request: Request) -> Response:
+        """Get user wallet balance"""
+        def operation():
+            service = WalletService()
+            wallet_data = service.get_wallet_balance(request.user)
+            return wallet_data
+        
+        return self.handle_service_operation(
+            operation,
+            "Wallet balance retrieved successfully",
+            "Failed to get wallet balance"
+        )
 
 
 @router.register(r"payments/cancel/<str:intent_id>", name="payment-cancel")
@@ -509,74 +515,6 @@ class RefundListView(GenericAPIView):
                     'message': 'An unexpected error occurred while processing your request'
                 }
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# Webhook endpoints for payment gateways
-@router.register(r"payments/webhooks/khalti", name="payment-webhook-khalti")
-@extend_schema(
-    tags=["Payments"],
-    summary="Khalti Webhook",
-    description="Handle Khalti payment gateway webhooks"
-)
-class KhaltiWebhookView(GenericAPIView):
-    permission_classes = [AllowAny]
-    serializer_class = serializers.PaymentWebhookSerializer  # Dummy serializer for schema
-    
-    def post(self, request: Request) -> Response:
-        """Handle Khalti webhook"""
-        try:
-            from api.payments.tasks import process_payment_webhook
-            
-            webhook_data = {
-                'gateway': 'khalti',
-                'payload': request.data,
-                'headers': dict(request.headers)
-            }
-            
-            # Process webhook asynchronously
-            process_payment_webhook.delay(webhook_data)
-            
-            return Response({'status': 'received'}, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Webhook processing failed: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-@router.register(r"payments/webhooks/esewa", name="payment-webhook-esewa")
-@extend_schema(
-    tags=["Payments"],
-    summary="eSewa Webhook",
-    description="Handle eSewa payment gateway webhooks"
-)
-class ESewaWebhookView(GenericAPIView):
-    permission_classes = [AllowAny]
-    serializer_class = serializers.PaymentWebhookSerializer  # Dummy serializer for schema
-    
-    def post(self, request: Request) -> Response:
-        """Handle eSewa webhook"""
-        try:
-            from api.payments.tasks import process_payment_webhook
-            
-            webhook_data = {
-                'gateway': 'esewa',
-                'payload': request.data,
-                'headers': dict(request.headers)
-            }
-            
-            # Process webhook asynchronously
-            process_payment_webhook.delay(webhook_data)
-            
-            return Response({'status': 'received'}, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Webhook processing failed: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
 
 
 @router.register(r"admin/refunds", name="admin-refunds")

@@ -89,4 +89,29 @@ class WalletService(CRUDService):
             wallet = self.get_or_create_wallet(user)
             return wallet.balance
         except Exception as e:
+            self.handle_service_error(e, "Failed to get wallet balance")   
+            
+    def get_wallet_balance(self, user) -> dict:
+        """Get user wallet balance with recent transactions"""
+        try:
+            wallet = self.get_or_create_wallet(user)
+            
+            # Get recent wallet transactions
+            recent_transactions = WalletTransaction.objects.filter(
+                wallet=wallet
+            ).order_by('-created_at')[:5]
+            
+            from api.payments.serializers import WalletTransactionSerializer
+            transaction_serializer = WalletTransactionSerializer(recent_transactions, many=True)
+            
+            return {
+                'balance': wallet.balance,
+                'currency': wallet.currency,
+                'formatted_balance': f"{wallet.currency} {wallet.balance:,.2f}",
+                'is_active': wallet.is_active,
+                'recent_transactions': transaction_serializer.data,
+                'last_updated': wallet.updated_at
+            }
+            
+        except Exception as e:
             self.handle_service_error(e, "Failed to get wallet balance")

@@ -8,77 +8,13 @@ from typing import Dict, Any
 
 from api.common.tasks.base import BaseTask, PaymentTask
 from api.payments.models import (
-    Transaction, PaymentIntent, PaymentWebhook, Refund, Wallet
+    Transaction, PaymentIntent, Refund, Wallet
 )
 
 
-@shared_task(base=PaymentTask, bind=True)
-def process_payment_webhook(self, webhook_data: Dict[str, Any]):
-    """Process payment gateway webhook"""
-    try:
-        # Create webhook record
-        webhook = PaymentWebhook.objects.create(
-            gateway=webhook_data['gateway'],
-            event_type=webhook_data['event_type'],
-            payload=webhook_data['payload'],
-            status='RECEIVED'
-        )
-        
-        # Process based on gateway and event type
-        if webhook_data['gateway'] == 'khalti':
-            result = self._process_khalti_webhook(webhook_data)
-        elif webhook_data['gateway'] == 'esewa':
-            result = self._process_esewa_webhook(webhook_data)
-        else:
-            raise ValueError(f"Unsupported gateway: {webhook_data['gateway']}")
-        
-        # Update webhook status
-        webhook.status = 'PROCESSED'
-        webhook.processing_result = str(result)
-        webhook.processed_at = timezone.now()
-        webhook.save(update_fields=['status', 'processing_result', 'processed_at'])
-        
-        self.logger.info(f"Webhook processed: {webhook_data['gateway']} - {webhook_data['event_type']}")
-        return result
-        
-    except Exception as e:
-        # Mark webhook as failed
-        if 'webhook' in locals():
-            webhook.status = 'FAILED'
-            webhook.processing_result = str(e)
-            webhook.processed_at = timezone.now()
-            webhook.save(update_fields=['status', 'processing_result', 'processed_at'])
-        
-        self.logger.error(f"Failed to process webhook: {str(e)}")
-        raise
+class PaymentWebhookHandler(PaymentTask):
+    """Handler for payment webhook processing"""
     
-    def _process_khalti_webhook(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Process Khalti webhook"""
-        payload = webhook_data['payload']
-        event_type = webhook_data['event_type']
-        
-        if event_type == 'payment.completed':
-            return self._handle_payment_completed(payload, 'khalti')
-        elif event_type == 'payment.failed':
-            return self._handle_payment_failed(payload, 'khalti')
-        else:
-            self.logger.warning(f"Unhandled Khalti event: {event_type}")
-            return {'status': 'ignored', 'reason': 'unhandled_event'}
-    
-    def _process_esewa_webhook(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Process eSewa webhook"""
-        payload = webhook_data['payload']
-        event_type = webhook_data['event_type']
-        
-        if event_type == 'payment_success':
-            return self._handle_payment_completed(payload, 'esewa')
-        elif event_type == 'payment_failure':
-            return self._handle_payment_failed(payload, 'esewa')
-        else:
-            self.logger.warning(f"Unhandled eSewa event: {event_type}")
-            return {'status': 'ignored', 'reason': 'unhandled_event'}
-    
-
     def _handle_payment_completed(self, payload: Dict[str, Any], gateway: str) -> Dict[str, Any]:
         """Handle successful payment"""
         try:
@@ -208,7 +144,7 @@ def reconcile_transactions(self, date_str: str = None):
     except Exception as e:
         self.logger.error(f"Failed to reconcile transactions: {str(e)}")
         raise
-    
+
     def _check_gateway_status(self, transaction: Transaction) -> str:
         """Check transaction status with gateway"""
         # Mock implementation - replace with actual gateway API calls
@@ -327,8 +263,8 @@ def process_pending_refunds(self):
     except Exception as e:
         self.logger.error(f"Failed to process pending refunds: {str(e)}")
         raise
-    
-def _process_gateway_refund(self, refund: Refund) -> bool:
+
+    def _process_gateway_refund(self, refund: Refund) -> bool:
     """Process refund with payment gateway"""
     try:
         transaction = refund.transaction
@@ -373,8 +309,8 @@ def _process_gateway_refund(self, refund: Refund) -> bool:
     except Exception as e:
         self.logger.error(f"Error processing gateway refund: {str(e)}")
         return False
-        
-def _process_khalti_refund(self, transaction, refund):
+
+    def _process_khalti_refund(self, transaction, refund):
     """Process refund through Khalti gateway"""
     try:
         import requests
@@ -419,8 +355,8 @@ def _process_khalti_refund(self, transaction, refund):
     except Exception as e:
         self.logger.error(f"Khalti refund error: {str(e)}")
         return False
-        
-def _process_esewa_refund(self, transaction, refund):
+
+    def _process_esewa_refund(self, transaction, refund):
     """Process refund through eSewa gateway"""
     try:
         import requests
@@ -483,19 +419,9 @@ def cleanup_old_payment_data(self):
         
         deleted_intents = old_intents.delete()[0]
         
-        # Clean up old webhook records (older than 6 months)
-        six_months_ago = timezone.now() - timezone.timedelta(days=180)
-        
-        old_webhooks = PaymentWebhook.objects.filter(
-            created_at__lt=six_months_ago
-        )
-        
-        deleted_webhooks = old_webhooks.delete()[0]
-        
-        self.logger.info(f"Cleaned up {deleted_intents} payment intents and {deleted_webhooks} webhooks")
+        self.logger.info(f"Cleaned up {deleted_intents} payment intents")
         return {
-            'deleted_intents': deleted_intents,
-            'deleted_webhooks': deleted_webhooks
+            'deleted_intents': deleted_intents
         }
         
     except Exception as e:

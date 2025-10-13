@@ -79,15 +79,19 @@ class NepalGatewayService:
         self, 
         amount: Decimal, 
         order_id: str,
+        description: str = "Wallet top-up",
         tax_amount: Decimal = Decimal('0'),
         product_service_charge: Decimal = Decimal('0'),
-        product_delivery_charge: Decimal = Decimal('0')
+        product_delivery_charge: Decimal = Decimal('0'),
+        success_url: str = None,
+        failure_url: str = None
     ) -> Dict[str, Any]:
         """Initiate eSewa payment"""
         try:
             init_response = self.esewa_client.initiate_payment(
                 amount=float(amount),
                 order_id=order_id,
+                description=description,
                 tax_amount=float(tax_amount),
                 product_service_charge=float(product_service_charge),
                 product_delivery_charge=float(product_delivery_charge)
@@ -95,11 +99,11 @@ class NepalGatewayService:
             
             return {
                 'success': True,
-                'redirect_required': init_response.is_redirect_required,
-                'redirect_url': init_response.redirect_url,
-                'redirect_method': init_response.redirect_method,  # POST
-                'form_fields': init_response.form_fields,
-                'payment_instructions': init_response.payment_instructions or {}
+                'redirect_required': getattr(init_response, 'is_redirect_required', True),
+                'redirect_url': getattr(init_response, 'redirect_url', ''),
+                'redirect_method': getattr(init_response, 'redirect_method', 'POST'),
+                'form_fields': getattr(init_response, 'form_fields', {}),
+                'payment_instructions': getattr(init_response, 'payment_instructions', {})
             }
             
         except InitiationError as e:
@@ -109,11 +113,12 @@ class NepalGatewayService:
                 code="esewa_initiation_error"
             )
     
-    def verify_esewa_payment(self, transaction_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Verify eSewa payment"""
+    def verify_esewa_payment(self, callback_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Verify eSewa payment using nepal-gateways package"""
         try:
+            # Use nepal-gateways EsewaClient.verify_payment()
             verification = self.esewa_client.verify_payment(
-                transaction_data_from_callback=transaction_data
+                transaction_data_from_callback=callback_data
             )
             
             return {
@@ -121,7 +126,7 @@ class NepalGatewayService:
                 'order_id': verification.order_id,
                 'transaction_id': verification.transaction_id,
                 'status_code': verification.status_code,
-                'amount': self.convert_amount_from_gateway(verification.verified_amount, 'esewa'),
+                'amount': verification.verified_amount,
                 'gateway_response': verification.raw_response
             }
             
@@ -158,11 +163,11 @@ class NepalGatewayService:
             
             return {
                 'success': True,
-                'redirect_required': init_response.is_redirect_required,
-                'redirect_url': init_response.redirect_url,
-                'redirect_method': init_response.redirect_method,  # GET
-                'form_fields': init_response.form_fields,  # None for Khalti
-                'payment_instructions': init_response.payment_instructions
+                'redirect_required': getattr(init_response, 'is_redirect_required', True),
+                'redirect_url': getattr(init_response, 'redirect_url', ''),
+                'redirect_method': getattr(init_response, 'redirect_method', 'GET'),
+                'form_fields': getattr(init_response, 'form_fields', None),
+                'payment_instructions': getattr(init_response, 'payment_instructions', {})
             }
             
         except InitiationError as e:
@@ -172,19 +177,22 @@ class NepalGatewayService:
                 code="khalti_initiation_error"
             )
     
-    def verify_khalti_payment(self, transaction_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Verify Khalti payment"""
+    def verify_khalti_payment(self, callback_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Verify Khalti payment using nepal-gateways package"""
         try:
+            # Use nepal-gateways KhaltiClient.verify_payment()
             verification = self.khalti_client.verify_payment(
-                transaction_data_from_callback=transaction_data
+                transaction_data_from_callback=callback_data
             )
             
             return {
                 'success': verification.is_successful,
-                'order_id': verification.order_id,  # PIDX for Khalti
+                'order_id': verification.order_id,
                 'transaction_id': verification.transaction_id,
                 'status_code': verification.status_code,
-                'amount': self.convert_amount_from_gateway(verification.verified_amount, 'khalti'),
+                'amount': self.convert_amount_from_gateway(
+                    verification.verified_amount, 'khalti'
+                ),
                 'gateway_response': verification.raw_response
             }
             

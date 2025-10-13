@@ -53,9 +53,7 @@ DOCUMENTED_ENDPOINTS = [
     '/api/payments/status',
     '/api/payments/cancel',
     '/api/payments/refunds',
-    '/api/payments/webhooks/khalti',
-    '/api/payments/webhooks/esewa',
-    '/api/payments/webhooks/stripe',
+    # Webhook endpoints removed - nepal-gateways uses callback-based flow
     
     # Rental Features
     '/api/rentals/start',

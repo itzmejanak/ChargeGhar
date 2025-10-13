@@ -167,3 +167,18 @@ try:
 except User.DoesNotExist:
     print('❌ Admin user not found')
 "
+
+
+curl -s https://raw.githubusercontent.com/polymorphisma/nepal-gateways/main/README.md
+curl -s https://raw.githubusercontent.com/polymorphisma/nepal-gateways/main/docs/EsewaClient.md
+curl -s https://raw.githubusercontent.com/polymorphisma/nepal-gateways/main/docs/KhaltiClient.md
+
+python3 -m venv /tmp/nepal_env && /tmp/nepal_env/bin/pip install nepal-gateways==0.2.0
+/tmp/nepal_env/bin/python -c "import nepal_gateways; print(nepal_gateways.__file__)"
+/tmp/nepal_env/lib/python3.12/site-packages/nepal_gateways/__init__.py
+find /tmp/nepal_env/lib/python3.12/site-packages/nepal_gateways -name "*.py" | head -10
+cat /tmp/nepal_env/lib/python3.12/site-packages/nepal_gateways/__init__.py
+cat /tmp/nepal_env/lib/python3.12/site-packages/nepal_gateways/esewa/client.py
+cat /tmp/nepal_env/lib/python3.12/site-packages/nepal_gateways/khalti/client.py
+cat /tmp/nepal_env/lib/python3.12/site-packages/nepal_gateways/esewa/config.py
+cat /tmp/nepal_env/lib/python3.12/site-packages/nepal_gateways/core/base.py

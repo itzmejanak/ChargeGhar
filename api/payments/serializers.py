@@ -7,14 +7,26 @@ from drf_spectacular.utils import extend_schema_field
 
 from api.payments.models import (
     Transaction, Wallet, WalletTransaction, PaymentIntent, 
-    PaymentWebhook, Refund, PaymentMethod
+    Refund, PaymentMethod
 )
 from api.rentals.models import RentalPackage
 from api.common.utils.helpers import convert_points_to_amount
 
+# ============================================================================
+# MVP-FOCUSED SERIALIZERS (List/Detail Pattern)
+# ============================================================================
+
+
+# Payment Method Serializers
+class PaymentMethodListSerializer(serializers.ModelSerializer):
+    """Minimal serializer for payment method listing"""
+    
+    class Meta:
+        model = PaymentMethod
+        fields = ['id', 'name', 'gateway', 'is_active']
 
 class PaymentMethodSerializer(serializers.ModelSerializer):
-    """Serializer for payment methods"""
+    """Standard serializer for payment methods"""
     
     class Meta:
         model = PaymentMethod
@@ -67,18 +79,33 @@ class WalletSerializer(serializers.ModelSerializer):
         return f"{obj.currency} {obj.balance:,.2f}"
 
 
+# Transaction Serializers (MVP Pattern)
+class TransactionListSerializer(serializers.ModelSerializer):
+    """Minimal serializer for transaction listing - MVP focused"""
+    formatted_amount = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Transaction
+        fields = [
+            'id', 'transaction_id', 'transaction_type', 'amount', 
+            'status', 'created_at', 'formatted_amount'
+        ]
+    
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_amount(self, obj) -> str:
+        return f"{obj.currency} {obj.amount:,.2f}"
+
 class TransactionSerializer(serializers.ModelSerializer):
-    """Serializer for transactions"""
+    """Standard serializer for transactions"""
     formatted_amount = serializers.SerializerMethodField()
     payment_method_name = serializers.SerializerMethodField()
-    rental_code = serializers.SerializerMethodField()
     
     class Meta:
         model = Transaction
         fields = [
             'id', 'transaction_id', 'transaction_type', 'amount', 'currency',
             'status', 'payment_method_type', 'gateway_reference', 'created_at',
-            'formatted_amount', 'payment_method_name', 'rental_code'
+            'formatted_amount', 'payment_method_name'
         ]
         read_only_fields = ['id', 'transaction_id', 'created_at']
     
@@ -89,6 +116,13 @@ class TransactionSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.CharField)
     def get_payment_method_name(self, obj) -> str:
         return obj.payment_method.name if obj.payment_method else "N/A"
+
+class TransactionDetailSerializer(TransactionSerializer):
+    """Detailed serializer for single transaction view"""
+    rental_code = serializers.SerializerMethodField()
+    
+    class Meta(TransactionSerializer.Meta):
+        fields = TransactionSerializer.Meta.fields + ['rental_code']
     
     @extend_schema_field(serializers.CharField)
     def get_rental_code(self, obj) -> str:
@@ -123,8 +157,23 @@ class WalletTransactionSerializer(serializers.ModelSerializer):
         return f"NPR {obj.balance_after:,.2f}"
 
 
+# Payment Intent Serializers (MVP Pattern)
+class PaymentIntentListSerializer(serializers.ModelSerializer):
+    """Minimal serializer for payment intent listing"""
+    formatted_amount = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = PaymentIntent
+        fields = [
+            'id', 'intent_id', 'status', 'amount', 'formatted_amount', 'created_at'
+        ]
+    
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_amount(self, obj) -> str:
+        return f"{obj.currency} {obj.amount:,.2f}"
+
 class PaymentIntentSerializer(serializers.ModelSerializer):
-    """Serializer for payment intents"""
+    """Standard serializer for payment intents"""
     payment_method_name = serializers.CharField(source='payment_method.name', read_only=True)
     formatted_amount = serializers.SerializerMethodField()
     is_expired = serializers.SerializerMethodField()
@@ -244,16 +293,7 @@ class RefundRequestSerializer(serializers.Serializer):
         return value.strip()
 
 
-class PaymentWebhookSerializer(serializers.ModelSerializer):
-    """Serializer for payment webhooks (Admin only)"""
-    
-    class Meta:
-        model = PaymentWebhook
-        fields = [
-            'id', 'gateway', 'event_type', 'payload', 'status',
-            'processing_result', 'received_at', 'processed_at'
-        ]
-        read_only_fields = ['id', 'received_at', 'processed_at']
+# PaymentWebhookSerializer removed - nepal-gateways uses callback-based flow, not webhooks
 
 
 class PaymentStatusSerializer(serializers.Serializer):
@@ -268,9 +308,16 @@ class PaymentStatusSerializer(serializers.Serializer):
 
 
 class VerifyTopupSerializer(serializers.Serializer):
-    """Serializer for verifying top-up payment"""
+    """Serializer for verifying top-up payment with callback data"""
     intent_id = serializers.CharField()
+    callback_data = serializers.JSONField(required=False, allow_null=True)
+    
+    # Support legacy fields for backward compatibility
     gateway_reference = serializers.CharField(required=False, allow_blank=True)
+    data = serializers.CharField(required=False, allow_blank=True)  # eSewa base64 data
+    pidx = serializers.CharField(required=False, allow_blank=True)  # Khalti pidx
+    status = serializers.CharField(required=False, allow_blank=True)  # Khalti status
+    txnId = serializers.CharField(required=False, allow_blank=True)  # Khalti txnId
     
     def validate_intent_id(self, value):
         try:
@@ -283,6 +330,32 @@ class VerifyTopupSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid payment intent")
         
         return value
+    
+    def validate(self, attrs):
+        """Build callback_data from individual fields if not provided"""
+        if not attrs.get('callback_data'):
+            # Build callback_data from individual fields
+            callback_data = {}
+            
+            # eSewa callback data
+            if attrs.get('data'):
+                callback_data['data'] = attrs['data']
+            
+            # Khalti callback data
+            if attrs.get('pidx'):
+                callback_data['pidx'] = attrs['pidx']
+                if attrs.get('status'):
+                    callback_data['status'] = attrs['status']
+                if attrs.get('txnId'):
+                    callback_data['txnId'] = attrs['txnId']
+            
+            # Legacy gateway_reference support
+            if attrs.get('gateway_reference') and not callback_data:
+                callback_data['gateway_reference'] = attrs['gateway_reference']
+            
+            attrs['callback_data'] = callback_data
+        
+        return attrs
 
 
 class UserTransactionHistorySerializer(serializers.Serializer):

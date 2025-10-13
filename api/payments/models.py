@@ -138,34 +138,6 @@ class PaymentIntent(BaseModel):
     def __str__(self):
         return f"{self.intent_id} - {self.intent_type}"
 
-
-class PaymentWebhook(BaseModel):
-    """
-    PaymentWebhook - Webhook events from payment gateways
-    """
-    STATUS_CHOICES = [
-        ('RECEIVED', 'Received'),
-        ('PROCESSED', 'Processed'),
-        ('FAILED', 'Failed'),
-    ]
-
-    gateway = models.CharField(max_length=255)  # khalti, esewa
-    event_type = models.CharField(max_length=255)
-    payload = models.JSONField(default=dict)
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='RECEIVED')
-    processing_result = models.CharField(max_length=255, null=True, blank=True)
-    received_at = models.DateTimeField(auto_now_add=True)
-    processed_at = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        db_table = "payment_webhooks"
-        verbose_name = "Payment Webhook"
-        verbose_name_plural = "Payment Webhooks"
-
-    def __str__(self):
-        return f"{self.gateway} - {self.event_type}"
-
-
 class Refund(BaseModel):
     """
     Refund - Refund requests and processing

@@ -1,0 +1,457 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChargeGhar - Wallet Top-up</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .user-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        .payment-method { 
+            margin: 10px 0; 
+            padding: 20px; 
+            border: 2px solid #e9ecef; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .payment-method:hover { 
+            background-color: #f8f9fa; 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .payment-method.selected { 
+            background-color: #e3f2fd; 
+            border-color: #2196f3; 
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+        .payment-logo {
+            width: 60px;
+            height: 40px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #666;
+        }
+        .form-group { margin: 20px 0; }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            color: #333;
+        }
+        input, select { 
+            width: 100%; 
+            padding: 15px; 
+            border: 2px solid #e9ecef; 
+            border-radius: 8px; 
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+        button { 
+            background: linear-gradient(135deg, #28a745, #20c997); 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 18px; 
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+        button:disabled { 
+            background: #6c757d; 
+            cursor: not-allowed; 
+            transform: none;
+            box-shadow: none;
+        }
+        .status { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-weight: 500;
+        }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .code-block { 
+            background: #2d3748; 
+            color: #e2e8f0; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin: 20px 0; 
+            overflow-x: auto; 
+            font-family: 'Courier New', monospace;
+        }
+        pre { margin: 0; line-height: 1.5; }
+        .wallet-balance {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .balance-amount {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💳 ChargeGhar Wallet Top-up</h1>
+            <p>Secure and instant wallet recharge</p>
+        </div>
+
+        <div class="user-info">
+            <strong>👤 Logged in as:</strong> {{ user.username }} ({{ user.email }})
+            <br><strong>🆔 User ID:</strong> {{ user.id }}
+        </div>
+
+        {% if wallet_balance is not None %}
+        <div class="wallet-balance">
+            <div>💰 Current Wallet Balance</div>
+            <div class="balance-amount">NPR {{ wallet_balance|floatformat:2 }}</div>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="amount">💵 Top-up Amount (NPR):</label>
+            <input type="number" id="amount" value="100" min="10" max="50000" step="0.01" placeholder="Enter amount to add to wallet">
+        </div>
+
+        <div class="form-group">
+            <label>🏦 Select Payment Method:</label>
+            <div id="payment-methods">
+                <div class="status info">Loading payment methods...</div>
+            </div>
+        </div>
+
+        <button id="pay-button" onclick="initiatePayment()" disabled>
+            🚀 Proceed to Payment
+        </button>
+
+        <div id="status"></div>
+
+        <div class="code-block">
+            <h3>📋 Payment Flow Log:</h3>
+            <pre id="api-log">Initializing payment system...</pre>
+        </div>
+    </div>
+
+    <script>
+        // Dynamic Configuration from Django
+        const API_BASE = '{{ request.scheme }}://{{ request.get_host }}/api';
+        const CSRF_TOKEN = '{{ csrf_token }}';
+        const USER_ID = {{ user.id }};
+        const ACCESS_TOKEN = '{{ access_token|default:"" }}';
+        
+        // Check if user is authenticated
+        if (!ACCESS_TOKEN) {
+            showStatus('❌ Authentication required. Please log in.', 'error');
+            logAPI('❌ No access token found. User needs to authenticate.');
+        }
+        
+        let selectedPaymentMethod = null;
+        let paymentMethods = [];
+
+        // Utility functions
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function logAPI(message) {
+            const logElement = document.getElementById('api-log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `\n[${timestamp}] ${message}`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function apiCall(url, options = {}) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN,
+                ...options.headers
+            };
+
+            // Add Authorization header if access token is available
+            if (ACCESS_TOKEN) {
+                headers['Authorization'] = `Bearer ${ACCESS_TOKEN}`;
+            }
+
+            return fetch(API_BASE + url, {
+                headers: headers,
+                credentials: 'include', // Include cookies for session auth
+                ...options
+            });
+        }
+
+        // Step 1: Load Payment Methods
+        async function loadPaymentMethods() {
+            try {
+                logAPI('🔄 Step 1: Loading payment methods...');
+                const response = await apiCall('/payments/methods');
+                const data = await response.json();
+                
+                if (data.success) {
+                    paymentMethods = data.data.payment_methods;
+                    renderPaymentMethods();
+                    logAPI('✅ Step 1: Payment methods loaded successfully');
+                } else {
+                    throw new Error('Failed to load payment methods');
+                }
+            } catch (error) {
+                showStatus('❌ Failed to load payment methods: ' + error.message, 'error');
+                logAPI('❌ Step 1 Failed: ' + error.message);
+            }
+        }
+
+        function renderPaymentMethods() {
+            const container = document.getElementById('payment-methods');
+            
+            if (paymentMethods.length === 0) {
+                container.innerHTML = '<div class="status error">No payment methods available</div>';
+                return;
+            }
+            
+            container.innerHTML = paymentMethods.map(method => {
+                const logoText = method.gateway.toUpperCase().substring(0, 3);
+                const isActive = method.is_active ? '' : ' (Inactive)';
+                
+                return `
+                    <div class="payment-method" onclick="selectPaymentMethod('${method.id}', '${method.gateway}', '${method.name}')" ${!method.is_active ? 'style="opacity: 0.5; cursor: not-allowed;"' : ''}>
+                        <div>
+                            <div style="font-size: 18px; font-weight: 600; color: #333;">
+                                ${method.name}${isActive}
+                            </div>
+                            <div style="color: #666; margin-top: 5px;">
+                                Gateway: ${method.gateway.toUpperCase()}
+                            </div>
+                        </div>
+                        <div class="payment-logo">
+                            ${logoText}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectPaymentMethod(id, gateway, name) {
+            // Check if method is active
+            const method = paymentMethods.find(m => m.id === id);
+            if (!method || !method.is_active) {
+                showStatus('❌ This payment method is currently unavailable', 'error');
+                return;
+            }
+            
+            selectedPaymentMethod = { id, gateway, name };
+            
+            // Update UI
+            document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
+            event.target.closest('.payment-method').classList.add('selected');
+            
+            // Enable pay button
+            document.getElementById('pay-button').disabled = false;
+            
+            showStatus(`✅ Selected ${name} (${gateway.toUpperCase()})`, 'success');
+            logAPI(`📌 Payment method selected: ${name} (${gateway.toUpperCase()})`);
+        }
+
+        // Step 2: Create Payment Intent and Get Gateway Data (Combined)
+        async function createPaymentIntentAndGetGatewayData() {
+            const amount = document.getElementById('amount').value;
+            
+            // Validate amount
+            if (!amount || parseFloat(amount) < 10) {
+                throw new Error('Minimum top-up amount is NPR 10');
+            }
+            
+            if (parseFloat(amount) > 50000) {
+                throw new Error('Maximum top-up amount is NPR 50,000');
+            }
+            
+            logAPI(`🔄 Creating payment intent for NPR ${amount}...`);
+            logAPI(`   User ID: ${USER_ID}`);
+            logAPI(`   Payment Method: ${selectedPaymentMethod.name}`);
+            
+            const response = await apiCall('/payments/wallet/topup-intent', {
+                method: 'POST',
+                body: JSON.stringify({
+                    amount: amount,
+                    payment_method_id: selectedPaymentMethod.id
+                })
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.data) {
+                logAPI('✅ Payment intent created with gateway data');
+                logAPI(`   Intent ID: ${data.data.intent_id}`);
+                logAPI(`   Gateway: ${data.data.gateway}`);
+                logAPI(`   Redirect URL: ${data.data.redirect_url}`);
+                logAPI(`   Form Fields: ${Object.keys(data.data.form_fields || {}).length} fields`);
+                
+                return data.data;
+            } else {
+                throw new Error(data.message || 'Failed to create payment intent');
+            }
+        }
+
+        // Step 3: Process Gateway Data and Redirect
+        function processGatewayDataAndRedirect(gatewayData) {
+            const { redirect_url, redirect_method, form_fields, gateway } = gatewayData;
+            
+            logAPI('🔄 Processing gateway data and redirecting...');
+            logAPI(`   Gateway: ${gateway ? gateway.toUpperCase() : 'UNKNOWN'}`);
+            logAPI(`   Method: ${redirect_method || 'POST'}`);
+            logAPI(`   URL: ${redirect_url}`);
+            logAPI(`   Form Fields: ${form_fields ? Object.keys(form_fields).length : 0} fields`);
+            
+            if (gateway === 'esewa' && form_fields) {
+                // eSewa requires POST form submission
+                createAndSubmitForm(redirect_url, redirect_method || 'POST', form_fields);
+            } else if (gateway === 'khalti') {
+                // Khalti uses GET redirect
+                window.location.href = redirect_url;
+            } else {
+                throw new Error(`Unsupported gateway: ${gateway}`);
+            }
+        }
+
+        // Create and submit form for eSewa
+        function createAndSubmitForm(url, method, fields) {
+            logAPI('🔄 Step 4: Creating and submitting payment form...');
+            
+            const form = document.createElement('form');
+            form.method = method;
+            form.action = url;
+            form.style.display = 'none';
+            
+            // Add all form fields as hidden inputs
+            Object.entries(fields).forEach(([key, value]) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            });
+            
+            // Add to DOM and submit
+            document.body.appendChild(form);
+            
+            showStatus('🚀 Redirecting to payment gateway...', 'info');
+            logAPI('✅ Step 4: Form submitted - redirecting to gateway');
+            
+            // Submit form (this will redirect to eSewa)
+            form.submit();
+        }
+
+        // Main payment flow (Simplified - Single API Call)
+        async function initiatePayment() {
+            try {
+                // Validate authentication
+                if (!ACCESS_TOKEN) {
+                    throw new Error('Please log in to continue with payment');
+                }
+                
+                // Validate selection
+                if (!selectedPaymentMethod) {
+                    throw new Error('Please select a payment method');
+                }
+                
+                const amount = document.getElementById('amount').value;
+                showStatus(`🔄 Processing NPR ${amount} payment via ${selectedPaymentMethod.name}...`, 'info');
+                
+                // Disable button to prevent double submission
+                document.getElementById('pay-button').disabled = true;
+                
+                logAPI(`🚀 Starting simplified payment flow for User ID: ${USER_ID}`);
+                
+                // Single Step: Create payment intent and get gateway data
+                const gatewayData = await createPaymentIntentAndGetGatewayData();
+                
+                // Process gateway data and redirect
+                processGatewayDataAndRedirect(gatewayData);
+                
+            } catch (error) {
+                showStatus('❌ Payment failed: ' + error.message, 'error');
+                logAPI('❌ Payment Failed: ' + error.message);
+                
+                // Re-enable button
+                document.getElementById('pay-button').disabled = false;
+            }
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            logAPI('🚀 ChargeGhar Payment System Initialized');
+            logAPI(`� Usaer: {{ user.username }} (ID: ${USER_ID})`);
+            logAPI(`🌐 API Base: ${API_BASE}`);
+            logAPI(`🔐 Authentication: ${ACCESS_TOKEN ? 'Active' : 'Required'}`);
+            
+            if (ACCESS_TOKEN) {
+                loadPaymentMethods();
+                logAPI('📋 Simplified payment flow:');
+                logAPI('   1. Load available payment methods');
+                logAPI('   2. Create payment intent with gateway data (single API call)');
+                logAPI('   3. Redirect to payment gateway');
+                logAPI('✨ Optimized: No separate form data endpoint needed!');
+            } else {
+                logAPI('❌ Please authenticate to access payment features');
+                showStatus('❌ Authentication required. Please log in to continue.', 'error');
+            }
+        };
+    </script>
+</body>
+</html>

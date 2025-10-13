@@ -27,7 +27,7 @@ your target should be:
 at last, use the manual caching finder script in each app, and you can run it using:
 
 ```bash
-python find_cache_manual.py --<app_name>
+python ./tools/find_cache_manual.py --<app_name>
 ```
 
 after running it, update the services to remove manual caching since we're using decorators.
