@@ -377,7 +377,190 @@ class GitManager:
         else:
             print(f"{Colors.RED}❌ Failed to switch branch{Colors.ENDC}")
             print(output)
+    """
+    Add these methods to your GitManager class.
+    Make sure they are indented with 4 spaces (one indentation level) 
+    to be inside the class.
 
+    Place them AFTER the switch_branch method and BEFORE the main() function.
+    """
+
+    def delete_branch(self, branch_input: str, force: bool = False):
+        """Delete a local branch"""
+        # Check if input is a number (list index)
+        if branch_input.strip().isdigit():
+            branches = self.get_all_branches()
+            index = int(branch_input.strip()) - 1
+            if 0 <= index < len(branches['local']):
+                branch_name = branches['local'][index]
+            else:
+                print(f"{Colors.RED}❌ Invalid branch number. You have {len(branches['local'])} local branches.{Colors.ENDC}")
+                return
+        else:
+            branch_name = branch_input.strip()
+            
+        if branch_name == self.current_branch:
+            print(f"{Colors.RED}❌ Cannot delete the current branch{Colors.ENDC}")
+            return
+        
+        flag = "-D" if force else "-d"
+        print(f"{Colors.YELLOW}🗑️  Deleting branch: {branch_name}...{Colors.ENDC}")
+        
+        output, status = self._run_command_with_status(f"git branch {flag} {branch_name}")
+        
+        if status == 0:
+            print(f"{Colors.GREEN}✅ Branch '{branch_name}' deleted successfully{Colors.ENDC}")
+        else:
+            print(f"{Colors.RED}❌ Failed to delete branch{Colors.ENDC}")
+            print(output)
+            if not force:
+                print(f"\n{Colors.YELLOW}Tip: Use force delete if branch has unmerged changes{Colors.ENDC}")
+
+    def delete_remote_branch(self, branch_input: str):
+        """Delete a remote branch"""
+        # Check if input is a number (list index)
+        if branch_input.strip().isdigit():
+            branches = self.get_all_branches()
+            index = int(branch_input.strip()) - 1
+            if 0 <= index < len(branches['remote']):
+                branch_name = branches['remote'][index]
+            else:
+                print(f"{Colors.RED}❌ Invalid branch number. You have {len(branches['remote'])} remote branches.{Colors.ENDC}")
+                return
+        else:
+            branch_name = branch_input.strip()
+        
+        # Remove 'origin/' prefix if present
+        branch_name = branch_name.replace('origin/', '')
+        
+        print(f"{Colors.YELLOW}⚠️  WARNING: This will delete the remote branch '{branch_name}'!{Colors.ENDC}")
+        confirm = input(f"Type 'DELETE' to confirm: ").strip()
+        
+        if confirm != 'DELETE':
+            print(f"{Colors.RED}❌ Deletion cancelled{Colors.ENDC}")
+            return
+        
+        output, status = self._run_command_with_status(f"git push origin --delete {branch_name}")
+        
+        if status == 0:
+            print(f"{Colors.GREEN}✅ Remote branch '{branch_name}' deleted successfully{Colors.ENDC}")
+        else:
+            print(f"{Colors.RED}❌ Failed to delete remote branch{Colors.ENDC}")
+            print(output)
+
+    def create_branch(self, branch_name: str, from_branch: str = None):
+        """Create a new branch"""
+        if from_branch:
+            command = f"git checkout -b {branch_name} {from_branch}"
+            print(f"{Colors.CYAN}🌿 Creating branch '{branch_name}' from '{from_branch}'...{Colors.ENDC}")
+        else:
+            command = f"git checkout -b {branch_name}"
+            print(f"{Colors.CYAN}🌿 Creating new branch '{branch_name}'...{Colors.ENDC}")
+        
+        output, status = self._run_command_with_status(command)
+        
+        if status == 0:
+            self.current_branch = branch_name
+            print(f"{Colors.GREEN}✅ Branch created and switched to '{branch_name}'{Colors.ENDC}")
+        else:
+            print(f"{Colors.RED}❌ Failed to create branch{Colors.ENDC}")
+            print(output)
+
+    def rename_branch(self, old_name: str, new_name: str):
+        """Rename a branch"""
+        if old_name == self.current_branch:
+            command = f"git branch -m {new_name}"
+            print(f"{Colors.CYAN}✏️  Renaming current branch to '{new_name}'...{Colors.ENDC}")
+        else:
+            command = f"git branch -m {old_name} {new_name}"
+            print(f"{Colors.CYAN}✏️  Renaming '{old_name}' to '{new_name}'...{Colors.ENDC}")
+        
+        output, status = self._run_command_with_status(command)
+        
+        if status == 0:
+            if old_name == self.current_branch:
+                self.current_branch = new_name
+            print(f"{Colors.GREEN}✅ Branch renamed successfully{Colors.ENDC}")
+        else:
+            print(f"{Colors.RED}❌ Failed to rename branch{Colors.ENDC}")
+            print(output)
+
+    def push_current_branch(self, set_upstream: bool = False):
+        """Push current branch to remote"""
+        if set_upstream:
+            command = f"git push -u origin {self.current_branch}"
+            print(f"{Colors.CYAN}📤 Pushing and setting upstream for '{self.current_branch}'...{Colors.ENDC}")
+        else:
+            command = f"git push origin {self.current_branch}"
+            print(f"{Colors.CYAN}📤 Pushing '{self.current_branch}' to remote...{Colors.ENDC}")
+        
+        output, status = self._run_command_with_status(command)
+        
+        if status == 0:
+            print(f"{Colors.GREEN}✅ Branch pushed successfully{Colors.ENDC}")
+        else:
+            print(f"{Colors.RED}❌ Push failed{Colors.ENDC}")
+            print(output)
+
+    def merge_branch(self, branch_name: str):
+        """Merge a branch into current branch"""
+        print(f"{Colors.CYAN}🔀 Merging '{branch_name}' into '{self.current_branch}'...{Colors.ENDC}")
+        
+        confirm = input(f"Proceed with merge? (y/n): ").lower().strip()
+        if confirm != 'y':
+            print(f"{Colors.RED}❌ Merge cancelled{Colors.ENDC}")
+            return
+        
+        output, status = self._run_command_with_status(f"git merge {branch_name}")
+        
+        if status == 0:
+            print(f"{Colors.GREEN}✅ Successfully merged '{branch_name}'{Colors.ENDC}")
+            print(output)
+        else:
+            print(f"{Colors.RED}❌ Merge failed with conflicts{Colors.ENDC}")
+            print(output)
+            self.show_conflict_help()
+
+    def fetch_all(self):
+        """Fetch all remote branches"""
+        print(f"{Colors.CYAN}📡 Fetching all remote branches...{Colors.ENDC}")
+        output, status = self._run_command_with_status("git fetch --all --prune")
+        
+        if status == 0:
+            print(f"{Colors.GREEN}✅ Fetch completed{Colors.ENDC}")
+        else:
+            print(f"{Colors.RED}❌ Fetch failed{Colors.ENDC}")
+        print(output)
+
+    def prune_branches(self):
+        """Remove tracking branches that no longer exist on remote"""
+        print(f"{Colors.YELLOW}🧹 Pruning deleted remote branches...{Colors.ENDC}")
+        output = self._run_command("git remote prune origin")
+        print(output)
+        print(f"{Colors.GREEN}✅ Pruning completed{Colors.ENDC}")
+
+    def show_stash_list(self):
+        """Show all stashed changes"""
+        self.print_header("STASH LIST")
+        output = self._run_command("git stash list")
+        if output.strip():
+            print(output)
+        else:
+            print(f"{Colors.YELLOW}No stashes found{Colors.ENDC}")
+
+    def apply_stash(self, stash_id: str = "0"):
+        """Apply a stashed change"""
+        print(f"{Colors.CYAN}📦 Applying stash...{Colors.ENDC}")
+        output, status = self._run_command_with_status(f"git stash apply stash@{{{stash_id}}}")
+        
+        if status == 0:
+            print(f"{Colors.GREEN}✅ Stash applied successfully{Colors.ENDC}")
+        else:
+            print(f"{Colors.RED}❌ Failed to apply stash{Colors.ENDC}")
+            print(output)
+
+
+# NOTE: After the GitManager class ends, add this main() function at the module level (no indentation):
 
 def main():
     """Main program loop"""
@@ -388,26 +571,42 @@ def main():
         print(f"{Colors.GREEN}Current Branch: {Colors.BOLD}{git.current_branch}{Colors.ENDC}")
         print(f"{Colors.CYAN}Repository: {git.repo_path}{Colors.ENDC}\n")
         
-        print("🎯 Main Actions:")
-        print("  1. List all branches")
-        print("  2. Pull from a branch (with diff review)")
-        print("  3. Switch branch")
-        print("  4. Compare branches")
-        print("  5. Show recent commits")
-        print("  6. Check git status")
-        print("  7. Refresh current branch info")
-        print("  0. Exit")
+        # Grid Menu Display
+        print(f"{Colors.BOLD}{'─'*70}{Colors.ENDC}")
+        print(f"{Colors.BOLD}{Colors.CYAN}🎯 BRANCH OPERATIONS{Colors.ENDC}")
+        print(f"{Colors.BOLD}{'─'*70}{Colors.ENDC}")
+        print(f"  {Colors.YELLOW}1.{Colors.ENDC} List Branches    {Colors.YELLOW}2.{Colors.ENDC} Create Branch    {Colors.YELLOW}3.{Colors.ENDC} Switch Branch")
+        print(f"  {Colors.YELLOW}4.{Colors.ENDC} Delete Local     {Colors.YELLOW}5.{Colors.ENDC} Delete Remote    {Colors.YELLOW}6.{Colors.ENDC} Rename Branch")
         
-        choice = input(f"\n{Colors.BOLD}Enter your choice: {Colors.ENDC}").strip()
+        print(f"\n{Colors.BOLD}{Colors.BLUE}📊 SYNC & COMPARE{Colors.ENDC}")
+        print(f"{Colors.BOLD}{'─'*70}{Colors.ENDC}")
+        print(f"  {Colors.YELLOW}7.{Colors.ENDC} Pull + Review    {Colors.YELLOW}8.{Colors.ENDC} Push Branch      {Colors.YELLOW}9.{Colors.ENDC} Fetch All")
+        print(f"  {Colors.YELLOW}10.{Colors.ENDC} Merge Branch    {Colors.YELLOW}11.{Colors.ENDC} Compare Branches")
+        
+        print(f"\n{Colors.BOLD}{Colors.GREEN}📜 HISTORY & INFO{Colors.ENDC}")
+        print(f"{Colors.BOLD}{'─'*70}{Colors.ENDC}")
+        print(f"  {Colors.YELLOW}12.{Colors.ENDC} Recent Commits  {Colors.YELLOW}13.{Colors.ENDC} Git Status")
+        
+        print(f"\n{Colors.BOLD}{Colors.GREEN}💾 STASH{Colors.ENDC}                 {Colors.BOLD}{Colors.CYAN}🔧 MAINTENANCE{Colors.ENDC}")
+        print(f"{Colors.BOLD}{'─'*70}{Colors.ENDC}")
+        print(f"  {Colors.YELLOW}14.{Colors.ENDC} Stash List      {Colors.YELLOW}15.{Colors.ENDC} Apply Stash      {Colors.YELLOW}16.{Colors.ENDC} Prune Branches")
+        print(f"  {Colors.YELLOW}17.{Colors.ENDC} Refresh Info")
+        
+        print(f"\n{Colors.BOLD}{'─'*70}{Colors.ENDC}")
+        print(f"  {Colors.RED}0.{Colors.ENDC} Exit")
+        print(f"{Colors.BOLD}{'─'*70}{Colors.ENDC}")
+        
+        choice = input(f"\n{Colors.BOLD}➤ Enter choice: {Colors.ENDC}").strip()
         
         if choice == '1':
             git.display_branches()
             input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
         
         elif choice == '2':
-            branch = input(f"{Colors.BOLD}Enter branch name to pull from: {Colors.ENDC}").strip()
-            if branch:
-                git.pull_branch(branch)
+            branch_name = input(f"{Colors.BOLD}Enter new branch name: {Colors.ENDC}").strip()
+            from_branch = input(f"Create from branch (leave empty for current): ").strip()
+            if branch_name:
+                git.create_branch(branch_name, from_branch if from_branch else None)
             input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
         
         elif choice == '3':
@@ -419,25 +618,84 @@ def main():
         
         elif choice == '4':
             git.display_branches()
+            branch = input(f"\n{Colors.BOLD}Enter branch name/number to delete: {Colors.ENDC}").strip()
+            if branch:
+                force = input("Force delete (unmerged changes)? (y/n): ").lower().strip() == 'y'
+                git.delete_branch(branch, force)
+            input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
+        
+        elif choice == '5':
+            git.display_branches()
+            branch = input(f"\n{Colors.BOLD}Enter remote branch name/number to delete: {Colors.ENDC}").strip()
+            if branch:
+                git.delete_remote_branch(branch)
+            input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
+        
+        elif choice == '6':
+            git.display_branches()
+            old_name = input(f"\n{Colors.BOLD}Branch to rename (leave empty for current): {Colors.ENDC}").strip()
+            new_name = input(f"{Colors.BOLD}New branch name: {Colors.ENDC}").strip()
+            if new_name:
+                git.rename_branch(old_name if old_name else git.current_branch, new_name)
+            input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
+        
+        elif choice == '7':
+            branch = input(f"{Colors.BOLD}Enter branch name to pull from: {Colors.ENDC}").strip()
+            if branch:
+                git.pull_branch(branch)
+            input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
+        
+        elif choice == '8':
+            upstream = input("Set upstream tracking? (y/n): ").lower().strip() == 'y'
+            git.push_current_branch(upstream)
+            input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
+        
+        elif choice == '9':
+            git.fetch_all()
+            input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
+        
+        elif choice == '10':
+            git.display_branches()
+            branch = input(f"\n{Colors.BOLD}Branch to merge into current: {Colors.ENDC}").strip()
+            if branch:
+                git.merge_branch(branch)
+            input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
+        
+        elif choice == '11':
+            git.display_branches()
             branch1 = input(f"\n{Colors.BOLD}Enter first branch: {Colors.ENDC}").strip()
             branch2 = input(f"{Colors.BOLD}Enter second branch: {Colors.ENDC}").strip()
             if branch1 and branch2:
                 git.compare_branches(branch1, branch2)
             input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
         
-        elif choice == '5':
+        elif choice == '12':
             count = input(f"Number of commits to show (default 10): ").strip()
             count = int(count) if count.isdigit() else 10
             git.show_recent_commits(count)
             input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
         
-        elif choice == '6':
+        elif choice == '13':
             git.print_header("GIT STATUS")
             output = git._run_command("git status")
             print(output)
             input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
         
-        elif choice == '7':
+        elif choice == '14':
+            git.show_stash_list()
+            input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
+        
+        elif choice == '15':
+            git.show_stash_list()
+            stash_id = input(f"\nStash number to apply (default 0): ").strip()
+            git.apply_stash(stash_id if stash_id else "0")
+            input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
+        
+        elif choice == '16':
+            git.prune_branches()
+            input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
+        
+        elif choice == '17':
             git._verify_git_repo()
             print(f"{Colors.GREEN}✅ Branch info refreshed{Colors.ENDC}")
             input(f"\n{Colors.CYAN}Press Enter to continue...{Colors.ENDC}")
