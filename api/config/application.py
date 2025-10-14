@@ -132,6 +132,12 @@ SPARROW_SMS_TOKEN = getenv("SPARROW_SMS_TOKEN")
 SPARROW_SMS_FROM = getenv("SPARROW_SMS_FROM", "Demo")
 SPARROW_SMS_BASE_URL = getenv("SPARROW_SMS_BASE_URL", "https://sms.sparrowsms.com/v2/sms/")
 
+# Firebase Configuration
+FIREBASE_CREDENTIALS_PATH = getenv("FIREBASE_CREDENTIALS_PATH", "firebase-credentials.json")
+FIREBASE_CREDENTIALS_BASE64 = getenv("FIREBASE_CREDENTIALS_BASE64")
+FCM_SERVER_KEY = getenv("FCM_SERVER_KEY")
+FCM_SENDER_ID = getenv("FCM_SENDER_ID")
+
 # Email Configuration
 EMAIL_BACKEND = getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = getenv('EMAIL_HOST', 'smtp.hostinger.com')
