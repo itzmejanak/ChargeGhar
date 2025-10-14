@@ -219,6 +219,11 @@ app.conf.worker_prefetch_multiplier = 1
 app.conf.task_acks_late = True
 app.conf.worker_disable_rate_limits = False
 
+# Connection settings for better reliability
+app.conf.broker_connection_retry_on_startup = True
+app.conf.broker_connection_retry = True
+app.conf.broker_connection_max_retries = 10
+
 # Error handling
 app.conf.task_reject_on_worker_lost = True
 app.conf.task_ignore_result = False
