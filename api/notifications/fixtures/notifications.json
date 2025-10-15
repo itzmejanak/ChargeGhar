@@ -313,9 +313,9 @@
     "fields": {
       "name": "Points Earned",
       "slug": "points_earned",
-      "notification_type": "achievement",
-      "title_template": "Points Earned!",
-      "message_template": "You earned {{points}} points! Total points: {{total_points}}. Redeem rewards in the app.",
+      "notification_type": "points",
+      "title_template": "🎉 {{points}} Points Earned!",
+      "message_template": "{{reason}} - You earned {{points}} points! Your total balance is now {{total_points}} points.",
       "is_active": true,
       "created_at": "2025-09-13T10:00:00Z",
       "updated_at": "2025-09-13T10:00:00Z"
@@ -569,6 +569,20 @@
       "send_sms": false,
       "send_email": true,
       "is_critical": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationrule",
+    "pk": 8,
+    "fields": {
+      "notification_type": "points",
+      "send_in_app": true,
+      "send_push": true,
+      "send_sms": false,
+      "send_email": false,
+      "is_critical": false,
       "created_at": "2025-09-13T10:00:00Z",
       "updated_at": "2025-09-13T10:00:00Z"
     }

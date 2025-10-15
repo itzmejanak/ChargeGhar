@@ -1,460 +1,325 @@
+"""
+🎯 Points Tasks - Clean Celery Tasks for Points Operations
+===========================================================
+
+Simplified, universal tasks for points operations.
+Following the same clean architecture as notifications app.
+
+Usage:
+    from api.points.tasks import award_points_task
+    
+    # Async
+    award_points_task.delay(user_id, points, source, description)
+"""
+
 from __future__ import annotations
 
+import logging
 from celery import shared_task
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from decimal import Decimal
 from typing import Dict, Any
 
-from api.common.tasks.base import BaseTask
-from api.points.models import PointsTransaction, Referral
-from api.users.models import UserPoints
-
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-@shared_task(base=BaseTask, bind=True)
-def award_points_task(self, user_id: str, points: int, source: str, description: str, **kwargs):
-    """Award points to user asynchronously"""
+@shared_task(
+    name='points.award_points',
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60
+)
+def award_points_task(self, user_id: str, points: int, source: str, 
+                     description: str, metadata: Dict[str, Any] = None):
+    """
+    Award points to user asynchronously
+    
+    Args:
+        user_id: User ID (UUID string)
+        points: Points to award
+        source: Source of points (e.g., 'RENTAL', 'TOPUP', 'REFERRAL')
+        description: Description of the award
+        metadata: Additional metadata (optional)
+    
+    Example:
+        award_points_task.delay(
+            user_id=str(user.id),
+            points=50,
+            source='RENTAL',
+            description='Completed rental successfully',
+            metadata={'rental_id': rental_id}
+        )
+    """
     try:
-        user = User.objects.get(id=user_id)
+        from api.points.services import award_points
         
-        from api.points.services import PointsService
-        service = PointsService()
+        # Get user
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            logger.error(f"User not found: {user_id}")
+            return {'status': 'failed', 'error': 'User not found'}
         
-        # Convert kwargs for related objects
-        related_rental = None
-        related_referral = None
-        
-        if kwargs.get('rental_id'):
-            from api.rentals.models import Rental
-            try:
-                related_rental = Rental.objects.get(id=kwargs['rental_id'])
-            except Rental.DoesNotExist:
-                pass
-        
-        if kwargs.get('referral_id'):
-            try:
-                related_referral = Referral.objects.get(id=kwargs['referral_id'])
-            except Referral.DoesNotExist:
-                pass
-        
-        transaction = service.award_points(
+        # Award points using universal API
+        transaction = award_points(
             user=user,
             points=points,
             source=source,
             description=description,
-            metadata=kwargs.get('metadata', {}),
-            related_rental=related_rental,
-            related_referral=related_referral
+            async_send=False,  # We're already in async context
+            metadata=metadata or {}
         )
         
-        self.logger.info(f"Points awarded: {user.username} +{points} ({source})")
-        
-        # Send notification to user
-        from api.notifications.tasks import send_points_notification
-        send_points_notification.delay(
-            user_id=user_id,
-            points=points,
-            source=source,
-            description=description
-        )
-        
+        logger.info(f"Points awarded async: {user.username} +{points} ({source})")
         return {
+            'status': 'success',
             'user_id': user_id,
             'points_awarded': points,
             'new_balance': transaction.balance_after,
             'transaction_id': str(transaction.id)
         }
         
-    except User.DoesNotExist:
-        self.logger.error(f"User not found: {user_id}")
-        raise
     except Exception as e:
-        self.logger.error(f"Failed to award points: {str(e)}")
-        raise
+        logger.error(f"Failed to award points async: {str(e)}", exc_info=True)
+        
+        # Retry task on failure
+        try:
+            raise self.retry(exc=e)
+        except self.MaxRetriesExceededError:
+            logger.error(f"Max retries exceeded for award_points_task")
+            return {'status': 'failed', 'error': str(e)}
 
 
-@shared_task(base=BaseTask, bind=True)
-def award_topup_points_task(self, user_id: str, topup_amount: float):
-    """Award points for wallet top-up (10 points per NPR 100)"""
+@shared_task(
+    name='points.deduct_points',
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60
+)
+def deduct_points_task(self, user_id: str, points: int, source: str, 
+                      description: str, metadata: Dict[str, Any] = None):
+    """
+    Deduct points from user asynchronously
+    
+    Args:
+        user_id: User ID (UUID string)
+        points: Points to deduct
+        source: Source of deduction (e.g., 'REDEMPTION', 'PENALTY')
+        description: Description of the deduction
+        metadata: Additional metadata (optional)
+    
+    Example:
+        deduct_points_task.delay(
+            user_id=str(user.id),
+            points=100,
+            source='REDEMPTION',
+            description='Redeemed discount coupon',
+            metadata={'coupon_code': 'SAVE100'}
+        )
+    """
     try:
-        user = User.objects.get(id=user_id)
+        from api.points.services import deduct_points
         
-        # Calculate points (10 points per NPR 100)
-        points = int((Decimal(str(topup_amount)) / Decimal('100')) * 10)
+        # Get user
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            logger.error(f"User not found: {user_id}")
+            return {'status': 'failed', 'error': 'User not found'}
         
-        if points > 0:
-            from api.points.services import PointsService
-            service = PointsService()
-            
-            service.award_points(
-                user=user,
-                points=points,
-                source='TOPUP',
-                description=f'Top-up reward for NPR {topup_amount}',
-                metadata={'topup_amount': topup_amount}
-            )
-            
-            self.logger.info(f"Top-up points awarded: {user.username} +{points} for NPR {topup_amount}")
-            
-            return {
-                'user_id': user_id,
-                'topup_amount': topup_amount,
-                'points_awarded': points
-            }
-        
-        return {'user_id': user_id, 'points_awarded': 0, 'reason': 'Amount too low'}
-        
-    except User.DoesNotExist:
-        self.logger.error(f"User not found: {user_id}")
-        raise
-    except Exception as e:
-        self.logger.error(f"Failed to award top-up points: {str(e)}")
-        raise
-
-
-@shared_task(base=BaseTask, bind=True)
-def award_rental_completion_points(self, user_id: str, rental_id: str, is_timely_return: bool = False):
-    """Award points for rental completion"""
-    try:
-        user = User.objects.get(id=user_id)
-        
-        from api.points.services import PointsService
-        service = PointsService()
-        
-        # Base points for rental completion
-        base_points = 5
-        bonus_points = 0
-        
-        # Bonus points for timely return
-        if is_timely_return:
-            bonus_points = 5
-        
-        total_points = base_points + bonus_points
-        
-        # Award base points
-        service.award_points(
+        # Deduct points using universal API
+        transaction = deduct_points(
             user=user,
-            points=base_points,
-            source='RENTAL_COMPLETE',
-            description='Rental completion reward',
-            metadata={'rental_id': rental_id}
+            points=points,
+            source=source,
+            description=description,
+            async_send=False,  # We're already in async context
+            **(metadata or {})
         )
         
-        # Award bonus points if applicable
-        if bonus_points > 0:
-            service.award_points(
-                user=user,
-                points=bonus_points,
-                source='TIMELY_RETURN',
-                description='Timely return bonus',
-                metadata={'rental_id': rental_id}
-            )
-        
-        # Check if this is user's first rental for referral completion
-        from api.rentals.models import Rental
-        rental = Rental.objects.get(id=rental_id)
-        
-        user_rental_count = Rental.objects.filter(
-            user=user,
-            status='COMPLETED'
-        ).count()
-        
-        if user_rental_count == 1:  # First completed rental
-            # Check for pending referral
-            try:
-                referral = Referral.objects.get(
-                    invitee=user,
-                    status='PENDING'
-                )
-                # Complete the referral
-                from api.points.services import ReferralService
-                referral_service = ReferralService()
-                referral_service.complete_referral(str(referral.id), rental)
-                
-            except Referral.DoesNotExist:
-                pass  # No referral to complete
-        
-        self.logger.info(f"Rental completion points awarded: {user.username} +{total_points}")
-        
+        logger.info(f"Points deducted async: {user.username} -{points} ({source})")
         return {
+            'status': 'success',
             'user_id': user_id,
-            'rental_id': rental_id,
-            'base_points': base_points,
-            'bonus_points': bonus_points,
-            'total_points': total_points,
-            'is_timely_return': is_timely_return
+            'points_deducted': points,
+            'new_balance': transaction.balance_after,
+            'transaction_id': str(transaction.id)
         }
         
-    except User.DoesNotExist:
-        self.logger.error(f"User not found: {user_id}")
-        raise
     except Exception as e:
-        self.logger.error(f"Failed to award rental completion points: {str(e)}")
-        raise
+        logger.error(f"Failed to deduct points async: {str(e)}", exc_info=True)
+        
+        # Retry task on failure
+        try:
+            raise self.retry(exc=e)
+        except self.MaxRetriesExceededError:
+            logger.error(f"Max retries exceeded for deduct_points_task")
+            return {'status': 'failed', 'error': str(e)}
 
 
-@shared_task(base=BaseTask, bind=True)
-def process_referral_task(self, invitee_id: str, inviter_id: str):
-    """Process referral relationship"""
+@shared_task(
+    name='points.complete_referral',
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60
+)
+def complete_referral_task(self, referral_id: str):
+    """
+    Complete referral after first rental
+    
+    Args:
+        referral_id: Referral ID (UUID string)
+    
+    Example:
+        complete_referral_task.delay(referral_id=str(referral.id))
+    """
     try:
-        invitee = User.objects.get(id=invitee_id)
-        inviter = User.objects.get(id=inviter_id)
+        from api.points.services.referral_service import ReferralService
         
-        from api.points.services import ReferralService
         service = ReferralService()
+        result = service.complete_referral(referral_id)
         
-        # Create referral relationship
-        referral = service.create_referral(
-            inviter=inviter,
-            invitee=invitee,
-            referral_code=inviter.referral_code
-        )
-        
-        self.logger.info(f"Referral processed: {inviter.username} -> {invitee.username}")
-        
+        logger.info(f"Referral completed async: {referral_id}")
         return {
-            'referral_id': str(referral.id),
-            'inviter_id': inviter_id,
-            'invitee_id': invitee_id,
-            'status': referral.status
+            'status': 'success',
+            'referral_id': referral_id,
+            **result
         }
         
-    except User.DoesNotExist as e:
-        self.logger.error(f"User not found: {str(e)}")
-        raise
     except Exception as e:
-        self.logger.error(f"Failed to process referral: {str(e)}")
-        raise
-
-
-@shared_task(base=BaseTask, bind=True)
-def expire_old_referrals(self):
-    """Expire old pending referrals"""
-    try:
-        from api.points.services import ReferralService
-        service = ReferralService()
+        logger.error(f"Failed to complete referral async: {str(e)}", exc_info=True)
         
+        # Retry task on failure
+        try:
+            raise self.retry(exc=e)
+        except self.MaxRetriesExceededError:
+            logger.error(f"Max retries exceeded for complete_referral_task")
+            return {'status': 'failed', 'error': str(e)}
+
+
+@shared_task(
+    name='points.expire_old_referrals',
+    bind=True
+)
+def expire_old_referrals_task(self):
+    """
+    Expire old pending referrals (scheduled task)
+    
+    Example:
+        # In celery beat schedule:
+        'expire-old-referrals': {
+            'task': 'points.expire_old_referrals',
+            'schedule': crontab(hour=0, minute=0),  # Daily at midnight
+        }
+    """
+    try:
+        from api.points.services.referral_service import ReferralService
+        
+        service = ReferralService()
         expired_count = service.expire_old_referrals()
         
-        self.logger.info(f"Expired {expired_count} old referrals")
-        return {'expired_count': expired_count}
+        logger.info(f"Expired {expired_count} old referrals")
+        return {
+            'status': 'success',
+            'expired_count': expired_count
+        }
         
     except Exception as e:
-        self.logger.error(f"Failed to expire old referrals: {str(e)}")
-        raise
+        logger.error(f"Failed to expire old referrals: {str(e)}", exc_info=True)
+        return {'status': 'failed', 'error': str(e)}
 
 
-@shared_task(base=BaseTask, bind=True)
-def calculate_monthly_points_leaderboard(self):
-    """Calculate and cache monthly points leaderboard"""
+@shared_task(
+    name='points.calculate_leaderboard',
+    bind=True
+)
+def calculate_leaderboard_task(self, limit: int = 100):
+    """
+    Calculate and cache points leaderboard (scheduled task)
+    
+    Args:
+        limit: Number of top users to include
+    
+    Example:
+        # In celery beat schedule:
+        'calculate-leaderboard': {
+            'task': 'points.calculate_leaderboard',
+            'schedule': crontab(minute='*/30'),  # Every 30 minutes
+        }
+    """
     try:
-        from api.points.services import PointsLeaderboardService
-        service = PointsLeaderboardService()
+        from api.points.services.points_leaderboard_service import PointsLeaderboardService
+        from django.core.cache import cache
         
-        # Get top 100 users for leaderboard
-        leaderboard = service.get_points_leaderboard(limit=100)
+        service = PointsLeaderboardService()
+        leaderboard = service.get_points_leaderboard(limit=limit)
         
         # Cache the leaderboard
-        from django.core.cache import cache
         current_month = timezone.now().strftime('%Y-%m')
         cache_key = f"points_leaderboard:{current_month}"
         cache.set(cache_key, leaderboard, timeout=3600)  # 1 hour
         
-        self.logger.info(f"Monthly points leaderboard calculated with {len(leaderboard)} users")
-        
+        logger.info(f"Leaderboard calculated with {len(leaderboard)} users")
         return {
+            'status': 'success',
             'leaderboard_size': len(leaderboard),
-            'cache_key': cache_key,
-            'month': current_month
+            'cache_key': cache_key
         }
         
     except Exception as e:
-        self.logger.error(f"Failed to calculate monthly leaderboard: {str(e)}")
-        raise
+        logger.error(f"Failed to calculate leaderboard: {str(e)}", exc_info=True)
+        return {'status': 'failed', 'error': str(e)}
 
 
-@shared_task(base=BaseTask, bind=True)
-def cleanup_old_points_transactions(self):
-    """Clean up old points transactions (older than 2 years)"""
+@shared_task(
+    name='points.cleanup_old_transactions',
+    bind=True
+)
+def cleanup_old_transactions_task(self, days: int = 730):
+    """
+    Clean up old points transactions (scheduled task)
+    
+    Args:
+        days: Delete transactions older than this many days (default: 730 = 2 years)
+    
+    Example:
+        # In celery beat schedule:
+        'cleanup-old-transactions': {
+            'task': 'points.cleanup_old_transactions',
+            'schedule': crontab(day_of_month=1, hour=2),  # Monthly at 2 AM
+        }
+    """
     try:
-        cutoff_date = timezone.now() - timezone.timedelta(days=730)  # 2 years
+        from api.points.models import PointsTransaction
         
-        # Keep transactions that are related to referrals or have special metadata
-        old_transactions = PointsTransaction.objects.filter(
+        cutoff_date = timezone.now() - timezone.timedelta(days=days)
+        
+        # Only delete non-critical transactions
+        deleted_count, _ = PointsTransaction.objects.filter(
             created_at__lt=cutoff_date,
             related_referral__isnull=True,
-            source__in=['TOPUP', 'RENTAL_COMPLETE', 'TIMELY_RETURN']
-        )
+            source__in=['TOPUP', 'RENTAL', 'TIMELY_RETURN']
+        ).delete()
         
-        deleted_count = old_transactions.delete()[0]
-        
-        self.logger.info(f"Cleaned up {deleted_count} old points transactions")
-        return {'deleted_count': deleted_count}
-        
-    except Exception as e:
-        self.logger.error(f"Failed to cleanup old points transactions: {str(e)}")
-        raise
-
-
-@shared_task(base=BaseTask, bind=True)
-def generate_points_analytics_report(self, date_range: tuple = None):
-    """Generate comprehensive points analytics report"""
-    try:
-        if date_range:
-            from datetime import datetime
-            start_date = datetime.fromisoformat(date_range[0])
-            end_date = datetime.fromisoformat(date_range[1])
-        else:
-            # Default to last 30 days
-            end_date = timezone.now()
-            start_date = end_date - timezone.timedelta(days=30)
-        
-        # Points transactions in date range
-        transactions = PointsTransaction.objects.filter(
-            created_at__range=(start_date, end_date)
-        )
-        
-        # Calculate analytics
-        analytics = {
-            'period': {
-                'start_date': start_date.isoformat(),
-                'end_date': end_date.isoformat()
-            },
-            'total_transactions': transactions.count(),
-            'points_earned': transactions.filter(transaction_type='EARNED').aggregate(
-                total=sum(t.points for t in transactions.filter(transaction_type='EARNED'))
-            )['total'] or 0,
-            'points_spent': transactions.filter(transaction_type='SPENT').aggregate(
-                total=sum(t.points for t in transactions.filter(transaction_type='SPENT'))
-            )['total'] or 0,
-            'active_users': transactions.values('user').distinct().count(),
-            'source_breakdown': {},
-            'daily_breakdown': []
-        }
-        
-        # Source breakdown
-        for source, _ in PointsTransaction.SOURCE_CHOICES:
-            source_transactions = transactions.filter(source=source)
-            analytics['source_breakdown'][source] = {
-                'count': source_transactions.count(),
-                'total_points': sum(t.points for t in source_transactions)
-            }
-        
-        # Referral analytics
-        referrals = Referral.objects.filter(
-            created_at__range=(start_date, end_date)
-        )
-        
-        from api.points.services import ReferralService
-        referral_service = ReferralService()
-        referral_analytics = referral_service.get_referral_analytics((start_date, end_date))
-        
-        analytics['referral_analytics'] = referral_analytics
-        
-        # Cache analytics
-        from django.core.cache import cache
-        cache_key = f"points_analytics:{start_date.date()}:{end_date.date()}"
-        cache.set(cache_key, analytics, timeout=3600)  # 1 hour
-        
-        self.logger.info(f"Points analytics generated for {start_date.date()} to {end_date.date()}")
-        return analytics
-        
-    except Exception as e:
-        self.logger.error(f"Failed to generate points analytics: {str(e)}")
-        raise
-
-
-@shared_task(base=BaseTask, bind=True)
-def sync_user_points_balance(self):
-    """Sync and verify user points balances"""
-    try:
-        user_points = UserPoints.objects.all()
-        
-        discrepancies = []
-        
-        for points in user_points:
-            # Calculate balance from transactions
-            transactions = PointsTransaction.objects.filter(user=points.user)
-            
-            earned = sum(
-                t.points for t in transactions.filter(transaction_type='EARNED')
-            )
-            spent = sum(
-                t.points for t in transactions.filter(transaction_type='SPENT')
-            )
-            
-            calculated_current = earned - spent
-            calculated_total = earned
-            
-            # Check for discrepancies
-            if (calculated_current != points.current_points or 
-                calculated_total != points.total_points):
-                
-                discrepancies.append({
-                    'user_id': str(points.user.id),
-                    'username': points.user.username,
-                    'stored_current': points.current_points,
-                    'calculated_current': calculated_current,
-                    'stored_total': points.total_points,
-                    'calculated_total': calculated_total
-                })
-                
-                # Auto-fix the discrepancy
-                points.current_points = calculated_current
-                points.total_points = calculated_total
-                points.save(update_fields=['current_points', 'total_points'])
-        
-        if discrepancies:
-            # Send alert to admin
-            from api.notifications.tasks import send_points_discrepancy_alert
-            send_points_discrepancy_alert.delay(discrepancies)
-        
-        self.logger.info(f"Points balance sync completed. {len(discrepancies)} discrepancies found and fixed")
-        
+        logger.info(f"Cleaned up {deleted_count} old points transactions")
         return {
-            'total_users': user_points.count(),
-            'discrepancies_count': len(discrepancies),
-            'discrepancies': discrepancies
+            'status': 'success',
+            'deleted_count': deleted_count,
+            'cutoff_date': cutoff_date.isoformat()
         }
         
     except Exception as e:
-        self.logger.error(f"Failed to sync user points balance: {str(e)}")
-        raise
+        logger.error(f"Failed to cleanup old transactions: {str(e)}", exc_info=True)
+        return {'status': 'failed', 'error': str(e)}
 
 
-@shared_task(base=BaseTask, bind=True)
-def send_points_milestone_notifications(self):
-    """Send notifications for points milestones"""
-    try:
-        # Define milestones
-        milestones = [100, 500, 1000, 2500, 5000, 10000]
-        
-        notifications_sent = 0
-        
-        for milestone in milestones:
-            # Find users who recently crossed this milestone
-            recent_transactions = PointsTransaction.objects.filter(
-                transaction_type='EARNED',
-                created_at__gte=timezone.now() - timezone.timedelta(hours=24),
-                balance_after__gte=milestone,
-                balance_before__lt=milestone
-            )
-            
-            for transaction in recent_transactions:
-                # Send milestone notification
-                from api.notifications.tasks import send_points_milestone_notification
-                send_points_milestone_notification.delay(
-                    user_id=str(transaction.user.id),
-                    milestone=milestone
-                )
-                notifications_sent += 1
-        
-        self.logger.info(f"Sent {notifications_sent} points milestone notifications")
-        
-        return {'notifications_sent': notifications_sent}
-        
-    except Exception as e:
-        self.logger.error(f"Failed to send points milestone notifications: {str(e)}")
-        raise
+# Export all tasks
+__all__ = [
+    'award_points_task',
+    'deduct_points_task',
+    'complete_referral_task',
+    'expire_old_referrals_task',
+    'calculate_leaderboard_task',
+    'cleanup_old_transactions_task',
+]

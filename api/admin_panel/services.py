@@ -101,12 +101,14 @@ class AdminUserService(CRUDService):
             
             # Send notification to user if status changed to banned/inactive
             if status in ['BANNED', 'INACTIVE']:
-                from api.notifications.services import NotificationService
-                notification_service = NotificationService()
-                
-                # Send account status notification using clean API
-                from api.notifications.services import notify_account_status
-                notify_account_status(user, status, reason)
+                from api.notifications.services import notify
+                notify(
+                    user,
+                    'account_status_changed',
+                    async_send=True,
+                    status=status,
+                    reason=reason
+                )
             
             self.log_info(f"User status updated: {user.username} -> {status}")
             return user
@@ -156,12 +158,14 @@ class AdminUserService(CRUDService):
             )
             
             # Send notification to user
-            from api.notifications.services import NotificationService
-            notification_service = NotificationService()
-            
-            # Send balance added notification using clean API
-            from api.notifications.services import notify_wallet_recharged
-            notify_wallet_recharged(user, amount, new_balance)
+            from api.notifications.services import notify
+            notify(
+                user,
+                'wallet_recharged',
+                async_send=True,
+                amount=amount,
+                new_balance=new_balance
+            )
             
             self.log_info(f"Balance added to user: {user.username} +NPR {amount}")
             
@@ -566,16 +570,15 @@ class AdminNotificationService(BaseService):
             users = self._get_target_users(target_audience)
             
             # Send bulk notification
-            from api.notifications.services import BulkNotificationService
-            bulk_service = BulkNotificationService()
+            from api.notifications.services import notify_bulk
             
-            result = bulk_service.send_bulk_notification(
+            result = notify_bulk(
+                users,
+                'broadcast_message',
+                async_send=True,
                 title=title,
                 message=message,
-                notification_type='system',
-                user_ids=[str(user.id) for user in users],
-                send_push=send_push,
-                send_in_app=True
+                send_push=send_push
             )
             
             # Log admin action

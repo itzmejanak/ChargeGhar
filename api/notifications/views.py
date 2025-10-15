@@ -13,7 +13,7 @@ from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
 from api.common.decorators import cached_response, log_api_call
 from api.notifications import serializers
-from api.notifications.services import NotificationService
+from api.notifications.services.notification import NotificationService
 
 if TYPE_CHECKING:
     from rest_framework.request import Request

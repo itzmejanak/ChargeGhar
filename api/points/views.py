@@ -12,7 +12,10 @@ from api.common.mixins import BaseAPIView
 from api.common.decorators import cached_response, log_api_call
 from api.common.serializers import BaseResponseSerializer
 from api.points import serializers
-from api.points.services import PointsService, ReferralService, PointsLeaderboardService
+from api.points.services import award_points, deduct_points
+from api.points.services.points_service import PointsService
+from api.points.services.referral_service import ReferralService
+from api.points.services.points_leaderboard_service import PointsLeaderboardService
 from api.points.models import PointsTransaction, Referral
 
 if TYPE_CHECKING:

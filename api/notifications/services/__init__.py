@@ -2,26 +2,14 @@
 from .email import EmailService
 from .fcm import FCMService
 from .sms import SMSService
-from .bulk import BulkNotificationService
 from .analytics import NotificationAnalyticsService
 
-# Import from the NEW clean notify module
+# Import the UNIVERSAL notification methods
 from .notify import (
     NotifyService,
-    # Global notification helpers - ULTRA CLEAN
-    notify,
-    notify_otp,
-    notify_payment,
-    notify_profile_reminder,
-    notify_kyc_status,
-    notify_account_status,
-    notify_fines_dues,
-    notify_coupon_applied,
-    notify_rental_started,
-    notify_rental_ending,
-    notify_rental_completed,
-    notify_points_earned,
-    notify_wallet_recharged,
+    notify,        # Universal sync/async notification
+    notify_bulk,   # Universal bulk notification
+    send_otp,      # Universal OTP sender
 )
 
 # Import legacy service for backward compatibility
@@ -33,24 +21,13 @@ __all__ = [
     "EmailService",
     "FCMService",
     "SMSService",
-    "BulkNotificationService",
     "NotificationAnalyticsService",
     
     # Backward compatibility
     "NotificationService", 
     
-    # Global helpers - ULTRA CLEAN
-    "notify",
-    "notify_otp",
-    "notify_payment", 
-    "notify_profile_reminder",
-    "notify_kyc_status",
-    "notify_account_status",
-    "notify_fines_dues",
-    "notify_coupon_applied",
-    "notify_rental_started",
-    "notify_rental_ending",
-    "notify_rental_completed",
-    "notify_points_earned",
-    "notify_wallet_recharged",
+    # UNIVERSAL METHODS - Just 3 methods for everything!
+    "notify",       # notify(user, 'template', async_send=False, **context)
+    "notify_bulk",  # notify_bulk(users, 'template', async_send=True, **context)
+    "send_otp",     # send_otp(identifier, otp, purpose, async_send=True)
 ]

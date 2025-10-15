@@ -18,9 +18,7 @@ class AppConfig(BaseModel):
 
     def __str__(self):
         return self.key
-
-
-
+        
 
 class AppVersion(BaseModel):
     """

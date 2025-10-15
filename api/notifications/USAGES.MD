@@ -1,431 +1,297 @@
-# 🚀 ChargeGhar Notification System - Integration Guide
+# 🚀 Notification System - Quick Reference
 
-## 📋 Table of Contents
-- [Quick Start](#quick-start)
-- [Ultra-Clean One-Liner API](#ultra-clean-one-liner-api)
-- [Integration Examples by App](#integration-examples-by-app)
-- [Template System](#template-system)
-- [Channel Rules](#channel-rules)
-- [Migration from Old API](#migration-from-old-api)
-- [Best Practices](#best-practices)
+## 💡 The Power of Simplicity: Just 2 Methods!
 
-## 🎯 Quick Start
+Instead of remembering dozens of methods, you only need **2 universal methods** that work for ALL scenarios:
 
-### **1. Import the Clean API**
+1. **`notify()`** - Send to one user (sync or async)
+2. **`notify_bulk()`** - Send to multiple users (sync or async)
+
+---
+
+## 📦 Import Statement
+
 ```python
-# Ultra-clean one-liners (recommended)
-from api.notifications.services import (
-    notify_otp, notify_payment, notify_profile_reminder,
-    notify_kyc_status, notify_account_status, notify_fines_dues,
-    notify_coupon_applied, notify_rental_started, notify_points_earned
-)
+from api.notifications.services import notify, notify_bulk
+```
 
-# Generic notify function
+That's it! Just import these 2 methods and you're ready to send ANY notification.
+
+---
+
+## 🎯 Method 1: `notify()` - Universal Single Notification
+
+### Signature
+```python
+notify(user, template_slug: str, async_send: bool = False, **context)
+```
+
+### Parameters
+- **`user`**: User object (or user_id string for async)
+- **`template_slug`**: Template name (e.g., 'rental_started', 'payment_success')
+- **`async_send`**: `False` = immediate (sync), `True` = background (async via Celery)
+- **`**context`**: Template variables as keyword arguments
+
+---
+
+## 📚 Real-World Examples
+
+### Rental Notifications
+
+```python
 from api.notifications.services import notify
+
+# Rental started (async - non-blocking)
+notify(user, 'rental_started', async_send=True,
+       powerbank_id='PB123',
+       station_name='Mall Road Station',
+       max_hours=24)
+
+# Rental ending soon (sync - immediate)
+notify(user, 'rental_ending_soon',
+       powerbank_id='PB123',
+       remaining_hours=2)
+
+# Rental completed (async)
+notify(user, 'rental_completed', async_send=True,
+       powerbank_id='PB123',
+       total_cost=150)
 ```
 
-### **2. Send Notifications (One Line Each!)**
+### Payment Notifications
+
 ```python
-# OTP notifications (smart email/SMS detection)
-notify_otp(user, '123456', 'login', 'user@example.com')  # Email OTP
-notify_otp(user, '654321', 'login', '9841234567')        # SMS OTP
+# Payment success (sync - immediate feedback)
+notify(user, 'payment_success',
+       amount=100,
+       gateway='eSewa',
+       transaction_id='TXN123456')
 
-# Payment notifications
-notify_payment(user, 'successful', 100.0, 'TXN123')
-
-# Profile reminders
-notify_profile_reminder(user)
-
-# And many more...
+# Wallet recharged (async)
+notify(user, 'wallet_recharged', async_send=True,
+       amount=500,
+       new_balance=1200)
 ```
 
-## 🚀 Ultra-Clean One-Liner API
+### OTP Notifications
 
-### **Available One-Liners:**
-
-| Function | Usage | Channels |
-|----------|-------|----------|
-| `notify_otp(user, otp, purpose, identifier)` | OTP verification | SMS/Email (auto-detected) |
-| `notify_payment(user, status, amount, txn_id)` | Payment status | In-App + FCM + SMS |
-| `notify_profile_reminder(user)` | Profile completion | In-App + FCM + SMS |
-| `notify_kyc_status(user, status, reason)` | KYC updates | In-App + FCM + SMS |
-| `notify_account_status(user, status, reason)` | Account changes | In-App + FCM + SMS |
-| `notify_fines_dues(user, amount, reason)` | Late fees | In-App + FCM + SMS |
-| `notify_coupon_applied(user, code, points)` | Coupon success | In-App + FCM |
-| `notify_rental_started(user, pb_id, station, hours)` | Rental start | In-App + FCM |
-| `notify_rental_ending(user, pb_id, hours)` | Rental ending | In-App + FCM |
-| `notify_rental_completed(user, pb_id, cost)` | Rental complete | In-App + FCM |
-| `notify_points_earned(user, points, total)` | Points awarded | In-App + FCM |
-| `notify_wallet_recharged(user, amount, balance)` | Wallet topup | In-App + FCM + SMS |
-
-### **Generic Notify Function:**
 ```python
-# For custom templates or advanced usage
-notify(user, 'template_slug', key1='value1', key2='value2')
+# OTP via SMS (sync - must be immediate)
+notify(user, 'otp_sms',
+       otp='123456',
+       purpose='login',
+       expiry_minutes=5)
+
+# OTP via Email (sync)
+notify(user, 'otp_email',
+       otp='123456',
+       purpose='verification',
+       expiry_minutes=10)
 ```
 
-## 📱 Integration Examples by App
-
-### **🔐 Users App - Authentication & Profile**
+### Any Other Notification
 
 ```python
-# api/users/services.py
+# Points earned
+notify(user, 'points_earned', async_send=True,
+       points=50, reason='Rental completed', total_points=150)
 
-class AuthService(BaseService):
-    def generate_otp(self, identifier: str, purpose: str):
-        # ... OTP generation logic ...
-        
-        # ✅ NEW: One-liner OTP notification
-        from api.notifications.services import notify_otp
-        if user:
-            notify_otp(user, otp, purpose.lower(), identifier)
-        # For new users, direct service calls are handled automatically
-    
-    def update_account_status(self, user, new_status: str, reason: str = None):
-        user.status = new_status
-        user.save()
-        
-        # ✅ NEW: One-liner account status notification
-        from api.notifications.services import notify_account_status
-        notify_account_status(user, new_status, reason)
+# KYC status
+notify(user, 'kyc_status_update',
+       kyc_status='approved')
 
-class UserProfileService(BaseService):
-    def update_profile(self, user, data: dict):
-        # ... profile update logic ...
-        
-        # Check if profile is still incomplete
-        if not profile.is_profile_complete:
-            # ✅ NEW: One-liner profile reminder
-            from api.notifications.services import notify_profile_reminder
-            notify_profile_reminder(user)
+# Account status
+notify(user, 'account_status_update',
+       new_status='active', reason='KYC verified')
 
-class UserKYCService(BaseService):
-    def update_kyc_status(self, user, status: str, rejection_reason: str = None):
-        # ... KYC update logic ...
-        
-        # ✅ NEW: One-liner KYC notification
-        from api.notifications.services import notify_kyc_status
-        notify_kyc_status(user, status.lower(), rejection_reason)
+# Special offer
+notify(user, 'special_offer', async_send=True,
+       offer_title='50% Off', expiry_date='2025-12-31', promo_code='WEEKEND50')
 ```
 
-### **💰 Payments App - Transactions & Wallet**
+---
 
+## 🎯 Method 2: `notify_bulk()` - Universal Bulk Notification
+
+### Signature
 ```python
-# api/payments/services.py
-
-class PaymentIntentService(BaseService):
-    def complete_payment(self, intent, transaction_data):
-        # ... payment completion logic ...
-        
-        if transaction.status == 'SUCCESS':
-            # ✅ NEW: One-liner payment notification
-            from api.notifications.services import notify_payment
-            notify_payment(intent.user, 'successful', float(intent.amount), transaction.transaction_id)
-        else:
-            notify_payment(intent.user, 'failed', float(intent.amount))
-
-class RentalPaymentService(BaseService):
-    def calculate_overdue_amount(self, rental):
-        # ... overdue calculation logic ...
-        
-        if late_fee > 0:
-            # ✅ NEW: One-liner fines notification
-            from api.notifications.services import notify_fines_dues
-            notify_fines_dues(rental.user, float(late_fee), f"Late return penalty - {overdue_minutes} minutes")
-
-class WalletService(BaseService):
-    def add_balance(self, user, amount: float, reason: str):
-        # ... wallet update logic ...
-        
-        # ✅ NEW: One-liner wallet notification
-        from api.notifications.services import notify_wallet_recharged
-        notify_wallet_recharged(user, amount, user.wallet.balance)
+notify_bulk(users: list, template_slug: str, async_send: bool = True, **context)
 ```
 
-### **🏠 Rentals App - Power Bank Operations**
+### Examples
 
 ```python
-# api/rentals/services.py
+from api.notifications.services import notify_bulk
+
+# Marketing campaign (async - recommended)
+active_users = User.objects.filter(is_active=True)
+notify_bulk(active_users, 'special_offer', async_send=True,
+           offer_title='Flash Sale - 70% Off',
+           expiry_date='2025-10-18',
+           promo_code='FLASH70')
+
+# Maintenance notice
+notify_bulk(all_users, 'maintenance_notice', async_send=True,
+           maintenance_date='2025-10-20',
+           start_time='2:00 AM',
+           end_time='4:00 AM')
+```
+
+---
+
+## ⚡ Sync vs Async - When to Use What?
+
+### Use **Sync** (`async_send=False`) for:
+- ✅ OTP notifications - Must be immediate
+- ✅ Payment confirmations - User is waiting
+- ✅ Critical alerts - Account suspended, security issues
+
+```python
+notify(user, 'otp_sms', otp='123456')  # Default is sync
+notify(user, 'payment_success', amount=100, gateway='eSewa')
+```
+
+### Use **Async** (`async_send=True`) for:
+- ✅ Marketing campaigns - Bulk notifications
+- ✅ Non-critical updates - Promotions, achievements
+- ✅ Large batches - 10+ users
+
+```python
+notify(user, 'rental_started', async_send=True, powerbank_id='PB123')
+notify_bulk(users, 'special_offer', async_send=True, discount='50%')
+```
+
+---
+
+## 🔧 Integration in Your Services
+
+### Rental Service
+```python
+from api.notifications.services import notify
 
 class RentalService(BaseService):
     def start_rental(self, user, powerbank, station):
-        # ... rental start logic ...
+        # ... rental logic ...
         
-        # ✅ NEW: One-liner rental start notification
-        from api.notifications.services import notify_rental_started
-        notify_rental_started(user, powerbank.device_id, station.name, 24)
-    
-    def complete_rental(self, rental):
-        # ... rental completion logic ...
+        # One line notification!
+        notify(user, 'rental_started', async_send=True,
+               powerbank_id=powerbank.id,
+               station_name=station.name,
+               max_hours=24)
         
-        # ✅ NEW: One-liner rental completion notification
-        from api.notifications.services import notify_rental_completed
-        notify_rental_completed(rental.user, rental.powerbank.device_id, float(rental.total_cost))
-
-# api/rentals/tasks.py (Celery tasks)
-@shared_task
-def check_rental_expiry():
-    expiring_rentals = Rental.objects.filter(...)
-    
-    for rental in expiring_rentals:
-        # ✅ NEW: One-liner rental ending notification
-        from api.notifications.services import notify_rental_ending
-        notify_rental_ending(rental.user, rental.powerbank.device_id, remaining_hours)
+        return rental
 ```
 
-### **🎁 Promotions App - Coupons & Offers**
-
+### Payment Service
 ```python
-# api/promotions/services.py
+from api.notifications.services import notify
 
-class CouponService(BaseService):
-    def apply_coupon(self, user, coupon_code: str):
-        # ... coupon application logic ...
+class PaymentService(BaseService):
+    def process_payment(self, user, amount, gateway):
+        # ... payment logic ...
         
-        # ✅ NEW: One-liner coupon notification
-        from api.notifications.services import notify_coupon_applied
-        notify_coupon_applied(user, coupon.code, coupon.points_value)
-
-# api/promotions/tasks.py
-@shared_task
-def send_expiring_coupon_notifications():
-    expiring_coupons = Coupon.objects.filter(...)
-    
-    for coupon in expiring_coupons:
-        for user in eligible_users:
-            # ✅ NEW: Generic notify for custom templates
-            from api.notifications.services import notify
-            notify(user, 'coupon_expiring_soon',
-                  coupon_code=coupon.code,
-                  days_until_expiry=days_until_expiry)
+        # Immediate feedback (sync)
+        notify(user, 'payment_success',
+               amount=amount,
+               gateway=gateway,
+               transaction_id=transaction.id)
+        
+        return transaction
 ```
 
-### **🏆 Points App - Rewards & Achievements**
-
+### User Registration
 ```python
-# api/points/services.py
+from api.notifications.services import notify
 
-class PointsService(BaseService):
-    def award_points(self, user, points: int, reason: str):
-        # ... points awarding logic ...
-        
-        # ✅ NEW: One-liner points notification
-        from api.notifications.services import notify_points_earned
-        notify_points_earned(user, points, user.total_points)
-
-# api/social/tasks.py
-@shared_task
-def process_achievements(user_id):
-    # ... achievement processing ...
+def register_user(username, email, phone):
+    user = User.objects.create(...)
     
-    for achievement in unlocked_achievements:
-        # ✅ NEW: Generic notify for achievements
-        from api.notifications.services import notify
-        notify(user, 'achievement_unlocked',
-              achievement_name=achievement.name,
-              points=achievement.points_value)
+    # Welcome (async)
+    notify(user, 'welcome_user', async_send=True,
+           user_name=user.full_name)
+    
+    # OTP (sync - immediate)
+    otp = generate_otp()
+    notify(user, 'otp_sms', otp=otp, purpose='verification')
+    
+    return user
 ```
 
-## 🎨 Template System
+---
 
-### **How Templates Work:**
-1. **Database-Driven**: All notification content comes from `NotificationTemplate` models
-2. **Dynamic Content**: Use Django template syntax with variables
-3. **Automatic Rendering**: Templates are rendered with provided data
+## 📋 Available Templates
 
-### **Template Structure:**
-```json
-{
-  "name": "Payment Success",
-  "slug": "payment_success",
-  "notification_type": "payment",
-  "title_template": "Payment {{status|title}}",
-  "message_template": "Your payment of Rs. {{amount}} has been {{status}}. {% if transaction_id %}Transaction ID: {{transaction_id}}{% endif %}",
-  "is_active": true
+| Template Slug | Variables |
+|--------------|-----------|
+| `rental_started` | powerbank_id, station_name, max_hours |
+| `rental_ending_soon` | powerbank_id, remaining_hours |
+| `rental_completed` | powerbank_id, total_cost |
+| `payment_success` | amount, gateway, transaction_id |
+| `payment_failed` | amount, gateway, failure_reason |
+| `wallet_recharged` | amount, new_balance |
+| `otp_sms` | otp, purpose, expiry_minutes |
+| `otp_email` | otp, purpose, expiry_minutes |
+| `welcome_user` | user_name |
+| `kyc_status_update` | kyc_status, rejection_reason |
+| `account_status_update` | new_status, reason |
+| `special_offer` | offer_title, expiry_date, promo_code |
+| `points_earned` | points, reason, total_points |
+| `coupon_applied` | coupon_code, points |
+| ... and 20+ more! | See `fixtures/notifications.json` |
+
+---
+
+## 💡 Pro Tips
+
+### Tip 1: Use **kwargs
+```python
+context = {
+    'powerbank_id': rental.powerbank_id,
+    'station_name': rental.station.name,
+    'max_hours': 24
 }
+notify(user, 'rental_started', async_send=True, **context)
 ```
 
-### **Using Templates:**
+### Tip 2: Default is sync
 ```python
-# Template variables are passed as keyword arguments
-notify_payment(user, 'successful', 100.0, 'TXN123')
-
-# This renders to:
-# Title: "Payment Successful"  
-# Message: "Your payment of Rs. 100.0 has been successful. Transaction ID: TXN123"
+# These are the same:
+notify(user, 'payment_success', amount=100)
+notify(user, 'payment_success', async_send=False, amount=100)
 ```
 
-## 📡 Channel Rules
-
-### **Automatic Channel Distribution:**
-The system automatically sends notifications via multiple channels based on `NotificationRule` configurations:
-
-| Notification Type | In-App | FCM | SMS | Email |
-|-------------------|--------|-----|-----|-------|
-| `system` | ✅ | ✅ | ✅ | ❌ |
-| `payment` | ✅ | ✅ | ✅ | ❌ |
-| `rental` | ✅ | ✅ | ❌ | ❌ |
-| `promotion` | ✅ | ✅ | ❌ | ❌ |
-| `achievement` | ✅ | ✅ | ❌ | ❌ |
-| `otp_sms` | ❌ | ❌ | ✅ | ❌ |
-| `otp_email` | ❌ | ❌ | ❌ | ✅ |
-
-### **Smart OTP Channel Selection:**
+### Tip 3: Handle exceptions
 ```python
-# Email OTP (identifier contains @)
-notify_otp(user, '123456', 'login', 'user@example.com')  # → Email only
-
-# SMS OTP (identifier is phone number)
-notify_otp(user, '654321', 'login', '9841234567')        # → SMS only
-
-# Default SMS OTP
-notify_otp(user, '999888', 'login')                      # → SMS only
-```
-
-## 🔄 Migration from Old API
-
-### **❌ Old Verbose API (8+ lines):**
-```python
-# DON'T USE - Old verbose approach
-from api.notifications.services import NotificationService
-notification_service = NotificationService()
-
-notification_service.create_notification(
-    user=user,
-    title="",  # Will be overridden by template
-    message="",  # Will be overridden by template
-    notification_type='payment',
-    template_slug='payment_status',
-    data={
-        'status': 'successful',
-        'amount': 100.0,
-        'transaction_id': 'TXN123'
-    },
-    auto_send=True
-)
-```
-
-### **✅ New Clean API (1 line):**
-```python
-# USE THIS - New clean approach
-from api.notifications.services import notify_payment
-notify_payment(user, 'successful', 100.0, 'TXN123')  # That's it! 🎉
-```
-
-### **Migration Examples:**
-
-| Old Pattern | New Pattern |
-|-------------|-------------|
-| `notification_service.create_notification(user, ..., template_slug='otp_sms', ...)` | `notify_otp(user, otp, purpose, identifier)` |
-| `notification_service.create_notification(user, ..., template_slug='payment_status', ...)` | `notify_payment(user, status, amount, txn_id)` |
-| `notification_service.create_notification(user, ..., template_slug='coupon_applied', ...)` | `notify_coupon_applied(user, code, points)` |
-| `notification_service.create_notification(user, ..., template_slug='profile_completion_reminder', ...)` | `notify_profile_reminder(user)` |
-
-## 🎯 Best Practices
-
-### **1. Use One-Liners When Possible**
-```python
-# ✅ GOOD - Use specific one-liner functions
-notify_payment(user, 'successful', 100.0)
-
-# ❌ AVOID - Generic notify when specific function exists
-notify(user, 'payment_status', status='successful', amount=100.0)
-```
-
-### **2. Smart OTP Handling**
-```python
-# ✅ GOOD - Let the system detect email vs SMS
-notify_otp(user, otp, purpose, identifier)  # Auto-detects based on identifier
-
-# ❌ AVOID - Manual channel selection
-if '@' in identifier:
-    # Manual email logic...
-else:
-    # Manual SMS logic...
-```
-
-### **3. Error Handling**
-```python
-# ✅ GOOD - Notifications are fire-and-forget
 try:
-    notify_payment(user, 'successful', amount)
+    notify(user, 'rental_started', async_send=True, powerbank_id='PB123')
 except Exception as e:
-    # Log error but don't fail the main operation
     logger.error(f"Notification failed: {e}")
-    # Continue with business logic
+    # Continue - notifications are non-critical
 ```
 
-### **4. Template Data**
+---
+
+## 📊 Summary
+
+### Just Remember This:
+
 ```python
-# ✅ GOOD - Provide all template variables
-notify(user, 'custom_template', 
-      required_field='value',
-      optional_field='value')
+from api.notifications.services import notify, notify_bulk
 
-# ❌ AVOID - Missing template variables (will show as empty)
-notify(user, 'custom_template')  # Missing required data
+# Single notification
+notify(user, 'template_slug', async_send=False, var1='value1', var2='value2')
+
+# Bulk notification
+notify_bulk(users, 'template_slug', async_send=True, var1='value1', var2='value2')
 ```
 
-### **5. User Validation**
-```python
-# ✅ GOOD - Validate user exists
-if user and user.is_active:
-    notify_payment(user, 'successful', amount)
+### That's it! 🎉
 
-# ❌ AVOID - Sending to inactive/invalid users
-notify_payment(inactive_user, 'successful', amount)  # Will fail
-```
+- **2 methods** for everything
+- **`async_send` parameter** controls sync/async
+- **`template_slug`** is any template from fixtures
+- **`**context`** passes variables to template
 
-## 🚀 Advanced Usage
+---
 
-### **Custom Templates:**
-```python
-# For templates not covered by one-liners
-notify(user, 'maintenance_notice',
-      maintenance_date='2024-01-15',
-      start_time='02:00 AM',
-      end_time='04:00 AM')
-```
-
-### **Conditional Notifications:**
-```python
-# Send notification only if conditions are met
-if user.preferences.get('payment_notifications', True):
-    notify_payment(user, 'successful', amount)
-```
-
-### **Bulk Notifications:**
-```python
-# For sending to multiple users
-users = User.objects.filter(is_active=True)
-for user in users:
-    notify(user, 'maintenance_notice', 
-          maintenance_date='2024-01-15')
-```
-
-## 📊 Performance & Scaling
-
-### **Automatic Optimizations:**
-- ✅ **Template Caching**: Templates are cached for performance
-- ✅ **Channel Batching**: Multiple channels sent efficiently
-- ✅ **Error Resilience**: Failed channels don't affect others
-- ✅ **Async Processing**: FCM and SMS sent asynchronously
-
-### **Best Practices for Scale:**
-- Use Celery tasks for bulk notifications
-- Batch notifications when possible
-- Monitor notification delivery rates
-- Set up proper error logging
-
-## 🎉 Summary
-
-The ChargeGhar notification system provides:
-
-1. **🚀 Ultra-Clean API**: One-liner functions for all common notifications
-2. **🎨 Template-Driven**: All content managed in database templates
-3. **📡 Multi-Channel**: Automatic distribution via In-App, FCM, SMS, Email
-4. **🔧 Smart Logic**: Intelligent OTP channel selection
-5. **⚡ High Performance**: Optimized for scale and reliability
-6. **🔄 Easy Migration**: Simple upgrade path from old verbose API
-
-**Start using the new clean API today and reduce your notification code by 87.5%!** 🎯
+**Print this and keep it handy! 📌**

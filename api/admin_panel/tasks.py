@@ -208,23 +208,19 @@ def monitor_system_health(self):
         
         # Send alerts if any issues found
         if alerts:
-            from api.notifications.services import NotificationService
-            notification_service = NotificationService()
-            
-            # Get admin users
+            from api.notifications.services import notify_bulk
             from django.contrib.auth import get_user_model
             User = get_user_model()
             admin_users = User.objects.filter(is_staff=True, is_active=True)
             
-            for admin in admin_users:
-                # Send system health alert using clean API (manual title/message for admin alerts)
-                from api.notifications.services import NotificationService
-                NotificationService().create_notification(
-                    user=admin,
-                    title="🚨 System Health Alert",
-                    message=f"{len(alerts)} system issues detected. Please review immediately.",
-                    notification_type='system'
-                )
+            # Send bulk notification to all admins
+            notify_bulk(
+                admin_users,
+                'system_health_alert',
+                async_send=True,
+                alert_count=len(alerts),
+                alerts=alerts
+            )
         
         # Log system health
         SystemLog.objects.create(
@@ -410,7 +406,6 @@ def send_admin_digest_report(self):
     """Send daily digest report to admin users"""
     try:
         from api.admin_panel.services import AdminAnalyticsService
-        from api.notifications.services import NotificationService
         
         # Generate analytics
         analytics_service = AdminAnalyticsService()
@@ -431,20 +426,18 @@ System Status: All systems operational
         
         # Send to admin users
         from django.contrib.auth import get_user_model
+        from api.notifications.services import notify_bulk
         User = get_user_model()
         admin_users = User.objects.filter(is_staff=True, is_active=True)
         
-        notification_service = NotificationService()
-        
-        for admin in admin_users:
-            # Send daily digest using clean API (manual title/message for admin alerts)
-            from api.notifications.services import NotificationService
-            NotificationService().create_notification(
-                user=admin,
-                title="📊 Daily System Digest",
-                message=digest_message,
-                notification_type='system'
-            )
+        # Send bulk notification to all admins
+        notify_bulk(
+            admin_users,
+            'daily_system_digest',
+            async_send=True,
+            analytics=analytics,
+            digest_message=digest_message
+        )
         
         self.logger.info(f"Daily digest sent to {admin_users.count()} admin users")
         return {

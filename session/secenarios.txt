@@ -1,0 +1,12 @@
+| Action                          | Points Awarded | Trigger/Condition                                      | Recipient       |
+|---------------------------------|----------------|--------------------------------------------------------|-----------------|
+| New User Signup                 | +50            | Upon successful registration and OTP verification     | New User (Invitee) |
+| Referral (Inviter)              | +100           | When the referred user completes their first rental    | Inviter         |
+| Referral (Invitee)              | +50            | Upon successful registration using a referral code    | Invitee         |
+| Top-Up (per NPR 100)            | +10            | For every NPR 100 added to the wallet via top-up       | User performing top-up |
+| Completed Rental                | +5             | Upon successful return of a power bank and rental completion | User            |
+| Apply Coupon                    | Variable (based on coupon value) | When a valid coupon code is applied and validated     | User            |
+| Timely Returns                  | +50 | Meeting timely return criteria for rentals (unlocks achievements with point rewards) | User            |
+| Unlocking Achievements          | Variable (based on achievement rewards) | Automatically when criteria met (e.g., total rentals, referrals, timely returns) | User            |
+| KYC Verification Completion     | +30            | Upon successful KYC approval                           | User            |
+| Profile Completion (100%)       | +20            | Filling all required profile fields including address | User

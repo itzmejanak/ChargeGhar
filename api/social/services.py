@@ -92,14 +92,14 @@ class AchievementService(CRUDService):
                     user_achievement.points_awarded = achievement.reward_value
                     
                     # Award points to user
-                    from api.points.services import PointsService
-                    points_service = PointsService()
-                    points_service.award_points(
+                    from api.points.services import award_points
+                    award_points(
                         user=user,
                         points=achievement.reward_value,
                         source='ACHIEVEMENT',
                         description=f'Achievement unlocked: {achievement.name}',
-                        metadata={'achievement_id': str(achievement.id)}
+                        async_send=True,  # Achievements can be processed async
+                        achievement_id=str(achievement.id)
                     )
                     
                     unlocked_achievements.append(user_achievement)

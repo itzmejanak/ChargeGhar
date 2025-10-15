@@ -151,12 +151,27 @@ class PaymentIntentService(CRUDService):
                 )
 
                 # Award points for top-up
-                from api.points.tasks import award_topup_points_task
-                award_topup_points_task.delay(intent.user.id, float(intent.amount))
+                from api.points.services import award_points
+                award_points(
+                    intent.user,
+                    int(float(intent.amount) * 0.1),  # 10% of top-up amount as points
+                    'TOPUP',
+                    f'Top-up reward for NPR {intent.amount}',
+                    async_send=True,
+                    topup_amount=float(intent.amount),
+                    transaction_id=transaction_obj.transaction_id
+                )
 
                 # Send payment success notification
-                from api.notifications.services import notify_payment
-                notify_payment(intent.user, 'successful', float(intent.amount), transaction_obj.transaction_id)
+                from api.notifications.services import notify
+                notify(
+                    intent.user,
+                    'payment_success',
+                    async_send=True,
+                    amount=float(intent.amount),
+                    transaction_id=transaction_obj.transaction_id,
+                    payment_type='topup'
+                )
 
                 # Update intent status
                 intent.status = 'COMPLETED'

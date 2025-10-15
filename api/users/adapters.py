@@ -109,9 +109,14 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             UserPoints.objects.create(user=user)
             Wallet.objects.create(user=user)
             
-            # Award signup points
-            from api.points.tasks import award_points_task
-            award_points_task.delay(user.id, 50, 'SOCIAL_SIGNUP', f'New user signup via {sociallogin.account.provider}')
+            # Award signup points (after transaction commits)
+            from api.points.services import award_points
+            from django.db import transaction
+            
+            # Schedule task after transaction commits to ensure user exists
+            transaction.on_commit(
+                lambda: award_points(user, 50, 'SOCIAL_SIGNUP', f'New user signup via {sociallogin.account.provider}', async_send=True)
+            )
             
             # Send welcome message
             from api.users.tasks import send_social_auth_welcome_message
