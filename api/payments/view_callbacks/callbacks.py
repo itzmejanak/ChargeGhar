@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import base64
 import json
-import logging
 from typing import TYPE_CHECKING
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, serializers
@@ -89,38 +88,7 @@ class ESewaSuccessCallbackView(GenericAPIView, BaseAPIView):
                     )
                     
             except Exception as verify_error:
-                logger = logging.getLogger(__name__)
-                logger.error(f"eSewa payment verification failed: {str(verify_error)}")
-                
-                # Check if payment was already processed
-                try:
-                    from api.payments.models import PaymentIntent
-                    intent = PaymentIntent.objects.get(intent_id=intent_id)
-                    
-                    if intent.status == 'COMPLETED':
-                        # Payment already processed - return success
-                        return self.success_response(
-                            data={
-                                'intent_id': intent_id,
-                                'gateway': 'esewa',
-                                'status': 'ALREADY_PROCESSED',
-                                'message': 'Payment was already successfully processed'
-                            },
-                            message="Payment already processed successfully"
-                        )
-                    elif intent.status == 'FAILED':
-                        return self.error_response(
-                            data={
-                                'intent_id': intent_id,
-                                'gateway': 'esewa',
-                                'status': 'FAILED'
-                            },
-                            message="Payment verification failed",
-                            status_code=status.HTTP_400_BAD_REQUEST
-                        )
-                except PaymentIntent.DoesNotExist:
-                    pass
-                
+                self.log_error(f"eSewa payment verification failed: {str(verify_error)}")
                 return self.error_response(
                     message="Verification error",
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -167,11 +135,9 @@ class ESewaFailureCallbackView(GenericAPIView, BaseAPIView):
                     intent.status = 'FAILED'
                     intent.intent_metadata['failure_reason'] = error_message
                     intent.save(update_fields=['status', 'intent_metadata'])
-                    logger = logging.getLogger(__name__)
-                    logger.info(f"Payment intent {intent_id} marked as failed")
+                    self.log_info(f"Payment intent {intent_id} marked as failed")
                 except Exception as e:
-                    logger = logging.getLogger(__name__)
-                    logger.error(f"Failed to update payment intent {intent_id}: {str(e)}")
+                    self.log_error(f"Failed to update payment intent {intent_id}: {str(e)}")
                 
                 return self.error_response(
                     data={
@@ -209,36 +175,27 @@ class KhaltiCallbackView(GenericAPIView, BaseAPIView):
     def get(self, request: Request) -> Response:
         """Handle Khalti return callback - Process payment and return response"""
         try:
-            # Khalti sends query parameters: pidx, status, txnId, purchase_order_id, etc.
+            # Khalti sends query parameters: pidx, status, txnId, etc.
             pidx = request.GET.get('pidx')
             status_param = request.GET.get('status')
             txn_id = request.GET.get('txnId')
-            purchase_order_id = request.GET.get('purchase_order_id')
             
-            if not pidx or not purchase_order_id:
+            if not pidx:
                 return self.error_response(
-                    message="Invalid Khalti callback - missing required parameters",
+                    message="Invalid Khalti callback",
                     status_code=status.HTTP_400_BAD_REQUEST
                 )
             
-            # For Khalti, purchase_order_id is the intent_id in our system
-            intent_id = purchase_order_id
+            # For Khalti, pidx IS the intent_id in our system
+            intent_id = pidx
             
             # Process payment server-side using PaymentIntentService
             service = PaymentIntentService()
             try:
-                # Include all relevant callback data for verification
                 callback_data = {
                     'pidx': pidx,
                     'status': status_param,
-                    'txnId': txn_id,
-                    'transaction_id': request.GET.get('transaction_id'),
-                    'tidx': request.GET.get('tidx'),
-                    'amount': request.GET.get('amount'),
-                    'total_amount': request.GET.get('total_amount'),
-                    'mobile': request.GET.get('mobile'),
-                    'purchase_order_id': purchase_order_id,
-                    'purchase_order_name': request.GET.get('purchase_order_name')
+                    'txnId': txn_id
                 }
                 
                 result = service.verify_topup_payment(intent_id, callback_data)
@@ -260,38 +217,7 @@ class KhaltiCallbackView(GenericAPIView, BaseAPIView):
                     )
                     
             except Exception as verify_error:
-                logger = logging.getLogger(__name__)
-                logger.error(f"Khalti payment verification failed: {str(verify_error)}")
-                
-                # Check if payment was already processed
-                try:
-                    from api.payments.models import PaymentIntent
-                    intent = PaymentIntent.objects.get(intent_id=intent_id)
-                    
-                    if intent.status == 'COMPLETED':
-                        # Payment already processed - return success
-                        return self.success_response(
-                            data={
-                                'intent_id': intent_id,
-                                'gateway': 'khalti',
-                                'status': 'ALREADY_PROCESSED',
-                                'message': 'Payment was already successfully processed'
-                            },
-                            message="Payment already processed successfully"
-                        )
-                    elif intent.status == 'FAILED':
-                        return self.error_response(
-                            data={
-                                'intent_id': intent_id,
-                                'gateway': 'khalti',
-                                'status': 'FAILED'
-                            },
-                            message="Payment verification failed",
-                            status_code=status.HTTP_400_BAD_REQUEST
-                        )
-                except PaymentIntent.DoesNotExist:
-                    pass
-                
+                self.log_error(f"Khalti payment verification failed: {str(verify_error)}")
                 return self.error_response(
                     message="Verification error",
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR

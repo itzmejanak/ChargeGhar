@@ -182,6 +182,3 @@ cat /tmp/nepal_env/lib/python3.12/site-packages/nepal_gateways/esewa/client.py
 cat /tmp/nepal_env/lib/python3.12/site-packages/nepal_gateways/khalti/client.py
 cat /tmp/nepal_env/lib/python3.12/site-packages/nepal_gateways/esewa/config.py
 cat /tmp/nepal_env/lib/python3.12/site-packages/nepal_gateways/core/base.py
-
-
-scp firebase-credentials.json root@213.210.21.113:/opt/powerbank/

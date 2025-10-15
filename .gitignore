@@ -158,5 +158,4 @@ setup-ssl.sh
 update-env-domains.sh
 DOMAIN_SETUP_GUIDE.md
 
-admin_endpoint_analysis_report.md
 firebase-credentials.json
