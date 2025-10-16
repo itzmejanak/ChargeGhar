@@ -15,5 +15,9 @@ task_always_eager = getenv("CELERY_TASK_ALWAYS_EAGER", "false").lower() == "true
 task_eager_propagates = getenv("CELERY_TASK_EAGER_PROPAGATES", "false").lower() == "true"
 task_ignore_result = getenv("CELERY_TASK_IGNORE_RESULT", "false").lower() == "true"
 
+# # Reduce debug noise in production
+# worker_log_format = "[%(asctime)s: %(levelname)s/%(processName)s] %(message)s"
+# worker_task_log_format = "[%(asctime)s: %(levelname)s/%(processName)s][%(task_name)s(%(task_id)s)] %(message)s"
+
 timezone = TIME_ZONE
 enable_utc = True

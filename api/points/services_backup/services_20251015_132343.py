@@ -56,6 +56,11 @@ class PointsService(CRUDService):
             )
             
             self.log_info(f"Points awarded: {user.username} +{points} ({source})")
+            
+            # Send notification for points earned
+            from api.notifications.services import notify_points_earned
+            notify_points_earned(user, points, user_points.current_points, description)
+            
             return points_transaction
             
         except Exception as e:
@@ -372,27 +377,34 @@ class ReferralService(CRUDService):
             # Award points to both users
             points_service = PointsService()
             
-            # Award points to inviter (100 points)
+            # Get points from AppConfig
+            from api.config.services import AppConfigService
+            config_service = AppConfigService()
+            
+            inviter_points = int(config_service.get_config_cached('POINTS_REFERRAL_INVITER', 100))
+            invitee_points = int(config_service.get_config_cached('POINTS_REFERRAL_INVITEE', 50))
+            
+            # Award points to inviter
             inviter_transaction = points_service.award_points(
                 referral.inviter,
-                100,
+                inviter_points,
                 'REFERRAL_INVITER',
                 f'Referral reward for inviting {referral.invitee.username}',
                 related_referral=referral,
                 related_rental=rental
             )
-            referral.inviter_points_awarded = 100
+            referral.inviter_points_awarded = inviter_points
             
-            # Award points to invitee (50 points)
+            # Award points to invitee
             invitee_transaction = points_service.award_points(
                 referral.invitee,
-                50,
+                invitee_points,
                 'REFERRAL_INVITEE',
                 f'Referral reward from {referral.inviter.username}',
                 related_referral=referral,
                 related_rental=rental
             )
-            referral.invitee_points_awarded = 50
+            referral.invitee_points_awarded = invitee_points
             
             # Mark referral as completed
             referral.status = 'COMPLETED'

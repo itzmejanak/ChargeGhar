@@ -8,7 +8,7 @@ and exploring code relationships with detailed insights.
 Usage:
     python ./tools/umain.py --list-apps
     python ./tools/umain.py --app users --list-files
-    python ./tools/umain.py --app users --file views.py --list
+    python ./tools/umain.py --app points --file tasks.py --list
     python ./tools/umain.py --app users --file services.py --usage UserService
     python ./tools/umain.py --app users --file services.py --usage UserService --verbose
     python ./tools/umain.py --app payments --file models.py --usage Transaction --export results.txt

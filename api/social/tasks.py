@@ -121,13 +121,12 @@ def send_achievement_unlock_notifications(self, user_id: str, user_achievement_i
             id__in=user_achievement_ids
         ).select_related('achievement')
         
-        from api.notifications.services import NotificationService
-        notification_service = NotificationService()
+        from api.notifications.services import notify
         
         for user_achievement in user_achievements:
             # Send achievement notification using clean API
-            from api.notifications.services import notify
             notify(user, 'achievement_unlocked',
+                  async_send=True,
                   achievement_name=user_achievement.achievement.name,
                   points=user_achievement.points_awarded)
         
@@ -204,16 +203,15 @@ def send_leaderboard_position_updates(self):
         
         top_users = UserLeaderboard.objects.order_by('rank')[:10]
         
-        from api.notifications.services import NotificationService
-        notification_service = NotificationService()
+        from api.notifications.services import notify
         
         notifications_sent = 0
         
         for leaderboard in top_users:
             try:
                 # Send leaderboard notification using clean API
-                from api.notifications.services import notify
                 notify(leaderboard.user, 'leaderboard_update', 
+                      async_send=True,
                       rank=leaderboard.rank, 
                       total_points=leaderboard.total_points_earned)
                 notifications_sent += 1

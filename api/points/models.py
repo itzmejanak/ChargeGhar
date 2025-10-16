@@ -1,9 +1,6 @@
 from django.db import models
 from api.common.models import BaseModel
 
-
-
-
 class PointsTransaction(BaseModel):
     """
     PointsTransaction - Points earning and spending history

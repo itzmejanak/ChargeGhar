@@ -66,15 +66,26 @@ class RentalService(CRUDService):
             # Schedule reminder notification (15 minutes before due)
             reminder_time = rental.due_at - timezone.timedelta(minutes=15)
             if reminder_time > timezone.now():
-                from api.notifications.tasks import send_rental_reminder_notification
-                send_rental_reminder_notification.apply_async(
-                    args=[str(rental.id)],
+                from api.notifications.tasks import send_notification_task
+                send_notification_task.apply_async(
+                    args=[str(user.id), 'rental_reminder', {
+                        'rental_id': str(rental.id),
+                        'rental_code': rental.rental_code,
+                        'due_time': rental.due_at.strftime('%H:%M')
+                    }],
                     eta=reminder_time
                 )
             
             # Send rental start notification using clean API
-            from api.notifications.services import notify_rental_started
-            notify_rental_started(user, power_bank.serial_number, station.station_name, 24)
+            from api.notifications.services import notify
+            notify(
+                user,
+                'rental_started',
+                async_send=True,
+                powerbank_serial=power_bank.serial_number,
+                station_name=station.station_name,
+                rental_duration=24
+            )
             
             self.log_info(f"Rental started: {rental.rental_code} by {user.username}")
             return rental
@@ -337,20 +348,27 @@ class RentalService(CRUDService):
             )
             
             # Award completion points
-            from api.points.tasks import award_rental_completion_points
-            award_rental_completion_points.delay(
-                str(rental.user.id),
-                str(rental.id),
-                rental.is_returned_on_time
+            from api.points.services import award_points
+            award_points(
+                rental.user,
+                50,  # Standard rental completion points
+                'RENTAL',
+                'Rental completion reward',
+                async_send=True,
+                rental_id=str(rental.id),
+                on_time=rental.is_returned_on_time
             )
             
             # Send completion notification
-            from api.notifications.services import NotificationService
-            notification_service = NotificationService()
-            
-            # Send rental completion notification using clean API
-            from api.notifications.services import notify_rental_completed
-            notify_rental_completed(rental.user, rental.power_bank.serial_number, float(rental.amount_paid))
+            from api.notifications.services import notify
+            notify(
+                rental.user,
+                'rental_completed',
+                async_send=True,
+                powerbank_serial=rental.power_bank.serial_number,
+                amount_paid=float(rental.amount_paid),
+                rental_code=rental.rental_code
+            )
             
             self.log_info(f"Power bank returned: {rental.rental_code}")
             return rental
@@ -520,23 +538,20 @@ class RentalIssueService(CRUDService):
             )
             
             # Send notification to admin
-            from api.notifications.services import NotificationService
-            notification_service = NotificationService()
-            
-            # Get admin users
+            from api.notifications.services import notify_bulk
             from django.contrib.auth import get_user_model
             User = get_user_model()
             admin_users = User.objects.filter(is_staff=True, is_active=True)
             
-            for admin in admin_users:
-                # Send admin notification using clean API (manual title/message for admin alerts)
-                from api.notifications.services import NotificationService
-                NotificationService().create_notification(
-                    user=admin,
-                    title="🚨 Rental Issue Reported",
-                    message=f"Issue reported for rental {rental.rental_code}: {issue.get_issue_type_display()}",
-                    notification_type='system'
-                )
+            # Send bulk notification to all admins
+            notify_bulk(
+                admin_users,
+                'rental_issue_reported',
+                async_send=True,
+                rental_code=rental.rental_code,
+                issue_type=issue.get_issue_type_display(),
+                user_name=user.username
+            )
             
             self.log_info(f"Rental issue reported: {rental.rental_code} - {issue.issue_type}")
             return issue

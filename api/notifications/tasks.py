@@ -1,627 +1,431 @@
+"""
+🚀 Celery Tasks for Async Notifications
+========================================
+
+Background tasks for sending notifications asynchronously using Celery.
+This ensures notifications don't block your main application flow.
+
+Usage:
+    # Send notification asynchronously
+    from api.notifications.tasks import send_notification_task
+    
+    send_notification_task.delay(
+        user_id=user.id,
+        template_slug='rental_started',
+        context={'powerbank_id': 'PB123'}
+    )
+"""
+
 from __future__ import annotations
 
+import logging
+from typing import Dict, Any
 from celery import shared_task
-from django.utils import timezone
 from django.contrib.auth import get_user_model
-from typing import Dict, Any, List
-from django.conf import settings
 
-from api.common.tasks.base import BaseTask, NotificationTask
-from api.notifications.models import Notification, SMS_FCMLog
-from api.notifications.services.email import EmailService
-
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-@shared_task(base=NotificationTask, bind=True)
-def send_otp_task(self, identifier: str, otp: str, purpose: str):
-    """Send OTP via SMS or Email with enhanced logging and error handling."""
-    self.logger.info(f"Initiating OTP task for {identifier} with purpose: {purpose}")
-
-    if '@' in identifier:
-        # Send email OTP
-        if not all([settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD]):
-            self.logger.critical("Email service is not configured. EMAIL_HOST_USER and EMAIL_HOST_PASSWORD must be set.")
-            raise Exception("Email service is not configured.")
-        
-        try:
-            email_service = EmailService()
-            email_service.send_email(
-                subject=f"Your ChargeGhar {purpose.replace('_', ' ').title()} Code",
-                recipient_list=[identifier],
-                template_name="otp_email.html",
-                context={"otp": otp, "purpose": purpose},
-            )
-            # self.logger.info(f"Email OTP for {purpose} successfully sent to: {identifier}")
-            # if settings.DEBUG:
-            #     self.logger.debug(f"OTP for {identifier}: {otp}")
-            # return {'status': 'sent', 'channel': 'email', 'identifier': identifier}
-        except Exception as e:
-            self.logger.error(f"Failed to send email OTP to {identifier}: {str(e)}", exc_info=True)
-            raise
-
-    else:
-        # Send SMS OTP
-        if not settings.SPARROW_SMS_TOKEN:
-            self.logger.critical("SMS service is not configured. SPARROW_SMS_TOKEN must be set.")
-            raise Exception("SMS service is not configured.")
-            
-        try:
-            from api.notifications.services import SMSService
-            sms_service = SMSService()
-            message = f"Your ChargeGhar code is: {otp}. Valid for 5 mins. Do not share."
-            
-            result = sms_service.send_sms(identifier, message)
-            
-            self.logger.info(f"OTP SMS for {purpose} sent to: {identifier}, response: {result}")
-            if settings.DEBUG:
-                self.logger.debug(f"OTP for {identifier}: {otp}")
-            return {
-                'status': 'sent',
-                'channel': 'sms',
-                'identifier': identifier,
-                'purpose': purpose,
-                'result': result
-            }
-        except Exception as e:
-            self.logger.error(f"Failed to send SMS OTP to {identifier}: {str(e)}", exc_info=True)
-            raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_push_notification_task(self, user_id: str, title: str, message: str, data: Dict[str, Any] = None):
-    """Send push notification to user"""
-    self.logger.critical("--- EXECUTING PUSH NOTIFICATION TASK ---")
+@shared_task(
+    name='notifications.send_notification',
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60  # Retry after 60 seconds
+)
+def send_notification_task(self, user_id: str, template_slug: str, 
+                          context: Dict[str, Any] = None):
+    """
+    Send notification asynchronously using Celery
+    
+    Args:
+        user_id: User ID (UUID string)
+        template_slug: Template slug (e.g., 'rental_started')
+        context: Template variables (e.g., {'powerbank_id': 'PB123'})
+    
+    Example:
+        send_notification_task.delay(
+            user_id=str(user.id),
+            template_slug='rental_started',
+            context={'powerbank_id': 'PB123', 'station_name': 'Mall Road'}
+        )
+    """
     try:
-        user = User.objects.get(id=user_id)
+        from api.notifications.services.notify import NotifyService
         
-        from api.notifications.services import FCMService
-        fcm_service = FCMService()
+        # Get user
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            logger.error(f"User not found: {user_id}")
+            return {'status': 'failed', 'error': 'User not found'}
         
-        result = fcm_service.send_push_notification(
-            user=user,
-            title=title,
-            message=message,
-            data=data or {}
+        # Send notification
+        notify_service = NotifyService()
+        notification = notify_service.send(user, template_slug, **(context or {}))
+        
+        logger.info(f"Notification sent async: {template_slug} to {user.username}")
+        return {
+            'status': 'success',
+            'notification_id': str(notification.id),
+            'user_id': user_id,
+            'template_slug': template_slug
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to send notification async: {str(e)}", exc_info=True)
+        
+        # Retry task on failure
+        try:
+            raise self.retry(exc=e)
+        except self.MaxRetriesExceededError:
+            logger.error(f"Max retries exceeded for notification: {template_slug}")
+            return {'status': 'failed', 'error': str(e)}
+
+
+@shared_task(
+    name='notifications.send_bulk_notifications',
+    bind=True,
+    max_retries=2
+)
+def send_bulk_notifications_task(self, user_ids: list, template_slug: str, 
+                                context: Dict[str, Any] = None):
+    """
+    Send bulk notifications asynchronously
+    
+    Args:
+        user_ids: List of user IDs (UUID strings)
+        template_slug: Template slug
+        context: Template variables (same for all users)
+    
+    Example:
+        user_ids = [str(user1.id), str(user2.id), str(user3.id)]
+        send_bulk_notifications_task.delay(
+            user_ids=user_ids,
+            template_slug='special_offer',
+            context={'offer_title': '50% Off', 'expiry_date': '2025-12-31'}
+        )
+    """
+    try:
+        from api.notifications.services.notify import NotifyService
+        
+        logger.info(f"Starting bulk notification: {template_slug} to {len(user_ids)} users")
+        
+        notify_service = NotifyService()
+        success_count = 0
+        failure_count = 0
+        
+        for user_id in user_ids:
+            try:
+                user = User.objects.get(id=user_id)
+                notify_service.send(user, template_slug, **(context or {}))
+                success_count += 1
+            except User.DoesNotExist:
+                logger.warning(f"User not found: {user_id}")
+                failure_count += 1
+            except Exception as e:
+                logger.error(f"Failed to send to user {user_id}: {str(e)}")
+                failure_count += 1
+        
+        logger.info(f"Bulk notification completed: {success_count} success, {failure_count} failed")
+        return {
+            'status': 'completed',
+            'success_count': success_count,
+            'failure_count': failure_count,
+            'total': len(user_ids)
+        }
+        
+    except Exception as e:
+        logger.error(f"Bulk notification failed: {str(e)}", exc_info=True)
+        return {'status': 'failed', 'error': str(e)}
+
+
+@shared_task(
+    name='notifications.send_otp',
+    bind=True,
+    max_retries=3
+)
+def send_otp_task(self, identifier: str, otp: str, purpose: str = 'verification',
+                 expiry_minutes: int = 5):
+    """
+    Send OTP asynchronously - handles both existing and non-existing users
+    
+    Args:
+        identifier: User identifier (UUID, email, or phone number)
+        otp: OTP code
+        purpose: Purpose of OTP (e.g., 'register', 'login')
+        expiry_minutes: OTP expiry time in minutes
+    
+    Example:
+        # For existing user (UUID)
+        send_otp_task.delay(
+            identifier=str(user.id),
+            otp='123456',
+            purpose='login',
+            expiry_minutes=5
         )
         
-        self.logger.info(f"Push notification sent to user: {user.username}")
-        return {
-            'user_id': user_id,
-            'title': title,
-            'result': result
+        # For non-existing user (email/phone)
+        send_otp_task.delay(
+            identifier='newuser@example.com',
+            otp='123456',
+            purpose='register',
+            expiry_minutes=5
+        )
+    """
+    try:
+        from api.notifications.models import NotificationTemplate
+        from django.template import Template, Context
+        
+        # Determine if identifier is email or phone
+        is_email = '@' in identifier
+        template_slug = 'otp_email' if is_email else 'otp_sms'
+        
+        # Try to find existing user
+        user = None
+        try:
+            # First try UUID lookup
+            user = User.objects.get(id=identifier)
+        except (User.DoesNotExist, ValueError):
+            # Then try email/phone lookup
+            try:
+                if is_email:
+                    user = User.objects.get(email=identifier)
+                else:
+                    user = User.objects.get(phone_number=identifier)
+            except User.DoesNotExist:
+                pass  # User doesn't exist, will handle below
+        
+        # Prepare context for template
+        context = {
+            'otp': otp,
+            'purpose': purpose.lower(),
+            'expiry_minutes': expiry_minutes,
+            'identifier': identifier
         }
         
-    except User.DoesNotExist:
-        self.logger.error(f"User not found: {user_id}")
-        raise
-    except Exception as e:
-        self.logger.error(f"Failed to send push notification: {str(e)}")
-        raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_points_notification(self, user_id: str, points: int, source: str, description: str):
-    """Send notification for points awarded (async task)"""
-    try:
-        user = User.objects.get(id=user_id)
+        # Get template for rendering
+        try:
+            template = NotificationTemplate.objects.get(slug=template_slug)
+        except NotificationTemplate.DoesNotExist:
+            logger.error(f"Template not found: {template_slug}")
+            return {'status': 'failed', 'error': f'Template not found: {template_slug}'}
         
-        # Use clean notification API in async task
-        from api.notifications.services import notify_points_earned
-        total_points = user.total_points if hasattr(user, 'total_points') else points
-        notify_points_earned(user, points, total_points)
+        # Render message
+        title_template = Template(template.title_template)
+        message_template = Template(template.message_template)
+        rendered_title = title_template.render(Context(context))
+        rendered_message = message_template.render(Context(context))
         
-        self.logger.info(f"Points notification sent to user: {user.username}")
-        return {
-            'user_id': user_id,
-            'points': points,
-            'status': 'sent'
-        }
-        
-    except User.DoesNotExist:
-        self.logger.error(f"User not found: {user_id}")
-        raise
-    except Exception as e:
-        self.logger.error(f"Failed to send points notification: {str(e)}")
-        raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_rental_reminder_notification(self, rental_id: str):
-    """Send rental return reminder (15 minutes before due)"""
-    try:
-        from api.rentals.models import Rental
-        rental = Rental.objects.get(id=rental_id)
-        
-        # Use clean notification API
-        from api.notifications.services import notify_rental_ending
-        notify_rental_ending(rental.user, rental.powerbank.serial_number, 0.25)  # 15 minutes = 0.25 hours
-        
-        self.logger.info(f"Rental reminder sent for: {rental.rental_code}")
-        return {
-            'rental_id': rental_id,
-            'rental_code': rental.rental_code,
-            'status': 'sent'
-        }
-        
-    except Exception as e:
-        self.logger.error(f"Failed to send rental reminder: {str(e)}")
-        raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_payment_status_notification(self, user_id: str, transaction_id: str, status: str, amount: str):
-    """Send payment status notification"""
-    try:
-        user = User.objects.get(id=user_id)
-        
-        # Use clean notification API
-        from api.notifications.services import notify_payment
-        payment_status = 'successful' if status == 'SUCCESS' else 'failed'
-        notify_payment(user, payment_status, float(amount), transaction_id)
-        
-        self.logger.info(f"Payment status notification sent to user: {user.username}")
-        return {
-            'user_id': user_id,
-            'transaction_id': transaction_id,
-            'status': status
-        }
-        
-    except User.DoesNotExist:
-        self.logger.error(f"User not found: {user_id}")
-        raise
-    except Exception as e:
-        self.logger.error(f"Failed to send payment status notification: {str(e)}")
-        raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_referral_completion_notification(self, referral_id: str):
-    """Send notification when referral is completed"""
-    try:
-        from api.points.models import Referral
-        referral = Referral.objects.get(id=referral_id)
-        
-        # Use clean notification API for both users
-        from api.notifications.services import notify_points_earned
-        
-        # Notify inviter
-        inviter_total = referral.inviter.total_points if hasattr(referral.inviter, 'total_points') else referral.inviter_points_awarded
-        notify_points_earned(referral.inviter, referral.inviter_points_awarded, inviter_total)
-        
-        # Notify invitee  
-        invitee_total = referral.invitee.total_points if hasattr(referral.invitee, 'total_points') else referral.invitee_points_awarded
-        notify_points_earned(referral.invitee, referral.invitee_points_awarded, invitee_total)
-        
-        self.logger.info(f"Referral completion notifications sent for: {referral_id}")
-        return {
-            'referral_id': referral_id,
-            'inviter_points': referral.inviter_points_awarded,
-            'invitee_points': referral.invitee_points_awarded
-        }
+        if user:
+            # User exists - use full notification system
+            from api.notifications.services.notify import NotifyService
+            notify_service = NotifyService()
+            notification = notify_service.send(user, template_slug, **context)
+            
+            logger.info(f"OTP sent to existing user: {user.username}")
+            return {
+                'status': 'success',
+                'notification_id': str(notification.id),
+                'user_type': 'existing',
+                'identifier': identifier
+            }
+        else:
+            # User doesn't exist - send directly via channel services
+            if is_email:
+                # Send via email service
+                from api.notifications.services.email import EmailService
+                email_service = EmailService()
+                
+                # Add rendered message to context for HTML template
+                email_context = context.copy()
+                email_context['message'] = rendered_message
+                
+                result = email_service.send_email(
+                    subject=rendered_title,
+                    recipient_list=[identifier],
+                    template_name='otp_email.html',
+                    context=email_context
+                )
+            else:
+                # Send via SMS service
+                from api.notifications.services.sms import SMSService
+                sms_service = SMSService()
+                result = sms_service.send_sms(
+                    phone_number=identifier,
+                    message=rendered_message,
+                    user=None
+                )
+            
+            logger.info(f"OTP sent to non-existing user: {identifier}")
+            return {
+                'status': 'success',
+                'notification_id': 'otp_direct',
+                'user_type': 'non_existing',
+                'identifier': identifier
+            }
         
     except Exception as e:
-        self.logger.error(f"Failed to send referral completion notification: {str(e)}")
-        raise
+        logger.error(f"Failed to send OTP: {str(e)}", exc_info=True)
+        
+        # Retry task
+        try:
+            raise self.retry(exc=e)
+        except self.MaxRetriesExceededError:
+            logger.error(f"Max retries exceeded for OTP send to {identifier}")
+            return {'status': 'failed', 'error': str(e)}
 
 
-@shared_task(base=NotificationTask, bind=True)
-def send_station_issue_notification(self, issue_id: str):
-    """Send notification to admin about station issue"""
+@shared_task(
+    name='notifications.send_scheduled_notification',
+    bind=True
+)
+def send_scheduled_notification_task(self, user_id: str, template_slug: str,
+                                    context: Dict[str, Any] = None,
+                                    schedule_time: str = None):
+    """
+    Send scheduled notification (use with Celery Beat)
+    
+    Args:
+        user_id: User ID
+        template_slug: Template slug
+        context: Template variables
+        schedule_time: ISO format time (for logging)
+    
+    Example:
+        # In your Celery Beat schedule:
+        send_scheduled_notification_task.apply_async(
+            args=[str(user.id), 'rental_reminder', {'powerbank_id': 'PB123'}],
+            eta=datetime.now() + timedelta(hours=2)
+        )
+    """
     try:
-        from api.stations.models import StationIssue
-        issue = StationIssue.objects.get(id=issue_id)
+        from api.notifications.services.notify import NotifyService
         
-        # Get admin users and send notifications using clean API
-        admin_users = User.objects.filter(is_staff=True, is_active=True)
+        # Get user
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            logger.error(f"User not found: {user_id}")
+            return {'status': 'failed', 'error': 'User not found'}
         
-        for admin in admin_users:
-            # Use backward compatible API for admin alerts with custom titles
-            from api.notifications.services import NotificationService
-            NotificationService().create_notification(
-                user=admin,
-                title="🚨 Station Issue Reported",
-                message=f"Issue reported at {issue.station.station_name}: {issue.get_issue_type_display()}",
-                notification_type='system'
-            )
+        # Send notification
+        notify_service = NotifyService()
+        notification = notify_service.send(user, template_slug, **(context or {}))
         
-        self.logger.info(f"Station issue notification sent to {admin_users.count()} admins")
+        logger.info(f"Scheduled notification sent: {template_slug} to {user.username}")
         return {
-            'issue_id': issue_id,
-            'station_name': issue.station.station_name,
-            'admins_notified': admin_users.count()
-        }
-        
-    except Exception as e:
-        self.logger.error(f"Failed to send station issue notification: {str(e)}")
-        raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_station_offline_notification(self, station_id: str):
-    """Send notification when station goes offline"""
-    try:
-        from api.stations.models import Station
-        station = Station.objects.get(id=station_id)
-        
-        # Get admin users and send notifications using clean API
-        admin_users = User.objects.filter(is_staff=True, is_active=True)
-        
-        for admin in admin_users:
-            # Use backward compatible API for admin alerts with custom titles
-            from api.notifications.services import NotificationService
-            NotificationService().create_notification(
-                user=admin,
-                title="📡 Station Offline",
-                message=f"Station {station.station_name} has gone offline and needs attention.",
-                notification_type='system'
-            )
-        
-        self.logger.info(f"Station offline notification sent for: {station.station_name}")
-        return {
-            'station_id': station_id,
-            'station_name': station.station_name,
-            'admins_notified': admin_users.count()
+            'status': 'success',
+            'notification_id': str(notification.id),
+            'schedule_time': schedule_time
         }
         
     except Exception as e:
-        self.logger.error(f"Failed to send station offline notification: {str(e)}")
-        raise
+        logger.error(f"Scheduled notification failed: {str(e)}", exc_info=True)
+        return {'status': 'failed', 'error': str(e)}
 
 
-@shared_task(base=BaseTask, bind=True)
-def cleanup_old_notifications(self):
-    """Clean up old notifications (older than 3 months)"""
+@shared_task(
+    name='notifications.cleanup_old_notifications',
+    bind=True
+)
+def cleanup_old_notifications_task(self, days: int = 90):
+    """
+    Clean up old read notifications (use with Celery Beat)
+    
+    Args:
+        days: Delete read notifications older than this many days
+    
+    Example:
+        # Run daily to clean up 90+ day old read notifications
+        cleanup_old_notifications_task.delay(days=90)
+    """
     try:
-        cutoff_date = timezone.now() - timezone.timedelta(days=90)
+        from django.utils import timezone
+        from datetime import timedelta
+        from api.notifications.models import Notification
+        
+        cutoff_date = timezone.now() - timedelta(days=days)
         
         # Delete old read notifications
-        deleted_notifications = Notification.objects.filter(
-            created_at__lt=cutoff_date,
-            is_read=True
-        ).delete()[0]
-        
-        # Delete old SMS/FCM logs
-        deleted_logs = SMS_FCMLog.objects.filter(
+        deleted_count, _ = Notification.objects.filter(
+            is_read=True,
             created_at__lt=cutoff_date
-        ).delete()[0]
+        ).delete()
         
-        self.logger.info(f"Cleaned up {deleted_notifications} notifications and {deleted_logs} SMS/FCM logs")
+        logger.info(f"Cleaned up {deleted_count} old notifications (older than {days} days)")
         return {
-            'deleted_notifications': deleted_notifications,
-            'deleted_logs': deleted_logs
+            'status': 'success',
+            'deleted_count': deleted_count,
+            'cutoff_date': cutoff_date.isoformat()
         }
         
     except Exception as e:
-        self.logger.error(f"Failed to cleanup old notifications: {str(e)}")
-        raise
+        logger.error(f"Cleanup task failed: {str(e)}", exc_info=True)
+        return {'status': 'failed', 'error': str(e)}
 
 
-@shared_task(base=BaseTask, bind=True)
-def generate_notification_analytics_report(self, date_range: tuple = None):
-    """Generate notification analytics report"""
+@shared_task(
+    name='notifications.send_reminder_notifications',
+    bind=True
+)
+def send_reminder_notifications_task(self):
+    """
+    Send reminder notifications for overdue rentals (use with Celery Beat)
+    
+    This is an example task that can be scheduled to run periodically.
+    Customize based on your business logic.
+    
+    Example:
+        # In celery beat schedule:
+        'send-rental-reminders': {
+            'task': 'notifications.send_reminder_notifications',
+            'schedule': crontab(minute='*/30'),  # Every 30 minutes
+        }
+    """
     try:
-        from api.notifications.services import NotificationAnalyticsService
-        
-        service = NotificationAnalyticsService()
-        
-        if date_range:
-            from datetime import datetime
-            start_date = datetime.fromisoformat(date_range[0])
-            end_date = datetime.fromisoformat(date_range[1])
-            date_range = (start_date, end_date)
-        
-        analytics = service.get_notification_analytics(date_range)
-        
-        # Cache the analytics report
-        from django.core.cache import cache
-        if date_range:
-            cache_key = f"notification_analytics:{date_range[0].date()}:{date_range[1].date()}"
-        else:
-            cache_key = "notification_analytics:last_30_days"
-        
-        cache.set(cache_key, analytics, timeout=3600)  # 1 hour
-        
-        self.logger.info("Notification analytics report generated")
-        return analytics
-        
-    except Exception as e:
-        self.logger.error(f"Failed to generate notification analytics: {str(e)}")
-        raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_points_milestone_notification(self, user_id: str, milestone: int):
-    """Send notification for points milestone achievement"""
-    try:
-        user = User.objects.get(id=user_id)
-        
-        # Use clean notification API
+        from django.utils import timezone
+        from datetime import timedelta
         from api.notifications.services import notify
-        notify(user, 'points_milestone', milestone=milestone)
         
-        self.logger.info(f"Points milestone notification sent to user: {user.username}")
-        return {
-            'user_id': user_id,
-            'milestone': milestone,
-            'status': 'sent'
-        }
+        # This is a placeholder - customize based on your rental model
+        logger.info("Checking for overdue rentals...")
         
-    except User.DoesNotExist:
-        self.logger.error(f"User not found: {user_id}")
-        raise
-    except Exception as e:
-        self.logger.error(f"Failed to send milestone notification: {str(e)}")
-        raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_account_deactivation_notification(self, user_id: str):
-    """Send notification about account deactivation"""
-    try:
-        user = User.objects.get(id=user_id)
+        # Example: Find rentals ending soon and send reminders
+        # from api.rentals.models import Rental
+        # rentals_ending_soon = Rental.objects.filter(
+        #     status='active',
+        #     end_time__lte=timezone.now() + timedelta(hours=2),
+        #     reminder_sent=False
+        # )
+        # 
+        # for rental in rentals_ending_soon:
+        #     # Use universal notify() method
+        #     notify(
+        #         rental.user,
+        #         'rental_ending',
+        #         async_send=False,
+        #         powerbank_id=rental.powerbank_id,
+        #         remaining_hours=2,
+        #         end_time=rental.end_time.strftime('%I:%M %p')
+        #     )
+        #     rental.reminder_sent = True
+        #     rental.save()
         
-        from api.notifications.services import SMSService
-        sms_service = SMSService()
-        
-        if user.phone_number:
-            message = (
-                f"Hi {user.username}, your PowerBank account has been deactivated due to inactivity. "
-                f"Login to reactivate your account."
-            )
-            
-            sms_service.send_sms(user.phone_number, message, user)
-        
-        self.logger.info(f"Account deactivation notification sent to user: {user.username}")
-        return {
-            'user_id': user_id,
-            'status': 'sent'
-        }
-        
-    except User.DoesNotExist:
-        self.logger.error(f"User not found: {user_id}")
-        raise
-    except Exception as e:
-        self.logger.error(f"Failed to send deactivation notification: {str(e)}")
-        raise
-
-
-@shared_task(base=BaseTask, bind=True)
-def retry_failed_notifications(self):
-    """Retry failed SMS/FCM notifications"""
-    try:
-        # Get failed notifications from last 24 hours
-        twenty_four_hours_ago = timezone.now() - timezone.timedelta(hours=24)
-        
-        failed_logs = SMS_FCMLog.objects.filter(
-            status='failed',
-            created_at__gte=twenty_four_hours_ago
-        )
-        
-        retry_count = 0
-        success_count = 0
-        
-        for log in failed_logs:
-            try:
-                if log.notification_type == 'sms':
-                    from api.notifications.services import SMSService
-                    sms_service = SMSService()
-                    result = sms_service.send_sms(log.recipient, log.message, log.user)
-                    
-                    if result['status'] == 'sent':
-                        success_count += 1
-                
-                elif log.notification_type == 'fcm':
-                    from api.notifications.services import FCMService
-                    fcm_service = FCMService()
-                    
-                    if log.user:
-                        result = fcm_service.send_push_notification(
-                            log.user, log.title, log.message
-                        )
-                        
-                        if result['status'] == 'sent':
-                            success_count += 1
-                
-                retry_count += 1
-                
-            except Exception as e:
-                self.logger.error(f"Retry failed for log {log.id}: {str(e)}")
-        
-        self.logger.info(f"Retried {retry_count} failed notifications, {success_count} successful")
-        return {
-            'retry_count': retry_count,
-            'success_count': success_count
-        }
+        logger.info("Reminder notifications task completed")
+        return {'status': 'success'}
         
     except Exception as e:
-        self.logger.error(f"Failed to retry notifications: {str(e)}")
-        raise
+        logger.error(f"Reminder task failed: {str(e)}", exc_info=True)
+        return {'status': 'failed', 'error': str(e)}
 
 
-
-# ========================================
-# MISSING TASKS - ADDED FOR COMPATIBILITY
-# ========================================
-
-@shared_task(base=NotificationTask, bind=True)
-def send_achievement_unlock_notifications(self, user_id: str, achievements: List[Dict[str, Any]]):
-    """Send notifications for unlocked achievements"""
-    try:
-        user = User.objects.get(id=user_id)
-        
-        for achievement in achievements:
-            # Use clean notification API
-            from api.notifications.services import notify_points_earned
-            notify_points_earned(user, achievement.get('points', 0), user.total_points if hasattr(user, 'total_points') else 0)
-        
-        self.logger.info(f"Achievement notifications sent to user: {user.username}")
-        return {
-            'user_id': user_id,
-            'achievements_count': len(achievements),
-            'status': 'sent'
-        }
-        
-    except User.DoesNotExist:
-        self.logger.error(f"User not found: {user_id}")
-        raise
-    except Exception as e:
-        self.logger.error(f"Failed to send achievement notifications: {str(e)}")
-        raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_refund_request_notification(self, refund_id: str):
-    """Send notification to admin about refund request"""
-    try:
-        from api.payments.models import Refund
-        refund = Refund.objects.get(id=refund_id)
-        
-        # Get admin users and send notifications
-        admin_users = User.objects.filter(is_staff=True, is_active=True)
-        
-        for admin in admin_users:
-            from api.notifications.services import NotificationService
-            NotificationService().create_notification(
-                user=admin,
-                title="💰 Refund Request",
-                message=f"New refund request from {refund.user.username} for ₹{refund.amount}",
-                notification_type='system'
-            )
-        
-        self.logger.info(f"Refund request notification sent for: {refund_id}")
-        return {
-            'refund_id': refund_id,
-            'admins_notified': admin_users.count()
-        }
-        
-    except Exception as e:
-        self.logger.error(f"Failed to send refund request notification: {str(e)}")
-        raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_refund_approved_notification(self, refund_id: str):
-    """Send notification when refund is approved"""
-    try:
-        from api.payments.models import Refund
-        refund = Refund.objects.get(id=refund_id)
-        
-        # Use clean notification API
-        from api.notifications.services import notify_payment
-        notify_payment(refund.user, 'refund_approved', float(refund.amount), refund.transaction_id)
-        
-        self.logger.info(f"Refund approved notification sent for: {refund_id}")
-        return {
-            'refund_id': refund_id,
-            'user_id': str(refund.user.id),
-            'amount': str(refund.amount)
-        }
-        
-    except Exception as e:
-        self.logger.error(f"Failed to send refund approved notification: {str(e)}")
-        raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_refund_rejected_notification(self, refund_id: str):
-    """Send notification when refund is rejected"""
-    try:
-        from api.payments.models import Refund
-        refund = Refund.objects.get(id=refund_id)
-        
-        # Use clean notification API
-        from api.notifications.services import notify_payment
-        notify_payment(refund.user, 'refund_rejected', float(refund.amount), refund.transaction_id)
-        
-        self.logger.info(f"Refund rejected notification sent for: {refund_id}")
-        return {
-            'refund_id': refund_id,
-            'user_id': str(refund.user.id),
-            'amount': str(refund.amount)
-        }
-        
-    except Exception as e:
-        self.logger.error(f"Failed to send refund rejected notification: {str(e)}")
-        raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_wallet_discrepancy_alert(self, discrepancies: List[Dict[str, Any]]):
-    """Send alert to admin about wallet discrepancies"""
-    try:
-        admin_users = User.objects.filter(is_staff=True, is_active=True)
-        
-        for admin in admin_users:
-            from api.notifications.services import NotificationService
-            NotificationService().create_notification(
-                user=admin,
-                title="⚠️ Wallet Discrepancy Alert",
-                message=f"Found {len(discrepancies)} wallet discrepancies that need attention",
-                notification_type='system',
-                data={'discrepancies': discrepancies}
-            )
-        
-        self.logger.info(f"Wallet discrepancy alert sent to {admin_users.count()} admins")
-        return {
-            'discrepancies_count': len(discrepancies),
-            'admins_notified': admin_users.count()
-        }
-        
-    except Exception as e:
-        self.logger.error(f"Failed to send wallet discrepancy alert: {str(e)}")
-        raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_optimization_report(self, optimization_suggestions: List[Dict[str, Any]]):
-    """Send optimization report to admin"""
-    try:
-        admin_users = User.objects.filter(is_staff=True, is_active=True)
-        
-        for admin in admin_users:
-            from api.notifications.services import NotificationService
-            NotificationService().create_notification(
-                user=admin,
-                title="📊 Station Optimization Report",
-                message=f"New optimization report with {len(optimization_suggestions)} suggestions",
-                notification_type='system',
-                data={'suggestions': optimization_suggestions}
-            )
-        
-        self.logger.info(f"Optimization report sent to {admin_users.count()} admins")
-        return {
-            'suggestions_count': len(optimization_suggestions),
-            'admins_notified': admin_users.count()
-        }
-        
-    except Exception as e:
-        self.logger.error(f"Failed to send optimization report: {str(e)}")
-        raise
-
-
-@shared_task(base=NotificationTask, bind=True)
-def send_points_discrepancy_alert(self, discrepancies: List[Dict[str, Any]]):
-    """Send alert to admin about points discrepancies"""
-    try:
-        admin_users = User.objects.filter(is_staff=True, is_active=True)
-        
-        for admin in admin_users:
-            from api.notifications.services import NotificationService
-            NotificationService().create_notification(
-                user=admin,
-                title="⚠️ Points Discrepancy Alert",
-                message=f"Found {len(discrepancies)} points discrepancies that need attention",
-                notification_type='system',
-                data={'discrepancies': discrepancies}
-            )
-        
-        self.logger.info(f"Points discrepancy alert sent to {admin_users.count()} admins")
-        return {
-            'discrepancies_count': len(discrepancies),
-            'admins_notified': admin_users.count()
-        }
-        
-    except Exception as e:
-        self.logger.error(f"Failed to send points discrepancy alert: {str(e)}")
-        raise
+# Export all tasks
+__all__ = [
+    'send_notification_task',
+    'send_bulk_notifications_task',
+    'send_otp_task',
+    'send_scheduled_notification_task',
+    'cleanup_old_notifications_task',
+    'send_reminder_notifications_task',
+]

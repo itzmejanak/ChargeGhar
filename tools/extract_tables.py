@@ -22,7 +22,7 @@ from pathlib import Path
 class PowerBankTableExtractor:
     """Extracts ALL tables from ER diagram - Simple and Powerful for ongoing context."""
     
-    def __init__(self, er_diagram_path: str = "PowerBank_ER_Diagram.md"):
+    def __init__(self, er_diagram_path: str = "docs/PowerBank_ER_Diagram.md"):
         self.er_diagram_path = Path(er_diagram_path)
         self.all_tables: Set[str] = set()
         self.table_definitions: Dict[str, Dict] = {}

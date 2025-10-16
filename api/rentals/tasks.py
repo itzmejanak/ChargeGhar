@@ -30,15 +30,14 @@ def check_overdue_rentals(self):
             updated_count += 1
             
             # Send overdue notification
-            from api.notifications.services import NotificationService
-            notification_service = NotificationService()
+            from api.notifications.services import notify
             
             overdue_hours = int((now - rental.due_at).total_seconds() / 3600)
             penalty_amount = float(rental.overdue_amount)
             
             # Send rental overdue notification using clean API
-            from api.notifications.services import notify
             notify(rental.user, 'rental_overdue',
+                  async_send=True,
                   powerbank_id=rental.powerbank.serial_number,
                   overdue_hours=overdue_hours,
                   penalty_amount=penalty_amount)
@@ -146,12 +145,11 @@ def auto_complete_abandoned_rentals(self):
                 completed_count += 1
                 
                 # Send notification about completion and charges
-                from api.notifications.services import NotificationService
-                notification_service = NotificationService()
+                from api.notifications.services import notify
                 
                 # Send rental auto-completion notification using clean API
-                from api.notifications.services import notify
                 notify(rental.user, 'rental_auto_completed',
+                      async_send=True,
                       powerbank_id=rental.power_bank.serial_number,
                       total_cost=float(rental.overdue_amount))
                 
@@ -190,8 +188,16 @@ def send_rental_reminders(self):
         for rental in rentals_to_remind:
             try:
                 # Send reminder notification
-                from api.notifications.tasks import send_rental_reminder_notification
-                send_rental_reminder_notification.delay(str(rental.id))
+                from api.notifications.tasks import send_notification_task
+                send_notification_task.delay(
+                    str(rental.user.id),
+                    'rental_reminder',
+                    {
+                        'rental_id': str(rental.id),
+                        'rental_code': rental.rental_code,
+                        'due_time': rental.due_at.strftime('%H:%M')
+                    }
+                )
                 
                 # Mark reminder as sent
                 rental.rental_metadata['reminder_sent'] = True
@@ -418,18 +424,19 @@ def detect_rental_anomalies(self):
         
         # Send alert if anomalies found
         if anomalies:
-            from api.notifications.services import NotificationService
-            notification_service = NotificationService()
-            
-            # Get admin users
+            from api.notifications.services import notify_bulk
             from django.contrib.auth import get_user_model
             User = get_user_model()
             admin_users = User.objects.filter(is_staff=True, is_active=True)
             
-            for admin in admin_users:
-                # Send rental anomalies alert using clean API
-                from api.notifications.services import notify
-                notify(admin, 'rental_anomalies_alert', anomaly_count=len(anomalies))
+            # Send bulk notification to all admins
+            notify_bulk(
+                admin_users,
+                'rental_anomalies_alert',
+                async_send=True,
+                anomaly_count=len(anomalies),
+                anomalies=anomalies
+            )
         
         self.logger.info(f"Detected {len(anomalies)} rental anomalies")
         return {

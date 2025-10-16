@@ -23,7 +23,7 @@ from api.common.serializers import (
     MediaUploadSerializer
 )
 from api.common.serializers import BaseResponseSerializer, HealthCheckSerializer, AppVersionSerializer
-from api.notifications.tasks import send_otp_task
+# Notification tasks imported when needed
 
 
 if TYPE_CHECKING:

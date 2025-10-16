@@ -1,0 +1,148 @@
+no that is not the problem 
+
+owerbank_api-1            | 2025-10-15 18:59:25 DEBUG amqp using channel_id: 1
+
+powerbank_api-1            | 2025-10-15 18:59:25 DEBUG amqp Channel open
+
+powerbank_api-1            | 2025-10-15 18:59:25 INFO api.users.services OTP generated for 9866214494 - Purpose: REGISTER
+
+powerbank_api-1            | 2025-10-15 18:59:25 INFO api.common.decorators API call success
+
+powerbank_celery-1         | [2025-10-15 18:59:25,226: INFO/MainProcess] Task notifications.send_otp[ac943520-f796-42af-9293-717e73e37e77] received
+
+powerbank_celery-1         | [2025-10-15 18:59:25,235: INFO/ForkPoolWorker-8] Sending SMS via Sparrow SMS to +9779866214494
+
+powerbank_celery-1         | [2025-10-15 18:59:25,403: ERROR/ForkPoolWorker-8] SMS API error for +9779866214494: HTTP 400: {"response_code": 1008, "response": "Invalid Sender"}
+
+powerbank_celery-1         | [2025-10-15 18:59:25,405: INFO/ForkPoolWorker-8] OTP sent to non-existing user: 9866214494
+
+powerbank_celery-1         | [2025-10-15 18:59:25,407: INFO/ForkPoolWorker-8] Task notifications.send_otp[ac943520-f796-42af-9293-717e73e37e77] succeeded in 0.17834247404243797s: {'status': 'success', 'notification_id': 'otp_direct', 'user_type': 'non_existing', 'identifier': '9866214494'}
+
+
+
+
+
+please verify one our implenatation and garb the accuarte problem or we write wrong logic ??
+
+Kiro
+You're right! The issue is still persisting even after changing the sender ID. Let me analyze the implementation more carefully. The logs show the error is still happening, which means either:
+
+The environment variable change didn't take effect
+There's a caching issue
+The Sparrow SMS API configuration is incorrect
+Let me check the actual implementation and verify what's happening:
+
+Read file(s)
+
+sms.py 70 - 111
+I see a potential issue! Let me check if the services are actually picking up the new environment variable. The issue might be that the Docker containers haven't restarted or there's a fallback value being used.
+
+Let me also check the current .env file to make sure the change was applied:
+
+Read file(s)
+
+.env 150 - 161
+no no dont change those credentins upto yesrstary all working fine but new we get that problem ?? 
+
+Kiro
+You're absolutely right! If it was working yesterday and now it's not, this is likely due to our recent code changes, not the Sparrow SMS configuration. Let me revert the .env change and analyze what we changed in our implementation that might have broken the SMS flow.
+
+Error(s) while editing
+
+Unable to replace text, trying a different approach...
+Let me check what the current value is:
+
+Searched workspace
+Finding the current SPARROW_SMS_FROM value in .env
+Good, it's still "Demo". Now let me analyze what we changed in our recent implementation that might have caused this issue. Let me check the send_otp_task implementation:
+
+Read file(s)
+
+tasks.py 240 - 271
+I think I found the issue! The problem might be that we're now using the send_otp_task which calls the SMS service directly, but there might be a difference in how the message is being rendered or passed.
+
+Let me check what message is being sent by looking at the template rendering:
+
+Read file(s)
+
+tasks.py 200 - 231
+The logic looks correct. Let me check if there's a difference between how the old system worked vs the new system. The key insight is that yesterday it was working, so something in our recent changes broke it.
+
+Let me check what the actual message being sent looks like. The issue might be that the rendered message is too long or contains characters that Sparrow SMS doesn't accept.
+
+Let me create a debug version to see exactly what's being sent:
+
+Accepted edits to
+
+sms.py
+
+
+Now let me also check if there's an issue with the message content. Let me look at the otp_sms template from the fixtures:
+
+Command
+grep -A 5 -B 5 '"slug": "otp_sms"' api/notifications/fixtures/notifications.json
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 28,
+    "fields": {
+      "name": "OTP SMS",
+      "slug": "otp_sms",
+      "notification_type": "system",
+      "title_template": "ChargeGhar OTP",
+      "message_template": "Your ChargeGhar {{purpose}} OTP is: {{otp}}. Valid for {{expiry_minutes}} minutes. Do not
+ share this code.",                                                                                                       "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+Wait! I think I found a potential issue. Let me compare the message templates between otp_sms and otp_email:
+
+Command
+grep -A 3 '"message_template"' api/notifications/fixtures/notifications.json | grep -A 3 -B 1 "otp"
+--
+      "message_template": "Your ChargeGhar {{purpose}} OTP is: {{otp}}. Valid for {{expiry_minutes}} minutes. Do not
+ share this code.",                                                                                                       "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+--
+--
+      "message_template": "Your ChargeGhar {{purpose}} verification code is: {{otp}}. This code is valid for {{expir
+y_minutes}} minutes. Do not share this code with anyone.",                                                                "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+I notice there are different message templates. Let me get the exact templates:
+
+Command
+grep -A 10 '"slug": "otp_sms"' api/notifications/fixtures/notifications.json
+      "slug": "otp_sms",
+      "notification_type": "system",
+      "title_template": "ChargeGhar OTP",
+      "message_template": "Your ChargeGhar {{purpose}} OTP is: {{otp}}. Valid for {{expiry_minutes}} minutes. Do not
+ share this code.",                                                                                                       "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+Command
+grep -A 10 '"slug": "otp_email"' api/notifications/fixtures/notifications.json
+      "slug": "otp_email",
+      "notification_type": "system",
+      "title_template": "ChargeGhar Email Verification",
+      "message_template": "Your ChargeGhar {{purpose}} verification code is: {{otp}}. This code is valid for {{expir
+y_minutes}} minutes. Do not share this code with anyone.",                                                                "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+Let me check if there's an issue with the message length or content. The problem might be that the rendered message is causing issues. Let me create a simple test to see what's actually being sent:
+
+Created
+
+debug_sms_issue.py
+
+
+Session Too Long
+Continue
+Summarize and continue in a new session.
+

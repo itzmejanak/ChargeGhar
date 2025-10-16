@@ -80,9 +80,14 @@ class SMSService(BaseService):
             self.log_info(f"Sending SMS via Sparrow SMS to {phone_number}")
             url = getattr(settings, 'SPARROW_SMS_BASE_URL', 'http://api.sparrowsms.com/v2/sms/')
             
+            # Debug: Log the exact payload being sent
+            sender_id = getattr(settings, 'SPARROW_SMS_FROM', 'ChargeGhar')
+            self.log_info(f"SMS Payload - From: {sender_id}, To: {phone_number}, Message Length: {len(message)}")
+            self.log_info(f"SMS Message: {message}")
+            
             payload = {
                 'token': settings.SPARROW_SMS_TOKEN,
-                'from': getattr(settings, 'SPARROW_SMS_FROM', 'ChargeGhar'),
+                'from': sender_id,
                 'to': phone_number,
                 'text': message
             }

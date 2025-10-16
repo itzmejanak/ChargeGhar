@@ -18,7 +18,7 @@ from api.common.utils.helpers import (
 )
 from api.users.models import User, UserProfile, UserKYC, UserDevice, UserPoints, UserAuditLog
 from api.payments.models import Wallet
-from api.notifications.services import NotificationService
+from api.notifications.services import notify
 
 
 User = get_user_model()
@@ -85,22 +85,31 @@ class AuthService(BaseService):
             cache.set(cache_key, otp, timeout=self.otp_expiry_minutes * 60)
             cache.set(attempts_key, attempts + 1, timeout=3600)  # 1 hour
             
-            # Send OTP using clean notification system
-            from api.notifications.services import notify_otp
+            # Determine OTP delivery method and template
+            is_email = '@' in identifier
+            template_slug = 'otp_email' if is_email else 'otp_sms'
             
             # Try to find existing user for notification
             user = None
             try:
-                if '@' in identifier:
+                if is_email:
                     user = User.objects.get(email=identifier)
                 else:
                     user = User.objects.get(phone_number=identifier)
             except User.DoesNotExist:
                 pass  # User not found, will handle via direct service
             
-            # Send OTP asynchronously via task (better performance)
-            from api.notifications.tasks import send_otp_task
-            send_otp_task.delay(identifier, otp, purpose.lower())
+            # Send OTP via universal OTP sender
+            from api.notifications.services import send_otp
+            
+            # Send OTP asynchronously - handles both existing and non-existing users
+            send_otp(
+                identifier=identifier,
+                otp=otp,
+                purpose=purpose,
+                expiry_minutes=self.otp_expiry_minutes,
+                async_send=True
+            )
             
             self.log_info(f"OTP generated for {identifier} - Purpose: {purpose}")
             return {
@@ -192,9 +201,18 @@ class AuthService(BaseService):
             if validated_data.get('referral_code'):
                 self._process_referral(user, validated_data['referral_code'])
             
-            # Award signup points
-            from api.points.tasks import award_points_task
-            award_points_task.delay(user.id, 50, 'SIGNUP', 'New user signup bonus')
+            # Award signup points (after transaction commits)
+            from api.points.services import award_points
+            from api.config.services import AppConfigService
+            from django.db import transaction
+            
+            config_service = AppConfigService()
+            signup_points = int(config_service.get_config_cached('POINTS_SIGNUP', 50))
+            
+            # Schedule task after transaction commits to ensure user exists
+            transaction.on_commit(
+                lambda: award_points(user, signup_points, 'SIGNUP', 'New user signup bonus', async_send=True)
+            )
             
             # Log audit
             self._log_user_audit(user, 'CREATE', 'USER', str(user.id), request)
@@ -281,8 +299,8 @@ class AuthService(BaseService):
             user.save(update_fields=['referred_by'])
             
             # Award referral points (will be handled by Celery task after first rental)
-            from api.points.tasks import process_referral_task
-            process_referral_task.delay(user.id, referrer.id)
+            from api.points.services import complete_referral
+            complete_referral(user, referrer, async_send=True)
             
         except User.DoesNotExist:
             # Invalid referral code - log but don't fail registration
@@ -320,8 +338,13 @@ class AuthService(BaseService):
             user.save(update_fields=['status'])
             
             # Send account status notification
-            from api.notifications.services import notify_account_status
-            notify_account_status(user, new_status, reason)
+            notify(
+                user,
+                'account_status_changed',
+                async_send=True,
+                new_status=new_status,
+                reason=reason
+            )
             
             self.log_info(f"Account status updated: {user.username} {old_status} -> {new_status}")
             return True
@@ -375,9 +398,14 @@ class AuthService(BaseService):
             UserPoints.objects.create(user=user)
             Wallet.objects.create(user=user)
             
-            # Award signup points
-            from api.points.tasks import award_points_task
-            award_points_task.delay(user.id, 50, 'SOCIAL_SIGNUP', f'New user signup via {provider}')
+            # Award signup points (after transaction commits)
+            from api.points.services import award_points
+            from django.db import transaction
+            
+            # Schedule task after transaction commits to ensure user exists
+            transaction.on_commit(
+                lambda: award_points(user, 50, 'SOCIAL_SIGNUP', f'New user signup via {provider}', async_send=True)
+            )
             
             # Mark user as created via service to avoid duplicate processing
             user._created_via_service = True
@@ -442,19 +470,35 @@ class UserProfileService(BaseService):
             
             # Check if profile is complete
             required_fields = ['full_name', 'date_of_birth', 'address']
+            was_complete = profile.is_profile_complete if hasattr(profile, 'is_profile_complete') else False
             profile.is_profile_complete = all(
                 getattr(profile, field) for field in required_fields
             )
             
             profile.save()
             
+            # Award points for profile completion (first time only)
+            if profile.is_profile_complete and not was_complete:
+                from api.points.services import award_points
+                from api.config.services import AppConfigService
+                from django.db import transaction
+                
+                config_service = AppConfigService()
+                profile_points = int(config_service.get_config_cached('POINTS_PROFILE', 20))
+                
+                # Schedule task after transaction commits
+                transaction.on_commit(
+                    lambda: award_points(user, profile_points, 'PROFILE', 'Profile completed', async_send=True)
+                )
+            
             # Send profile completion reminder if still incomplete (async)
-            if not profile.is_profile_complete:
-                from api.notifications.tasks import send_push_notification_task
-                send_push_notification_task.delay(
-                    str(user.id),
-                    "Complete Your Profile", 
-                    "Complete your profile to unlock all ChargeGhar features!"
+            elif not profile.is_profile_complete:
+                from api.notifications.services import notify
+                notify(
+                    user,
+                    'profile_completion_reminder',
+                    async_send=True,
+                    completion_percentage=profile.completion_percentage
                 )
             
             self.log_info(f"Profile updated for user: {user.username}")
@@ -554,11 +598,30 @@ class UserKYCService(BaseService):
                 kyc.rejection_reason = rejection_reason
             if status == 'APPROVED':
                 kyc.verified_at = timezone.now()
+                
+                # Award KYC completion points (after transaction commits)
+                from api.points.services import award_points
+                from api.config.services import AppConfigService
+                from django.db import transaction
+                
+                config_service = AppConfigService()
+                kyc_points = int(config_service.get_config_cached('POINTS_KYC', 30))
+                
+                # Schedule task after transaction commits
+                transaction.on_commit(
+                    lambda: award_points(user, kyc_points, 'KYC', 'KYC verification completed', async_send=True)
+                )
+                
             kyc.save()
             
             # Send KYC status notification
-            from api.notifications.services import notify_kyc_status
-            notify_kyc_status(user, status.lower(), rejection_reason)
+            notify(
+                user,
+                'kyc_status_updated',
+                async_send=True,
+                status=status.lower(),
+                rejection_reason=rejection_reason
+            )
             
             self.log_info(f"KYC status updated: {user.username} -> {status}")
             return True

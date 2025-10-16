@@ -87,19 +87,22 @@ class ServiceHandlerMixin:
             if isinstance(e, ServiceException):
                 error_code = getattr(e, 'code', 'service_error')
                 status_code = getattr(e, 'status_code', status.HTTP_400_BAD_REQUEST)
+                # Use the actual exception message instead of generic error_message
+                actual_message = str(e) or error_message
             else:
                 error_code = 'internal_error'
                 status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+                actual_message = error_message
             
             if hasattr(self, 'error_response'):
                 return self.error_response(
-                    message=error_message,
+                    message=actual_message,
                     status_code=status_code,
                     error_code=error_code
                 )
             else:
                 return Response(
-                    {'error': error_message},
+                    {'error': actual_message},
                     status=status_code
                 )
 

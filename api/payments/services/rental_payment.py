@@ -41,13 +41,13 @@ class RentalPaymentService(BaseService):
 
             # Deduct points if used
             if points_to_use > 0:
-                from api.points.services import PointsService
-                points_service = PointsService()
-                points_service.deduct_points(
+                from api.points.services import deduct_points
+                deduct_points(
                     user,
                     points_to_use,
                     'RENTAL_PAYMENT',
-                    rental_description
+                    rental_description,
+                    async_send=False  # Immediate for payment processing
                 )
 
             # Deduct wallet balance if used
@@ -87,13 +87,13 @@ class RentalPaymentService(BaseService):
 
             # Deduct points if used
             if payment_breakdown['points_to_use'] > 0:
-                from api.points.services import PointsService
-                points_service = PointsService()
-                points_service.deduct_points(
+                from api.points.services import deduct_points
+                deduct_points(
                     user,
                     payment_breakdown['points_to_use'],
                     'DUE_PAYMENT',
-                    f"Due payment for rental {rental.rental_code}"
+                    f"Due payment for rental {rental.rental_code}",
+                    async_send=False  # Immediate for payment processing
                 )
 
             # Deduct wallet if used

@@ -128,18 +128,16 @@ class CouponService(CRUDService):
             )
             
             # Award points to user
-            from api.points.services import PointsService
-            points_service = PointsService()
+            from api.points.services import award_points
             
-            points_service.award_points(
+            award_points(
                 user=user,
                 points=coupon.points_value,
                 source='COUPON',
                 description=f'Coupon applied: {coupon.name}',
-                metadata={
-                    'coupon_code': coupon.code,
-                    'coupon_usage_id': str(coupon_usage.id)
-                }
+                async_send=False,  # Immediate for coupon redemption
+                coupon_code=coupon.code,
+                coupon_usage_id=str(coupon_usage.id)
             )
             
             # Send coupon notification asynchronously via task

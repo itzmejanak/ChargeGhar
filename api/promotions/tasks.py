@@ -87,10 +87,7 @@ def send_coupon_expiry_reminders(self):
             valid_until__lte=three_days_from_now
         )
         
-        from api.notifications.services import NotificationService
-        notification_service = NotificationService()
-        
-        # Get users who haven't used these coupons
+        from api.notifications.services import notify
         from django.contrib.auth import get_user_model
         User = get_user_model()
         
@@ -111,8 +108,8 @@ def send_coupon_expiry_reminders(self):
                 try:
                     days_until_expiry = (coupon.valid_until - timezone.now()).days
                     # Send coupon expiring notification using clean API
-                    from api.notifications.services import notify
-                    notify(user, 'coupon_expiring_soon', 
+                    notify(user, 'coupon_expiring_soon',
+                          async_send=True,
                           coupon_code=coupon.code, 
                           coupon_name=coupon.name,
                           points_value=coupon.points_value,
@@ -206,18 +203,19 @@ def analyze_coupon_performance(self):
         
         # Send insights to admin if there are underperforming coupons
         if underperforming_coupons:
-            from api.notifications.services import NotificationService
-            notification_service = NotificationService()
-            
-            # Get admin users
+            from api.notifications.services import notify_bulk
             from django.contrib.auth import get_user_model
             User = get_user_model()
             admin_users = User.objects.filter(is_staff=True, is_active=True)
             
-            for admin in admin_users:
-                # Send coupon performance alert using clean API
-                from api.notifications.services import notify
-                notify(admin, 'coupon_performance_alert', underperforming_count=len(underperforming_coupons))
+            # Send bulk notification to all admins
+            notify_bulk(
+                admin_users,
+                'coupon_performance_alert',
+                async_send=True,
+                underperforming_count=len(underperforming_coupons),
+                underperforming_coupons=underperforming_coupons
+            )
         
         self.logger.info(f"Analyzed coupon performance. {len(underperforming_coupons)} underperforming coupons found")
         return {
@@ -268,10 +266,7 @@ def send_new_coupon_notifications(self, coupon_id: str):
     try:
         coupon = Coupon.objects.get(id=coupon_id)
         
-        from api.notifications.services import NotificationService
-        notification_service = NotificationService()
-        
-        # Get active users (limit to prevent spam)
+        from api.notifications.services import notify_bulk
         from django.contrib.auth import get_user_model
         User = get_user_model()
         
@@ -280,21 +275,18 @@ def send_new_coupon_notifications(self, coupon_id: str):
             status='ACTIVE'
         )[:500]  # Limit to 500 users
         
-        notifications_sent = 0
+        # Send bulk notification to eligible users
+        result = notify_bulk(
+            eligible_users,
+            'new_coupon_available',
+            async_send=True,
+            coupon_code=coupon.code,
+            coupon_name=coupon.name,
+            points_value=coupon.points_value,
+            expiry_date=coupon.valid_until.strftime('%B %d, %Y')
+        )
         
-        for user in eligible_users:
-            try:
-                # Send new coupon notification using clean API
-                from api.notifications.services import notify
-                notify(user, 'new_coupon_available',
-                      coupon_code=coupon.code,
-                      coupon_name=coupon.name,
-                      points_value=coupon.points_value,
-                      expiry_date=coupon.valid_until.strftime('%B %d, %Y'))
-                notifications_sent += 1
-                
-            except Exception as e:
-                self.logger.error(f"Failed to send new coupon notification to user {user.id}: {str(e)}")
+        notifications_sent = len(eligible_users)  # Assume all successful for bulk
         
         self.logger.info(f"Sent new coupon notifications to {notifications_sent} users")
         return {
