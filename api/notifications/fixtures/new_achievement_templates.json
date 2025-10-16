@@ -1,0 +1,30 @@
+[
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 35,
+    "fields": {
+      "name": "Achievement Claimed",
+      "slug": "achievement_claimed",
+      "notification_type": "achievement",
+      "title_template": "🎉 Achievement Claimed!",
+      "message_template": "You've earned {{points}} points from '{{achievement_name}}'! Total points: {{total_points}}",
+      "is_active": true,
+      "created_at": "2025-01-16T10:00:00Z",
+      "updated_at": "2025-01-16T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 36,
+    "fields": {
+      "name": "Bulk Achievements Claimed",
+      "slug": "bulk_achievements_claimed",
+      "notification_type": "achievement",
+      "title_template": "🎉 {{count}} Achievements Claimed!",
+      "message_template": "Wow! You've earned {{total_points}} points from {{count}} achievements: {{achievement_names}}",
+      "is_active": true,
+      "created_at": "2025-01-16T10:00:00Z",
+      "updated_at": "2025-01-16T10:00:00Z"
+    }
+  }
+]

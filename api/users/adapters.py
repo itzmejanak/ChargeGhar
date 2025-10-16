@@ -53,6 +53,19 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         provider = social_account.provider
         extra_data = social_account.extra_data
         
+        # Double-check if user already exists by email before creating
+        email = extra_data.get('email')
+        if email:
+            try:
+                existing_user = User.objects.get(email=email)
+                logger.info(f"Found existing user during populate: {existing_user.email}")
+                # Link social account to existing user
+                from api.users.services import AuthService
+                auth_service = AuthService()
+                return auth_service.link_social_account(existing_user, extra_data, provider)
+            except User.DoesNotExist:
+                pass  # User doesn't exist, proceed with creation
+        
         # Use service method to create social user
         try:
             from api.users.services import AuthService
@@ -65,8 +78,16 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         except Exception as e:
             logger.error(f"Error creating social user via service: {e}")
             
-            # Fallback to manual creation if service fails
-            email = extra_data.get('email')
+            # Final fallback - check once more for existing user
+            if email:
+                try:
+                    existing_user = User.objects.get(email=email)
+                    logger.info(f"Found existing user in fallback: {existing_user.email}")
+                    return existing_user
+                except User.DoesNotExist:
+                    pass
+            
+            # Manual creation as last resort
             uid = social_account.uid
             
             user = User()

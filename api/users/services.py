@@ -363,6 +363,15 @@ class AuthService(BaseService):
             picture = social_data.get('picture', '')
             provider_id = social_data.get('id') or social_data.get('sub')
             
+            # Check if user already exists by email (prevent duplicate constraint violation)
+            if email:
+                try:
+                    existing_user = User.objects.get(email=email)
+                    self.log_info(f"User with email {email} already exists, linking social account")
+                    return self.link_social_account(existing_user, social_data, provider)
+                except User.DoesNotExist:
+                    pass  # User doesn't exist, proceed with creation
+            
             # Create user with unique username
             base_username = email.split('@')[0] if email else f"{provider}_{provider_id}"
             username = base_username
@@ -373,10 +382,19 @@ class AuthService(BaseService):
                 username = f"{base_username}_{counter}"
                 counter += 1
             
-            user = User.objects.create_user(
-                email=email,
-                username=username,
-            )
+            try:
+                user = User.objects.create_user(
+                    email=email,
+                    username=username,
+                )
+            except Exception as create_error:
+                # Handle duplicate email constraint violation as fallback
+                if 'duplicate key value violates unique constraint' in str(create_error) and 'email' in str(create_error):
+                    self.log_warning(f"Duplicate email constraint during user creation, finding existing user: {email}")
+                    if email:
+                        existing_user = User.objects.get(email=email)
+                        return self.link_social_account(existing_user, social_data, provider)
+                raise create_error
             
             # Set social auth fields
             user.profile_picture = picture
@@ -407,6 +425,12 @@ class AuthService(BaseService):
                 lambda: award_points(user, 50, 'SOCIAL_SIGNUP', f'New user signup via {provider}', async_send=True)
             )
             
+            # Send welcome message (after transaction commits)
+            from api.users.tasks import send_social_auth_welcome_message
+            transaction.on_commit(
+                lambda: send_social_auth_welcome_message.delay(user.id, provider)
+            )
+            
             # Mark user as created via service to avoid duplicate processing
             user._created_via_service = True
             
@@ -422,9 +446,12 @@ class AuthService(BaseService):
         try:
             provider_id = social_data.get('id') or social_data.get('sub')
             
-            # Update user with social data
-            if not getattr(user, f'{provider}_id'):
-                setattr(user, f'{provider}_id', provider_id)
+            # Update user with social data if not already linked
+            provider_id_field = f'{provider}_id'
+            current_provider_id = getattr(user, provider_id_field, None)
+            
+            if not current_provider_id:
+                setattr(user, provider_id_field, provider_id)
                 user.social_provider = provider.upper()
                 user.social_profile_data = social_data
                 
@@ -433,19 +460,25 @@ class AuthService(BaseService):
                     user.profile_picture = social_data.get('picture')
                 
                 user.save()
-                
-                # Update profile with social data if incomplete
-                try:
-                    profile = user.profile
-                    if not profile.full_name and social_data.get('name'):
-                        profile.full_name = social_data.get('name')
-                        profile.save()
-                except UserProfile.DoesNotExist:
-                    UserProfile.objects.create(
-                        user=user,
-                        full_name=social_data.get('name', ''),
-                        avatar_url=social_data.get('picture', '')
-                    )
+            
+            # Ensure related objects exist and update profile with social data
+            try:
+                profile = user.profile
+                if not profile.full_name and social_data.get('name'):
+                    profile.full_name = social_data.get('name')
+                if not profile.avatar_url and social_data.get('picture'):
+                    profile.avatar_url = social_data.get('picture')
+                profile.save()
+            except UserProfile.DoesNotExist:
+                UserProfile.objects.create(
+                    user=user,
+                    full_name=social_data.get('name', ''),
+                    avatar_url=social_data.get('picture', '')
+                )
+            
+            # Ensure other related objects exist
+            UserPoints.objects.get_or_create(user=user)
+            Wallet.objects.get_or_create(user=user)
             
             self.log_info(f"Social account linked: {user.username} with {provider}")
             

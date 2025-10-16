@@ -586,5 +586,61 @@
       "created_at": "2025-09-13T10:00:00Z",
       "updated_at": "2025-09-13T10:00:00Z"
     }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 35,
+    "fields": {
+      "name": "Social Auth Welcome",
+      "slug": "social_auth_welcome",
+      "notification_type": "social_auth_welcome",
+      "title_template": "Welcome to ChargeGhar!",
+      "message_template": "Hi! Welcome to ChargeGhar! You've successfully signed up using {{provider}}. Your account is ready to use - start renting powerbanks today!",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationrule",
+    "pk": 9,
+    "fields": {
+      "notification_type": "system",
+      "send_in_app": true,
+      "send_push": false,
+      "send_sms": false,
+      "send_email": false,
+      "is_critical": false,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 36,
+    "fields": {
+      "name": "Achievement Claimed",
+      "slug": "achievement_claimed",
+      "notification_type": "achievement",
+      "title_template": "🏆 Achievement Claimed!",
+      "message_template": "Congratulations! You've claimed '{{achievement_name}}' and earned {{points}} points! Your total is now {{total_points}} points.",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 37,
+    "fields": {
+      "name": "Bulk Achievements Claimed",
+      "slug": "bulk_achievements_claimed",
+      "notification_type": "achievement",
+      "title_template": "🎉 Multiple Achievements Claimed!",
+      "message_template": "Amazing! You've claimed {{count}} achievements: {{achievement_names}}. Total points earned: {{total_points}}!",
+      "is_active": true,
+      "created_at": "2025-09-13T10:00:00Z",
+      "updated_at": "2025-09-13T10:00:00Z"
+    }
   }
 ]
