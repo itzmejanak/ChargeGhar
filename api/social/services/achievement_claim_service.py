@@ -11,7 +11,7 @@ Part of: Social App Real-Time Achievement Update
 
 from __future__ import annotations
 
-from typing import List
+from typing import List, Dict, Any
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import status
@@ -136,15 +136,16 @@ class AchievementClaimService(BaseService):
 
     def claim_multiple_achievements(
         self, user, achievement_ids: List[str]
-    ) -> List[UserAchievement]:
+    ) -> Dict[str, Any]:
         """
         Claim multiple achievements at once with batched notification.
         Useful for bulk claiming.
 
         Returns:
-            List of claimed UserAchievement objects
+            Dict with claimed achievements and error details
         """
         claimed_achievements = []
+        failed_claims = []
         total_points = 0
 
         for achievement_id in achievement_ids:
@@ -157,6 +158,11 @@ class AchievementClaimService(BaseService):
                 total_points += claimed.points_awarded or 0
             except ServiceException as e:
                 # Log error but continue with other achievements
+                failed_claims.append({
+                    'achievement_id': achievement_id,
+                    'error': e.detail,
+                    'code': getattr(e, 'code', 'unknown_error')
+                })
                 self.log_warning(
                     f"Failed to claim achievement {achievement_id}: {e.detail}"
                 )
@@ -200,4 +206,11 @@ class AchievementClaimService(BaseService):
                 f"Bulk claimed {len(claimed_achievements)} achievements for {user.username}"
             )
 
-        return claimed_achievements
+        # Return detailed results
+        return {
+            'claimed_achievements': claimed_achievements,
+            'failed_claims': failed_claims,
+            'total_points_awarded': total_points,
+            'success_count': len(claimed_achievements),
+            'failure_count': len(failed_claims)
+        }

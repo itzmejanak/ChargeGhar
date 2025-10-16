@@ -9,9 +9,8 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRespon
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
-from api.common.decorators import cached_response, log_api_call, rate_limit
+from api.common.decorators import cached_response, log_api_call
 from api.common.serializers import BaseResponseSerializer
-from api.common.permissions import IsProfileComplete, CanRentPowerBank
 from api.social import serializers
 from api.social.services import (
     AchievementService,
@@ -32,18 +31,17 @@ class UserAchievementsView(GenericAPIView, BaseAPIView):
     """User achievements endpoint"""
 
     serializer_class = serializers.UserAchievementsResponseSerializer
-    permission_classes = [IsAuthenticated, IsProfileComplete]
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         tags=["Social"],
         summary="Get user achievements (Real-Time)",
         description="Retrieve all achievements with real-time progress calculation. Unlocks achievements when criteria are met.",
         request=None,  # GET request - no body
-        responses={200: BaseResponseSerializer},
+        responses={200: serializers.UserAchievementsResponseSerializer},
     )
     @log_api_call()
-    @rate_limit(max_requests=10, window_seconds=60)  # Prevent abuse of real-time calculations
-    # NO CACHING - Real-time data required
+    # NO CACHING - Real-time data required for achievement progress
     def get(self, request: Request) -> Response:
         """Get user achievements with real-time progress calculation"""
 
@@ -78,6 +76,7 @@ class UserAchievementsView(GenericAPIView, BaseAPIView):
 class UnlockAchievementView(GenericAPIView, BaseAPIView):
     """Claim unlocked achievement"""
 
+    serializer_class = serializers.ClaimAchievementResponseSerializer
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
@@ -155,25 +154,24 @@ class BulkUnlockAchievementView(GenericAPIView, BaseAPIView):
             service = AchievementClaimService()
 
             # Claim multiple
-            claimed = service.claim_multiple_achievements(
+            result = service.claim_multiple_achievements(
                 request.user, serializer.validated_data["achievement_ids"]
             )
 
-            # Total points
-            total_points = sum(ua.points_awarded or 0 for ua in claimed)
-
             return {
-                "claimed_count": len(claimed),
-                "total_points_awarded": total_points,
+                "claimed_count": result['success_count'],
+                "failed_count": result['failure_count'],
+                "total_points_awarded": result['total_points_awarded'],
                 "achievements": serializers.UserAchievementSerializer(
-                    claimed, many=True
+                    result['claimed_achievements'], many=True
                 ).data,
+                "failed_claims": result['failed_claims'],
             }
 
         return self.handle_service_operation(
             operation,
-            f"Claimed achievements successfully",
-            "Failed to claim achievements",
+            "Bulk claim operation completed",
+            "Failed to process bulk claim",
         )
 
 
@@ -181,6 +179,7 @@ class BulkUnlockAchievementView(GenericAPIView, BaseAPIView):
 class LeaderboardView(GenericAPIView, BaseAPIView):
     """Leaderboard endpoint"""
 
+    serializer_class = serializers.LeaderboardResponseSerializer
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
@@ -269,6 +268,7 @@ class LeaderboardView(GenericAPIView, BaseAPIView):
 class SocialStatsView(GenericAPIView, BaseAPIView):
     """Social statistics endpoint"""
 
+    serializer_class = serializers.SocialStatsResponseSerializer
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
@@ -279,9 +279,9 @@ class SocialStatsView(GenericAPIView, BaseAPIView):
         responses={200: serializers.SocialStatsResponseSerializer},
     )
     @log_api_call()
-    @cached_response(timeout=600)  # Cache for 10 minutes - stats change slowly
+    # NO CACHING - Real-time data required for user stats accuracy
     def get(self, request: Request) -> Response:
-        """Get social statistics - CACHED for performance"""
+        """Get social statistics - Real-time for accuracy"""
 
         def operation():
             service = SocialAnalyticsService()

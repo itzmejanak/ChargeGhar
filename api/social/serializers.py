@@ -393,8 +393,23 @@ class BulkClaimSerializer(serializers.Serializer):
         child=serializers.UUIDField(),
         min_length=1,
         max_length=50,
-        help_text="List of UserAchievement IDs to claim",
+        help_text="List of UserAchievement IDs (not Achievement IDs) to claim. These are the IDs from the achievements endpoint.",
     )
+    
+    def validate_achievement_ids(self, value):
+        """Validate that all IDs are valid UUIDs"""
+        if not value:
+            raise serializers.ValidationError("At least one achievement ID is required")
+        
+        # Remove duplicates while preserving order
+        unique_ids = []
+        seen = set()
+        for achievement_id in value:
+            if achievement_id not in seen:
+                unique_ids.append(achievement_id)
+                seen.add(achievement_id)
+        
+        return unique_ids
 
 
 class ClaimAchievementResponseSerializer(BaseResponseSerializer):
@@ -409,13 +424,22 @@ class ClaimAchievementResponseSerializer(BaseResponseSerializer):
     data = AchievementClaimDataSerializer()
 
 
+class FailedClaimSerializer(serializers.Serializer):
+    """Serializer for failed achievement claims"""
+    achievement_id = serializers.UUIDField()
+    error = serializers.CharField()
+    code = serializers.CharField()
+
+
 class BulkClaimResponseSerializer(BaseResponseSerializer):
     """Response serializer for bulk claim endpoint"""
 
     class BulkClaimDataSerializer(serializers.Serializer):
         claimed_count = serializers.IntegerField()
+        failed_count = serializers.IntegerField()
         total_points_awarded = serializers.IntegerField()
         achievements = UserAchievementSerializer(many=True)
+        failed_claims = FailedClaimSerializer(many=True)
 
     data = BulkClaimDataSerializer()
 
