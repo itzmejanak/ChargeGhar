@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Stripe Checkout Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        button {
+            background-color: #635BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #524DFF;
+        }
+
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Stripe Checkout Test</h1>
+    <div class="container">
+        <h2>Test Product - $20.00</h2>
+        <p>Click the button below to test the Stripe checkout process.</p>
+        <button id="checkout-button">Checkout</button>
+    </div>
+
+    <script>
+        document.getElementById("checkout-button").addEventListener("click", async () => {
+            const button = document.getElementById("checkout-button");
+            button.textContent = 'Processing...';
+            button.disabled = true;
+
+            try {
+                const response = await fetch("/api/create-checkout-session/", {
+                    method: "GET",
+                });
+                const data = await response.json();
+
+                if (data.url) {
+                    window.location.href = data.url;  // redirect to Stripe
+                } else {
+                    alert("Error: " + (data.error || "No URL returned from server"));
+                    button.textContent = 'Checkout';
+                    button.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Failed to create checkout session");
+                button.textContent = 'Checkout';
+                button.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+
+</html>

@@ -146,3 +146,8 @@ EMAIL_USE_TLS = getenv('EMAIL_USE_TLS', 'TRUE').lower() == 'true'
 EMAIL_HOST_USER = getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = getenv('DEFAULT_FROM_EMAIL')
+
+# Stripe Configuration
+STRIPE_SECRET_KEY = getenv('STRIPE_SECRET_KEY', 'sk_test_51SI2DXE7F4Hts17wkuVjOppC8McL6rhja2ZZ5cKLVyw9WjllmZflNcZClq09ZX9ZPUPcTnGsRkkSmXcfmldaeyU300Z1sGA7Is')
+STRIPE_SUCCESS_URL = getenv('STRIPE_SUCCESS_URL', 'http://localhost:8010/payments/stripe/success/')
+STRIPE_CANCEL_URL = getenv('STRIPE_CANCEL_URL', 'http://localhost:8010/payments/stripe/cancel/')

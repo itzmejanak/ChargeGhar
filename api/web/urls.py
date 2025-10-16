@@ -24,17 +24,22 @@ from api.config.storage import (
 logger = logging.getLogger(__name__)
 
 # Define error handlers
-def handler400(request, exception=None):
+handler400 = 'api.web.urls.handler400_view'
+handler403 = 'api.web.urls.handler403_view'
+handler404 = 'api.web.urls.handler404_view'
+handler500 = 'api.web.urls.handler500_view'
+
+def handler400_view(request, exception=None):
     from rest_framework.views import exception_handler
     from rest_framework.exceptions import APIException
     from django.http import JsonResponse
     return JsonResponse({'detail': 'Bad request'}, status=400)
 
-def handler404(request, exception=None):
+def handler404_view(request, exception=None):
     from django.http import JsonResponse
     return JsonResponse({'detail': 'Not found'}, status=404)
 
-def handler500(request):
+def handler500_view(request, exception=None):
     from django.http import JsonResponse
     return JsonResponse({'detail': 'Internal server error'}, status=500)
 
@@ -68,7 +73,8 @@ urlpatterns = [
     path("api/", include("api.users.urls")),
     path("api/", include("api.stations.urls")),
     path("api/", include("api.notifications.urls")),
-    path("api/", include("api.payments.urls")),
+    path("payments/", include("api.payments.urls")),  # Direct access for payment pages
+    path("api/", include("api.payments.urls")),  # Keep API access too
     path("api/", include("api.points.urls")),
     path("api/", include("api.rentals.urls")),
     path("api/", include("api.social.urls")),
@@ -98,14 +104,5 @@ if not USE_S3_FOR_MEDIA:
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 
-def handler400(request, exception=None):
-    return JsonResponse({'error': 'Bad request'}, status=400)
-
-def handler403(request, exception=None):
+def handler403_view(request, exception=None):
     return JsonResponse({'error': 'Permission denied'}, status=403)
-
-def handler404(request, exception=None):
-    return JsonResponse({'error': 'Not found'}, status=404)
-
-def handler500(request, exception=None):
-    return JsonResponse({'error': 'Internal server error'}, status=500)

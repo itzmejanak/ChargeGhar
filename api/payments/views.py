@@ -9,6 +9,10 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.core.exceptions import ValidationError
+from django.http import JsonResponse, HttpResponse
+from rest_framework.decorators import api_view
+from django.conf import settings
+import stripe
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
@@ -28,6 +32,114 @@ if TYPE_CHECKING:
     from rest_framework.request import Request
 
 router = CustomViewRouter()
+
+import logging
+logger = logging.getLogger(__name__)
+
+# Initialize Stripe
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+@api_view(['GET'])
+def create_checkout_session(request):
+    try:
+        # Set your secret key
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+
+        # Define success and cancel URLs — Stripe will replace the placeholder automatically
+        success_url = f"{settings.STRIPE_SUCCESS_URL}?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{settings.STRIPE_CANCEL_URL}?session_id={{CHECKOUT_SESSION_ID}}"
+
+        # Log which key prefix we’re using (for debugging)
+        if not stripe.api_key:
+            logger.error("Stripe API key is not set!")
+            return JsonResponse({'error': 'Stripe API key is not configured properly'}, status=500)
+            logger.info(f"Using Stripe key starting with: {stripe.api_key[:8]}...")
+
+        # Create a Stripe Checkout session
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            mode='payment',
+            line_items=[
+                {
+                    'price_data': {
+                        'currency': 'usd',
+                        'product_data': {'name': 'Test Product'},
+                        'unit_amount': 2000,  # $20.00
+                    },
+                    'quantity': 1,
+                },
+            ],
+            success_url=success_url,
+            cancel_url=cancel_url,
+        )
+
+        # Log session details
+        logger.info(f"Stripe session created with ID: {session.id}")
+        logger.info(f"Checkout URL: {session.url}")
+
+        # Return the Checkout page URL to the frontend
+        return JsonResponse({'url': session.url})
+
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe API error: {str(e)}")
+        return JsonResponse({'error': f"Stripe error: {str(e)}"}, status=400)
+    except Exception as e:
+        logger.error(f"Stripe checkout error: {str(e)}")
+        return JsonResponse({'error': f"An unexpected error occurred: {str(e)}"}, status=500)
+
+
+def success(request):
+    """
+    Stripe redirects here after successful payment.
+    We expect ?session_id=<id> in the query parameters.
+    """
+    session_id = request.GET.get('session_id')
+
+    if not session_id:
+        return JsonResponse({
+            'success': False,
+            'error': {'code': 'missing_session_id', 'message': 'No session_id provided'}
+        }, status=400)
+
+    try:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        session = stripe.checkout.Session.retrieve(session_id)
+
+        # You can verify payment status here
+        if session.payment_status == 'paid':
+            return JsonResponse({
+                'success': True,
+                'message': 'Payment verified successfully',
+                'session': {'id': session.id, 'status': session.payment_status},
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': {'code': 'unpaid', 'message': 'Payment not completed'},
+                'session': {'id': session.id, 'status': session.payment_status},
+            }, status=400)
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe verification error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': {'code': 'stripe_error', 'message': str(e)},
+        }, status=500)
+    except Exception as e:
+        logger.error(f"Unexpected error verifying session: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': {'code': 'error', 'message': 'Stripe verification error'},
+        }, status=500)
+
+
+def cancel(request):
+    """
+    Stripe redirects here when payment is cancelled.
+    """
+    return JsonResponse({
+        'success': False,
+        'message': 'Payment cancelled by user'
+    })
 
 
 @router.register(r"payments/transactions", name="payment-transactions")
@@ -711,3 +823,66 @@ class AdminRejectRefundView(GenericAPIView):
                     'message': 'An unexpected error occurred while processing the request'
                 }
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET', 'POST'])
+def create_checkout_session(request):
+    try:
+        import logging
+        logger = logging.getLogger(__name__)
+
+        # Default values (for GET requests or missing params)
+        amount = 2000  # in cents ($20)
+        product_name = 'Test Product'
+        success_url = 'http://localhost:8010/payments/success/'
+        cancel_url = 'http://localhost:8010/payments/cancel/'
+
+        # If POST, override defaults with request data
+        if request.method == 'POST':
+            try:
+                data = request.data
+                amount = int(float(data.get('amount', 20.00)) * 100)
+                product_name = data.get('description', product_name)
+            except Exception as e:
+                logger.warning(f"Invalid POST data: {e}")
+
+        # Check Stripe key
+        if not stripe.api_key:
+            logger.error("Stripe API key is not set!")
+            return JsonResponse({'error': 'Stripe API key is not configured properly'})
+
+        logger.info(f"Creating Stripe checkout session for {amount} cents")
+
+        # Create Stripe checkout session
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            mode='payment',
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {'name': product_name},
+                    'unit_amount': amount,
+                },
+                'quantity': 1,
+            }],
+            success_url=success_url,
+            cancel_url=cancel_url,
+        )
+
+        logger.info(f"Stripe session created: {session.id}")
+        return JsonResponse({'url': session.url})
+
+    except stripe.error.StripeError as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Stripe error: {str(e)}")
+        return JsonResponse({'error': f"Stripe error: {str(e)}"})
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Checkout error: {str(e)}")
+        return JsonResponse({'error': f"An unexpected error occurred: {str(e)}"})
+
+
+def success(request):
+    return HttpResponse("Payment succeeded!")
+
+def cancel(request):
+    return HttpResponse("Payment canceled")

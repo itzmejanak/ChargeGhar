@@ -45,4 +45,4 @@ def payment_test_view(request):
         'wallet_balance': wallet_balance,
     }
     
-    return render(request, 'payment.html', context)
+    return render(request, 'stripe_test.html', context)
