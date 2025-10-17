@@ -187,3 +187,36 @@ cat /tmp/nepal_env/lib/python3.12/site-packages/nepal_gateways/core/base.py
 scp firebase-credentials.json root@213.210.21.113:/opt/powerbank/
 
  docker cp test_social_system.py powerbank_local_api_1:/application/test_social.py
+
+
+docker-compose exec api python manage.py shell -c "
+from django.core.management import execute_from_command_line
+from django.db import connection
+from django.apps import apps
+
+print('🗑️  Dropping all data from PostgreSQL database...')
+print('=' * 50)
+
+# Get all models
+all_models = apps.get_models()
+
+# Get table names
+table_names = []
+for model in all_models:
+    table_name = model._meta.db_table
+    table_names.append(table_name)
+
+print(f'Found {len(table_names)} tables to clear')
+
+# Clear data using DELETE (safer than TRUNCATE for PostgreSQL with foreign keys)
+with connection.cursor() as cursor:
+    for model in all_models:
+        table_name = model._meta.db_table
+        try:
+            cursor.execute(f'DELETE FROM {table_name};')
+            print(f'✅ Cleared: {table_name}')
+        except Exception as e:
+            print(f'⚠️  Could not clear {table_name}: {e}')
+
+print('\\n🎉 Database cleared successfully!')
+"

@@ -1,7 +1,17 @@
 #!/bin/bash
 
 # PowerBank Django Fixtures Loader Script
-# Loads all fixtures in proper dependency order
+# Loads all fixtures in proper dependency order with retry logic
+#
+# Usage:
+#   ./load-fixtures.sh    (correct filename with hyphen)
+#   ./load_fixtures.sh    (symlink with underscore)
+#
+# Features:
+# - Smart dependency-based loading for complex apps
+# - Retry logic for failed fixtures (up to 3 attempts)
+# - Priority-based loading order within apps
+# - Comprehensive error handling and reporting
 
 set -e  # Exit on any error
 
@@ -36,6 +46,12 @@ print_step() {
 if [[ ! -f "manage.py" ]]; then
     print_error "manage.py not found! Please run this script from the Django project root directory."
     exit 1
+fi
+
+# Make sure the script is executable
+if [[ ! -x "$0" ]]; then
+    print_warning "Script is not executable. Making it executable..."
+    chmod +x "$0"
 fi
 
 # Find the correct API container
@@ -170,10 +186,11 @@ print('   2. API Access: Email + OTP')
     print_status "✓ Superuser created/updated with dual authentication support"
 }
 
-# Function to load fixtures for an app
+# Function to load fixtures for an app with retry logic
 load_fixtures() {
     local app_name=$1
     local fixtures_dir="api/$app_name/fixtures"
+    local max_retries=3
 
     if [[ -d "$fixtures_dir" ]]; then
         print_step "Loading fixtures for $app_name..."
@@ -186,6 +203,10 @@ load_fixtures() {
             return
         fi
 
+        # Track failed fixtures for retry
+        local failed_fixtures=()
+        local retry_count=0
+
         # Load each fixture file
         for fixture in $fixtures; do
             local fixture_name=$(basename "$fixture")
@@ -195,7 +216,119 @@ load_fixtures() {
             if docker exec -i "$API_CONTAINER" python manage.py loaddata "$fixture" 2>/dev/null; then
                 print_status "✓ Successfully loaded $fixture_name"
             else
-                print_warning "⚠ Failed to load $fixture_name (might already exist or have dependencies)"
+                print_warning "⚠ Failed to load $fixture_name (adding to retry queue)"
+                failed_fixtures+=("$fixture")
+            fi
+        done
+
+        # Retry failed fixtures (dependency resolution)
+        while [[ ${#failed_fixtures[@]} -gt 0 && $retry_count -lt $max_retries ]]; do
+            retry_count=$((retry_count + 1))
+            print_step "Retry attempt $retry_count for $app_name (${#failed_fixtures[@]} fixtures)..."
+            
+            local new_failed_fixtures=()
+            
+            for fixture in "${failed_fixtures[@]}"; do
+                local fixture_name=$(basename "$fixture")
+                print_status "Retrying $fixture_name..."
+                
+                if docker exec -i "$API_CONTAINER" python manage.py loaddata "$fixture" 2>/dev/null; then
+                    print_status "✓ Successfully loaded $fixture_name on retry"
+                else
+                    print_warning "⚠ Still failing: $fixture_name"
+                    new_failed_fixtures+=("$fixture")
+                fi
+            done
+            
+            failed_fixtures=("${new_failed_fixtures[@]}")
+            
+            # Wait a bit between retries
+            if [[ ${#failed_fixtures[@]} -gt 0 ]]; then
+                sleep 2
+            fi
+        done
+
+        # Report final failures
+        if [[ ${#failed_fixtures[@]} -gt 0 ]]; then
+            print_error "❌ Failed to load ${#failed_fixtures[@]} fixtures in $app_name after $max_retries retries:"
+            for fixture in "${failed_fixtures[@]}"; do
+                local fixture_name=$(basename "$fixture")
+                print_error "   - $fixture_name"
+            done
+        fi
+    else
+        print_warning "Fixtures directory not found: $fixtures_dir"
+    fi
+}
+
+# Function to load fixtures with smart dependency ordering
+load_fixtures_smart() {
+    local app_name=$1
+    local fixtures_dir="api/$app_name/fixtures"
+
+    if [[ -d "$fixtures_dir" ]]; then
+        print_step "Smart loading fixtures for $app_name..."
+
+        # Find all .json files in the fixtures directory
+        local fixtures=$(find "$fixtures_dir" -name "*.json" -type f | sort)
+
+        if [[ -z "$fixtures" ]]; then
+            print_warning "No fixtures found in $fixtures_dir"
+            return
+        fi
+
+        # Define loading order based on common Django model dependencies
+        local priority_order=(
+            "*rule*"      # Rules first (notification rules, etc.)
+            "*config*"    # Configuration
+            "*country*"   # Countries
+            "*user*"      # Users
+            "*station*"   # Stations (but not slots/mappings)
+            "*amenity*"   # Amenities
+            "*slot*"      # Slots (depend on stations)
+            "*mapping*"   # Mappings (depend on stations + amenities)
+            "*powerbank*" # PowerBanks (depend on stations/slots)
+            "*template*"  # Templates (depend on rules)
+            "*"           # Everything else
+        )
+
+        local loaded_fixtures=()
+        
+        # Load fixtures in priority order
+        for pattern in "${priority_order[@]}"; do
+            for fixture in $fixtures; do
+                local fixture_name=$(basename "$fixture")
+                
+                # Skip if already loaded
+                if [[ " ${loaded_fixtures[@]} " =~ " ${fixture} " ]]; then
+                    continue
+                fi
+                
+                # Check if fixture matches current pattern
+                if [[ "$fixture_name" == $pattern ]]; then
+                    print_status "Loading $fixture_name (priority: $pattern)..."
+                    
+                    if docker exec -i "$API_CONTAINER" python manage.py loaddata "$fixture" 2>/dev/null; then
+                        print_status "✓ Successfully loaded $fixture_name"
+                        loaded_fixtures+=("$fixture")
+                    else
+                        print_warning "⚠ Failed to load $fixture_name"
+                    fi
+                fi
+            done
+        done
+
+        # Load any remaining fixtures that didn't match patterns
+        for fixture in $fixtures; do
+            if [[ ! " ${loaded_fixtures[@]} " =~ " ${fixture} " ]]; then
+                local fixture_name=$(basename "$fixture")
+                print_status "Loading remaining fixture: $fixture_name..."
+                
+                if docker exec -i "$API_CONTAINER" python manage.py loaddata "$fixture" 2>/dev/null; then
+                    print_status "✓ Successfully loaded $fixture_name"
+                else
+                    print_warning "⚠ Failed to load $fixture_name"
+                fi
             fi
         done
     else
@@ -238,8 +371,8 @@ except Exception as e:
 # Create superuser first
 create_superuser
 
-# Load fixtures in dependency order
-print_step "Loading fixtures in dependency order..."
+# Load fixtures in dependency order with smart loading
+print_step "Loading fixtures in dependency order with retry logic..."
 echo ""
 
 # 1. Common - Countries, late fee configs, and other foundational data
@@ -254,8 +387,8 @@ load_fixtures "users"
 # 4. Content - Static content data
 load_fixtures "content"
 
-# 5. Stations - Station, amenity, slot, and power bank data
-load_fixtures "stations"
+# 5. Stations - Station, amenity, slot, and power bank data (use smart loading for dependencies)
+load_fixtures_smart "stations"
 
 # 6. Rentals - Rental packages and rental data (depends on users, stations)
 load_fixtures "rentals"
@@ -272,8 +405,8 @@ load_fixtures "promotions"
 # 10. Social - Social features (depends on users)
 load_fixtures "social"
 
-# 11. Notifications - Notification system (depends on users)
-load_fixtures "notifications"
+# 11. Notifications - Notification system (depends on users, use smart loading)
+load_fixtures_smart "notifications"
 
 # 12. Admin Panel - Admin specific data (if exists)
 load_fixtures "admin_panel"
