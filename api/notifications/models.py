@@ -3,7 +3,6 @@ from __future__ import annotations
 from django.db import models
 from api.common.models import BaseModel
 
-
 class NotificationTemplate(BaseModel):
     """
     NotificationTemplate - Templates for different notification types
