@@ -1,0 +1,38 @@
+[
+  {
+    "model": "stations.stationamenitymapping",
+    "pk": "550e8400-e29b-41d4-a716-446655440201",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440001",
+      "amenity": "550e8400-e29b-41d4-a716-446655440101",
+      "is_available": true,
+      "notes": "Mall WiFi network",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationamenitymapping",
+    "pk": "550e8400-e29b-41d4-a716-446655440202",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440001",
+      "amenity": "550e8400-e29b-41d4-a716-446655440102",
+      "is_available": true,
+      "notes": "Mall parking available",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationamenitymapping",
+    "pk": "550e8400-e29b-41d4-a716-446655440203",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440002",
+      "amenity": "550e8400-e29b-41d4-a716-446655440103",
+      "is_available": true,
+      "notes": "Airport operates 24/7",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

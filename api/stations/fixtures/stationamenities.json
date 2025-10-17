@@ -1,0 +1,38 @@
+[
+  {
+    "model": "stations.stationamenity",
+    "pk": "550e8400-e29b-41d4-a716-446655440101",
+    "fields": {
+      "name": "WiFi",
+      "icon": "wifi",
+      "description": "Free WiFi available",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationamenity",
+    "pk": "550e8400-e29b-41d4-a716-446655440102",
+    "fields": {
+      "name": "Parking",
+      "icon": "parking",
+      "description": "Parking space available",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationamenity",
+    "pk": "550e8400-e29b-41d4-a716-446655440103",
+    "fields": {
+      "name": "24/7 Access",
+      "icon": "clock",
+      "description": "Available 24 hours a day",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

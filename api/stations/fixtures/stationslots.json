@@ -1,0 +1,77 @@
+[
+  {
+    "model": "stations.stationslot",
+    "pk": "550e8400-e29b-41d4-a716-446655440301",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440001",
+      "slot_number": 1,
+      "status": "AVAILABLE",
+      "battery_level": 95,
+      "slot_metadata": {},
+      "current_rental": null,
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationslot",
+    "pk": "550e8400-e29b-41d4-a716-446655440302",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440001",
+      "slot_number": 2,
+      "status": "AVAILABLE",
+      "battery_level": 88,
+      "slot_metadata": {},
+      "current_rental": null,
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationslot",
+    "pk": "550e8400-e29b-41d4-a716-446655440303",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440001",
+      "slot_number": 3,
+      "status": "OCCUPIED",
+      "battery_level": 100,
+      "slot_metadata": {},
+      "current_rental": null,
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationslot",
+    "pk": "550e8400-e29b-41d4-a716-446655440304",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440002",
+      "slot_number": 1,
+      "status": "AVAILABLE",
+      "battery_level": 92,
+      "slot_metadata": {},
+      "current_rental": null,
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationslot",
+    "pk": "550e8400-e29b-41d4-a716-446655440305",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440002",
+      "slot_number": 2,
+      "status": "AVAILABLE",
+      "battery_level": 85,
+      "slot_metadata": {},
+      "current_rental": null,
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

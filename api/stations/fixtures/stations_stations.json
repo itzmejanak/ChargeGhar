@@ -1,0 +1,98 @@
+[
+  {
+    "model": "stations.station",
+    "pk": "550e8400-e29b-41d4-a716-446655440001",
+    "fields": {
+      "station_name": "Kathmandu Mall Station",
+      "serial_number": "KTM001",
+      "imei": "123456789012345",
+      "latitude": "27.717245",
+      "longitude": "85.323960",
+      "address": "Kathmandu Mall, New Baneshwor, Kathmandu",
+      "landmark": "Near main entrance",
+      "total_slots": 8,
+      "status": "ONLINE",
+      "is_maintenance": false,
+      "hardware_info": {
+        "version": "2.1",
+        "manufacturer": "PowerTech",
+        "model": "PT-8S"
+      },
+      "last_heartbeat": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.station",
+    "pk": "550e8400-e29b-41d4-a716-446655440002",
+    "fields": {
+      "station_name": "Pokhara Airport Station",
+      "serial_number": "PKR001",
+      "imei": "123456789012346",
+      "latitude": "28.200896",
+      "longitude": "83.982056",
+      "address": "Pokhara Regional International Airport, Pokhara",
+      "landmark": "Terminal building, Level 1",
+      "total_slots": 6,
+      "status": "ONLINE",
+      "is_maintenance": false,
+      "hardware_info": {
+        "version": "2.1",
+        "manufacturer": "PowerTech",
+        "model": "PT-6S"
+      },
+      "last_heartbeat": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.station",
+    "pk": "550e8400-e29b-41d4-a716-446655440301",
+    "fields": {
+      "station_name": "Chitwan Mall Station",
+      "serial_number": "CTW001",
+      "imei": "123456789012347",
+      "latitude": "27.700769",
+      "longitude": "84.429359",
+      "address": "Chitwan Mall, Bharatpur, Chitwan",
+      "landmark": "Near food court",
+      "total_slots": 4,
+      "status": "ONLINE",
+      "is_maintenance": false,
+      "hardware_info": {
+        "version": "2.1",
+        "manufacturer": "PowerTech",
+        "model": "PT-4S"
+      },
+      "last_heartbeat": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.station",
+    "pk": "550e8400-e29b-41d4-a716-446655440302",
+    "fields": {
+      "station_name": "Lalitpur Tech Hub Station",
+      "serial_number": "LTP001",
+      "imei": "123456789012348",
+      "latitude": "27.678418",
+      "longitude": "85.316660",
+      "address": "Tech Hub, Lalitpur, Nepal",
+      "landmark": "Near IT companies",
+      "total_slots": 6,
+      "status": "ONLINE",
+      "is_maintenance": false,
+      "hardware_info": {
+        "version": "2.1",
+        "manufacturer": "PowerTech",
+        "model": "PT-6S"
+      },
+      "last_heartbeat": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]
