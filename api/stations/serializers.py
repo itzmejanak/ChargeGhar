@@ -172,6 +172,12 @@ class StationIssueSerializer(serializers.ModelSerializer):
 
 class StationIssueCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating station issues"""
+    images = serializers.ListField(
+        child=serializers.URLField(),
+        required=False,
+        allow_empty=True,
+        help_text="List of image URLs"
+    )
     
     class Meta:
         model = StationIssue
@@ -181,6 +187,11 @@ class StationIssueCreateSerializer(serializers.ModelSerializer):
         if len(value.strip()) < 10:
             raise serializers.ValidationError("Description must be at least 10 characters")
         return value.strip()
+    
+    def validate_images(self, value):
+        if value is None:
+            return []
+        return value
 
 
 # REMOVED: UserStationFavoriteSerializer - Not used in views, replaced with StationListSerializer
