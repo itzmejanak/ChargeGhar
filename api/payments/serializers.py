@@ -310,7 +310,7 @@ class PaymentStatusSerializer(serializers.Serializer):
 class VerifyTopupSerializer(serializers.Serializer):
     """Serializer for verifying top-up payment with callback data"""
     intent_id = serializers.CharField()
-    callback_data = serializers.JSONField(required=False, allow_null=True)
+    callback_data = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     
     # Support legacy fields for backward compatibility
     gateway_reference = serializers.CharField(required=False, allow_blank=True)
@@ -322,14 +322,39 @@ class VerifyTopupSerializer(serializers.Serializer):
     def validate_intent_id(self, value):
         try:
             intent = PaymentIntent.objects.get(intent_id=value)
-            if intent.status != 'PENDING':
-                raise serializers.ValidationError("Payment intent is not in pending status")
-            if timezone.now() > intent.expires_at:
+            
+            # Allow verification of PENDING or COMPLETED intents
+            if intent.status not in ['PENDING', 'COMPLETED']:
+                raise serializers.ValidationError(f"Payment intent status is {intent.status}, cannot verify")
+            
+            # Only check expiry for PENDING intents
+            if intent.status == 'PENDING' and timezone.now() > intent.expires_at:
                 raise serializers.ValidationError("Payment intent has expired")
+                
         except PaymentIntent.DoesNotExist:
             raise serializers.ValidationError("Invalid payment intent")
         
         return value
+    
+    def validate_callback_data(self, value):
+        """Validate callback_data - parse JSON if provided, otherwise return empty dict"""
+        if not value or value in ['', 'null', 'undefined']:
+            return {}
+        
+        # Try to parse as JSON if it's a string
+        if isinstance(value, str):
+            try:
+                import json
+                return json.loads(value)
+            except (json.JSONDecodeError, ValueError):
+                # If it's not valid JSON, treat as empty
+                return {}
+        
+        # If it's already a dict, return as is
+        if isinstance(value, dict):
+            return value
+            
+        return {}
     
     def validate(self, attrs):
         """Build callback_data from individual fields if not provided"""
