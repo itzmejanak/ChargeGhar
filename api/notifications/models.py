@@ -16,6 +16,9 @@ class NotificationTemplate(BaseModel):
         SYSTEM = 'system', 'System'
         ACHIEVEMENT = 'achievement', 'Achievement'
         SECURITY = 'security', 'Security'
+        POINTS = 'points', 'Points'
+        OTP_SMS = 'otp_sms', 'OTP SMS'
+        OTP_EMAIL = 'otp_email', 'OTP Email'
     
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=255, unique=True)
@@ -65,6 +68,9 @@ class Notification(BaseModel):
         PROMOTION = 'promotion', 'Promotion'
         SYSTEM = 'system', 'System'
         ACHIEVEMENT = 'achievement', 'Achievement'
+        POINTS = 'points', 'Points'
+        OTP_SMS = 'otp_sms', 'OTP SMS'
+        OTP_EMAIL = 'otp_email', 'OTP Email'
     
     class ChannelChoices(models.TextChoices):
         IN_APP = 'in_app', 'In App'

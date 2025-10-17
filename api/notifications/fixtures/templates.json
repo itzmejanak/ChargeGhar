@@ -364,76 +364,6 @@
     }
   },
   {
-    "model": "notifications.notificationrule",
-    "pk": 1,
-    "fields": {
-      "notification_type": "rental",
-      "send_in_app": true,
-      "send_push": true,
-      "send_sms": false,
-      "send_email": false,
-      "is_critical": false,
-      "created_at": "2025-09-13T10:00:00Z",
-      "updated_at": "2025-09-13T10:00:00Z"
-    }
-  },
-  {
-    "model": "notifications.notificationrule",
-    "pk": 2,
-    "fields": {
-      "notification_type": "payment",
-      "send_in_app": true,
-      "send_push": true,
-      "send_sms": true,
-      "send_email": false,
-      "is_critical": true,
-      "created_at": "2025-09-13T10:00:00Z",
-      "updated_at": "2025-09-13T10:00:00Z"
-    }
-  },
-  {
-    "model": "notifications.notificationrule",
-    "pk": 3,
-    "fields": {
-      "notification_type": "system",
-      "send_in_app": true,
-      "send_push": true,
-      "send_sms": true,
-      "send_email": false,
-      "is_critical": true,
-      "created_at": "2025-09-13T10:00:00Z",
-      "updated_at": "2025-09-13T10:00:00Z"
-    }
-  },
-  {
-    "model": "notifications.notificationrule",
-    "pk": 4,
-    "fields": {
-      "notification_type": "promotion",
-      "send_in_app": true,
-      "send_push": true,
-      "send_sms": false,
-      "send_email": false,
-      "is_critical": false,
-      "created_at": "2025-09-13T10:00:00Z",
-      "updated_at": "2025-09-13T10:00:00Z"
-    }
-  },
-  {
-    "model": "notifications.notificationrule",
-    "pk": 5,
-    "fields": {
-      "notification_type": "achievement",
-      "send_in_app": true,
-      "send_push": true,
-      "send_sms": false,
-      "send_email": false,
-      "is_critical": false,
-      "created_at": "2025-09-13T10:00:00Z",
-      "updated_at": "2025-09-13T10:00:00Z"
-    }
-  },
-  {
     "model": "notifications.notificationtemplate",
     "pk": 27,
     "fields": {
@@ -541,48 +471,6 @@
       "title_template": "Payment {{status|title}}",
       "message_template": "Your payment of Rs. {{amount}} has been {{status}}. {% if transaction_id %}Transaction ID: {{transaction_id}}{% endif %}",
       "is_active": true,
-      "created_at": "2025-09-13T10:00:00Z",
-      "updated_at": "2025-09-13T10:00:00Z"
-    }
-  },
-  {
-    "model": "notifications.notificationrule",
-    "pk": 6,
-    "fields": {
-      "notification_type": "otp_sms",
-      "send_in_app": false,
-      "send_push": false,
-      "send_sms": true,
-      "send_email": false,
-      "is_critical": true,
-      "created_at": "2025-09-13T10:00:00Z",
-      "updated_at": "2025-09-13T10:00:00Z"
-    }
-  },
-  {
-    "model": "notifications.notificationrule",
-    "pk": 7,
-    "fields": {
-      "notification_type": "otp_email",
-      "send_in_app": false,
-      "send_push": false,
-      "send_sms": false,
-      "send_email": true,
-      "is_critical": true,
-      "created_at": "2025-09-13T10:00:00Z",
-      "updated_at": "2025-09-13T10:00:00Z"
-    }
-  },
-  {
-    "model": "notifications.notificationrule",
-    "pk": 8,
-    "fields": {
-      "notification_type": "points",
-      "send_in_app": true,
-      "send_push": true,
-      "send_sms": false,
-      "send_email": false,
-      "is_critical": false,
       "created_at": "2025-09-13T10:00:00Z",
       "updated_at": "2025-09-13T10:00:00Z"
     }
