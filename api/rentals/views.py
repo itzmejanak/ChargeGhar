@@ -10,6 +10,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.common.routers import CustomViewRouter
+from api.common.mixins import BaseAPIView
+from api.common.serializers import BaseResponseSerializer
+from api.common.decorators import cached_response, rate_limit, log_api_call
 from api.rentals import serializers
 from api.rentals.services import (
     RentalService, RentalIssueService, RentalLocationService, RentalAnalyticsService
@@ -26,9 +29,10 @@ router = CustomViewRouter()
 @extend_schema(
     tags=["Rentals"],
     summary="Start Rental",
-    description="Initiates a new power bank rental session"
+    description="Initiates a new power bank rental session",
+    responses={201: BaseResponseSerializer}
 )
-class RentalStartView(GenericAPIView):
+class RentalStartView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.RentalStartSerializer
     permission_classes = [IsAuthenticated]
     
@@ -36,11 +40,12 @@ class RentalStartView(GenericAPIView):
         summary="Start New Rental",
         description="Start a new power bank rental at specified station with selected package",
         request=serializers.RentalStartSerializer,
-        responses={201: serializers.RentalSerializer}
+        responses={201: BaseResponseSerializer}
     )
+    @rate_limit(max_requests=3, window_seconds=60)  # Max 3 rental attempts per minute
     def post(self, request: Request) -> Response:
         """Start new rental"""
-        try:
+        def operation():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
@@ -52,23 +57,25 @@ class RentalStartView(GenericAPIView):
                 payment_scenario=serializer.validated_data.get('payment_scenario')
             )
             
-            response_serializer = serializers.RentalSerializer(rental)
-            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to start rental: {str(e)}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            response_serializer = serializers.RentalDetailSerializer(rental)
+            return response_serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            success_message="Rental started successfully",
+            error_message="Failed to start rental",
+            success_status=status.HTTP_201_CREATED
+        )
 
 
 @router.register(r"rentals/<str:rental_id>/cancel", name="rental-cancel")
 @extend_schema(
     tags=["Rentals"],
     summary="Cancel Rental",
-    description="Cancels an active rental"
+    description="Cancels an active rental",
+    responses={200: BaseResponseSerializer}
 )
-class RentalCancelView(GenericAPIView):
+class RentalCancelView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.RentalCancelSerializer
     permission_classes = [IsAuthenticated]
     
@@ -76,11 +83,12 @@ class RentalCancelView(GenericAPIView):
         summary="Cancel Active Rental",
         description="Cancel an active rental with optional reason",
         request=serializers.RentalCancelSerializer,
-        responses={200: serializers.RentalSerializer}
+        responses={200: BaseResponseSerializer}
     )
+    @log_api_call(include_request_data=True)
     def post(self, request: Request, rental_id: str) -> Response:
         """Cancel rental"""
-        try:
+        def operation():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
@@ -91,23 +99,24 @@ class RentalCancelView(GenericAPIView):
                 reason=serializer.validated_data.get('reason', '')
             )
             
-            response_serializer = serializers.RentalSerializer(rental)
-            return Response(response_serializer.data)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to cancel rental: {str(e)}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            response_serializer = serializers.RentalDetailSerializer(rental)
+            return response_serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            success_message="Rental cancelled successfully",
+            error_message="Failed to cancel rental"
+        )
 
 
 @router.register(r"rentals/<str:rental_id>/extend", name="rental-extend")
 @extend_schema(
     tags=["Rentals"],
     summary="Extend Rental",
-    description="Extends rental duration with additional package"
+    description="Extends rental duration with additional package",
+    responses={200: BaseResponseSerializer}
 )
-class RentalExtendView(GenericAPIView):
+class RentalExtendView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.RentalExtensionCreateSerializer
     permission_classes = [IsAuthenticated]
     
@@ -115,11 +124,11 @@ class RentalExtendView(GenericAPIView):
         summary="Extend Rental Duration",
         description="Extend rental duration by purchasing additional time package",
         request=serializers.RentalExtensionCreateSerializer,
-        responses={200: serializers.RentalExtensionSerializer}
+        responses={200: BaseResponseSerializer}
     )
     def post(self, request: Request, rental_id: str) -> Response:
         """Extend rental"""
-        try:
+        def operation():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
@@ -131,56 +140,57 @@ class RentalExtendView(GenericAPIView):
             )
             
             response_serializer = serializers.RentalExtensionSerializer(extension)
-            return Response(response_serializer.data)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to extend rental: {str(e)}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return response_serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            success_message="Rental extended successfully",
+            error_message="Failed to extend rental"
+        )
 
 
 @router.register(r"rentals/active", name="rental-active")
 @extend_schema(
     tags=["Rentals"],
     summary="Active Rental",
-    description="Get user's current active rental"
+    description="Get user's current active rental",
+    responses={200: BaseResponseSerializer}
 )
-class RentalActiveView(GenericAPIView):
-    serializer_class = serializers.RentalSerializer
+class RentalActiveView(GenericAPIView, BaseAPIView):
+    serializer_class = serializers.RentalDetailSerializer
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
         summary="Get Active Rental",
         description="Returns user's current active rental if any",
-        responses={200: serializers.RentalSerializer}
+        responses={200: BaseResponseSerializer}
     )
     def get(self, request: Request) -> Response:
         """Get active rental"""
-        try:
+        def operation():
             service = RentalService()
             rental = service.get_active_rental(request.user)
             
             if rental:
                 serializer = self.get_serializer(rental)
-                return Response(serializer.data)
-            else:
-                return Response(None)
-                
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get active rental: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+                return serializer.data
+            return None
+        
+        return self.handle_service_operation(
+            operation,
+            success_message="Active rental retrieved" if operation() else "No active rental",
+            error_message="Failed to get active rental"
+        )
 
 
 @router.register(r"rentals/history", name="rental-history")
 @extend_schema(
     tags=["Rentals"],
     summary="Rental History",
-    description="Get user's rental history with filtering and pagination"
+    description="Get user's rental history with filtering and pagination",
+    responses={200: BaseResponseSerializer}
 )
-class RentalHistoryView(GenericAPIView):
+class RentalHistoryView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.RentalListSerializer
     permission_classes = [IsAuthenticated]
     
@@ -234,7 +244,7 @@ class RentalHistoryView(GenericAPIView):
     )
     def get(self, request: Request) -> Response:
         """Get rental history"""
-        try:
+        def operation():
             # Validate query parameters
             filter_serializer = serializers.RentalHistoryFilterSerializer(data=request.query_params)
             filter_serializer.is_valid(raise_exception=True)
@@ -245,25 +255,26 @@ class RentalHistoryView(GenericAPIView):
             # Serialize the rentals
             serializer = self.get_serializer(result['results'], many=True)
             
-            return Response({
+            return {
                 'rentals': serializer.data,
                 'pagination': result['pagination']
-            })
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get rental history: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            success_message="Rental history retrieved successfully",
+            error_message="Failed to get rental history"
+        )
 
 
 @router.register(r"rentals/<str:rental_id>/pay-due", name="rental-pay-due")
 @extend_schema(
     tags=["Rentals"],
     summary="Settle Rental Dues",
-    description="Settle outstanding rental dues"
+    description="Settle outstanding rental dues",
+    responses={200: BaseResponseSerializer}
 )
-class RentalPayDueView(GenericAPIView):
+class RentalPayDueView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.RentalPayDueSerializer
     permission_classes = [IsAuthenticated]
     
@@ -271,11 +282,11 @@ class RentalPayDueView(GenericAPIView):
         summary="Settle Rental Dues",
         description="Settle outstanding rental dues using points and wallet combination",
         request=serializers.RentalPayDueSerializer,
-        responses={200: {'type': 'object', 'properties': {'success': {'type': 'boolean'}, 'data': {'type': 'object'}}}}
+        responses={200: BaseResponseSerializer}
     )
     def post(self, request: Request, rental_id: str) -> Response:
         """Settle rental dues"""
-        try:
+        def operation():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
 
@@ -293,13 +304,12 @@ class RentalPayDueView(GenericAPIView):
             )
 
             if not payment_options['is_sufficient']:
-                return Response({
-                    'success': False,
-                    'error': {
-                        'code': 'INSUFFICIENT_FUNDS',
-                        'message': f"Insufficient balance to pay dues. Need NPR {payment_options['shortfall']} more."
-                    }
-                }, status=status.HTTP_400_BAD_REQUEST)
+                from api.common.services.base import ServiceException
+                raise ServiceException(
+                    detail=f"Insufficient balance to pay dues. Need NPR {payment_options['shortfall']} more.",
+                    code="insufficient_funds",
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
 
             # Process payment using rental payment service
             from api.payments.services import RentalPaymentService
@@ -319,49 +329,34 @@ class RentalPayDueView(GenericAPIView):
             rental.payment_status = 'PAID'
             rental.save(update_fields=['payment_status'])
 
-            response_data = {
-                'success': True,
-                'data': {
-                    'transaction_id': transaction.transaction_id,
-                    'rental_id': str(rental.id),
-                    'amount_paid': float(payment_options['total_amount']),
-                    'payment_breakdown': {
-                        'points_used': payment_options['payment_breakdown']['points_used'],
-                        'points_amount': float(payment_options['payment_breakdown']['points_amount']),
-                        'wallet_used': float(payment_options['payment_breakdown']['wallet_used'])
-                    },
-                    'rental_status': rental.status,
-                    'account_unblocked': True
-                }
+            return {
+                'transaction_id': transaction.transaction_id,
+                'rental_id': str(rental.id),
+                'amount_paid': float(payment_options['total_amount']),
+                'payment_breakdown': {
+                    'points_used': payment_options['payment_breakdown']['points_used'],
+                    'points_amount': float(payment_options['payment_breakdown']['points_amount']),
+                    'wallet_used': float(payment_options['payment_breakdown']['wallet_used'])
+                },
+                'rental_status': rental.status,
+                'account_unblocked': True
             }
-
-            return Response(response_data)
-
-        except Rental.DoesNotExist:
-            return Response({
-                'success': False,
-                'error': {
-                    'code': 'RENTAL_NOT_FOUND',
-                    'message': 'Rental not found'
-                }
-            }, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({
-                'success': False,
-                'error': {
-                    'code': 'PAYMENT_FAILED',
-                    'message': str(e)
-                }
-            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        return self.handle_service_operation(
+            operation,
+            success_message="Rental dues settled successfully",
+            error_message="Failed to settle rental dues"
+        )
 
 
 @router.register(r"rentals/<str:rental_id>/issues", name="rental-issues")
 @extend_schema(
     tags=["Rentals"],
     summary="Rental Issues",
-    description="Report and manage rental issues"
+    description="Report and manage rental issues",
+    responses={201: BaseResponseSerializer}
 )
-class RentalIssueView(GenericAPIView):
+class RentalIssueView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.RentalIssueCreateSerializer
     permission_classes = [IsAuthenticated]
     
@@ -369,11 +364,11 @@ class RentalIssueView(GenericAPIView):
         summary="Report Rental Issue",
         description="Report an issue with current rental",
         request=serializers.RentalIssueCreateSerializer,
-        responses={201: serializers.RentalIssueSerializer}
+        responses={201: BaseResponseSerializer}
     )
     def post(self, request: Request, rental_id: str) -> Response:
         """Report rental issue"""
-        try:
+        def operation():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
@@ -385,22 +380,24 @@ class RentalIssueView(GenericAPIView):
             )
             
             response_serializer = serializers.RentalIssueSerializer(issue)
-            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to report issue: {str(e)}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return response_serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            success_message="Issue reported successfully",
+            error_message="Failed to report issue",
+            success_status=status.HTTP_201_CREATED
+        )
 
 
 @router.register(r"rentals/<str:rental_id>/location", name="rental-location")
 @extend_schema(
     tags=["Rentals"],
     summary="Rental Location",
-    description="Update rental location tracking"
+    description="Update rental location tracking",
+    responses={200: BaseResponseSerializer}
 )
-class RentalLocationView(GenericAPIView):
+class RentalLocationView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.RentalLocationUpdateSerializer
     permission_classes = [IsAuthenticated]
     
@@ -408,11 +405,11 @@ class RentalLocationView(GenericAPIView):
         summary="Update Rental Location",
         description="Update GPS location for active rental tracking",
         request=serializers.RentalLocationUpdateSerializer,
-        responses={200: serializers.RentalLocationSerializer}
+        responses={200: BaseResponseSerializer}
     )
     def post(self, request: Request, rental_id: str) -> Response:
         """Update rental location"""
-        try:
+        def operation():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
@@ -426,69 +423,93 @@ class RentalLocationView(GenericAPIView):
             )
             
             response_serializer = serializers.RentalLocationSerializer(location)
-            return Response(response_serializer.data)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to update location: {str(e)}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return response_serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            success_message="Location updated successfully",
+            error_message="Failed to update location"
+        )
 
 
 @router.register(r"rentals/packages", name="rental-packages")
 @extend_schema(
     tags=["Rentals"],
     summary="Rental Packages",
-    description="Get available rental packages"
+    description="Get available rental packages",
+    responses={200: BaseResponseSerializer}
 )
-class RentalPackageView(GenericAPIView):
-    serializer_class = serializers.RentalPackageDetailSerializer
+class RentalPackageView(GenericAPIView, BaseAPIView):
+    serializer_class = serializers.RentalPackageListSerializer
     
     @extend_schema(
         summary="Get Rental Packages",
-        description="Get list of available rental packages",
-        responses={200: serializers.RentalPackageDetailSerializer(many=True)}
+        description="Get list of available rental packages with pagination",
+        responses={200: BaseResponseSerializer},
+        parameters=[
+            OpenApiParameter(
+                name="page",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Page number",
+                required=False
+            ),
+            OpenApiParameter(
+                name="page_size",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Items per page",
+                required=False
+            )
+        ]
     )
+    @cached_response(timeout=3600)  # Cache for 1 hour - packages don't change frequently
     def get(self, request: Request) -> Response:
         """Get rental packages"""
-        try:
+        def operation():
             packages = RentalPackage.objects.filter(is_active=True).order_by('duration_minutes')
-            serializer = self.get_serializer(packages, many=True)
-            return Response(serializer.data)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get packages: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            result = self.paginate_response(
+                packages,
+                request,
+                serializer_class=serializers.RentalPackageListSerializer
             )
+            return result
+        
+        return self.handle_service_operation(
+            operation,
+            success_message="Packages retrieved successfully",
+            error_message="Failed to get packages"
+        )
 
 
 @router.register(r"rentals/stats", name="rental-stats")
 @extend_schema(
     tags=["Rentals"],
     summary="Rental Statistics",
-    description="Get user rental statistics"
+    description="Get user rental statistics",
+    responses={200: BaseResponseSerializer}
 )
-class RentalStatsView(GenericAPIView):
+class RentalStatsView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.RentalStatsSerializer
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
         summary="Get Rental Statistics",
         description="Get comprehensive rental statistics for the user",
-        responses={200: serializers.RentalStatsSerializer}
+        responses={200: BaseResponseSerializer}
     )
+    @cached_response(timeout=300)  # Cache for 5 minutes - stats update periodically
     def get(self, request: Request) -> Response:
         """Get rental statistics"""
-        try:
+        def operation():
             service = RentalService()
             stats = service.get_rental_stats(request.user)
             
             serializer = self.get_serializer(stats)
-            return Response(serializer.data)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get rental stats: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            success_message="Statistics retrieved successfully",
+            error_message="Failed to get rental stats"
+        )

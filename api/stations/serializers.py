@@ -8,10 +8,50 @@ from drf_spectacular.utils import extend_schema_field
 
 from api.stations.models import (
     Station, StationSlot, StationAmenity, StationAmenityMapping,
-    StationIssue, StationMedia, UserStationFavorite, PowerBank
+    StationIssue, StationMedia, UserStationFavorite
 )
 from api.common.utils.helpers import calculate_distance
 from api.common.serializers import BaseResponseSerializer
+
+
+class StationLocationMixin:
+    """Mixin for common station location and favorite calculations"""
+    
+    def get_distance(self, obj) -> Optional[float]:
+        """Calculate distance from user location if provided"""
+        request = self.context.get('request')
+        if not request:
+            return None
+        
+        user_lat = request.query_params.get('lat')
+        user_lng = request.query_params.get('lng')
+        
+        if user_lat and user_lng:
+            try:
+                user_lat = float(user_lat)
+                user_lng = float(user_lng)
+                distance = calculate_distance(
+                    user_lat, user_lng,
+                    float(obj.latitude), float(obj.longitude)
+                )
+                return round(distance, 2)
+            except (ValueError, TypeError):
+                pass
+        
+        return None
+    
+    def get_is_favorite(self, obj) -> bool:
+        """Check if station is user's favorite"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return UserStationFavorite.objects.filter(
+                user=request.user, station=obj
+            ).exists()
+        return False
+    
+    def get_available_slots(self, obj) -> int:
+        """Get count of available slots"""
+        return obj.slots.filter(status='AVAILABLE').count()
 
 
 class StationAmenitySerializer(serializers.ModelSerializer):
@@ -34,16 +74,7 @@ class StationSlotSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'last_updated']
 
 
-class PowerBankSerializer(serializers.ModelSerializer):
-    """Serializer for power banks"""
-    
-    class Meta:
-        model = PowerBank
-        fields = [
-            'id', 'serial_number', 'model', 'capacity_mah', 'status',
-            'battery_level', 'current_station', 'current_slot', 'last_updated'
-        ]
-        read_only_fields = ['id', 'last_updated']
+# REMOVED: PowerBankSerializer - Not used in current station views
 
 
 class StationMediaSerializer(serializers.ModelSerializer):
@@ -71,74 +102,26 @@ class StationAmenityMappingSerializer(serializers.ModelSerializer):
         fields = ['amenity', 'is_available', 'notes']
 
 
-class StationListSerializer(serializers.ModelSerializer):
-    """MVP serializer for station list views - minimal fields for performance"""
+class StationListSerializer(StationLocationMixin, serializers.ModelSerializer):
+    """Serializer for station list views with essential fields"""
     available_slots = serializers.SerializerMethodField()
-    is_online = serializers.SerializerMethodField()
+    total_slots = serializers.IntegerField(read_only=True)
     distance = serializers.SerializerMethodField()
     is_favorite = serializers.SerializerMethodField()
-    primary_image = serializers.SerializerMethodField()
     
     class Meta:
         model = Station
         fields = [
-            'id', 'station_name', 'latitude', 'longitude', 'status',
-            'available_slots', 'is_online', 'distance', 'is_favorite', 'primary_image'
+            'id', 'serial_number', 'station_name', 'latitude', 'longitude', 
+            'address', 'status', 'total_slots', 'available_slots', 
+            'distance', 'is_favorite'
         ]
         read_only_fields = fields
     
-    @extend_schema_field(serializers.IntegerField)
-    def get_available_slots(self, obj) -> int:
-        """Get count of available slots"""
-        return obj.slots.filter(status='AVAILABLE').count()
-    
-    @extend_schema_field(serializers.BooleanField)
-    def get_is_online(self, obj) -> bool:
-        """Check if station is online"""
-        return obj.status == 'ONLINE'
-    
-    @extend_schema_field(serializers.FloatField(allow_null=True))
-    def get_distance(self, obj) -> Optional[float]:
-        """Calculate distance from user location if provided"""
-        request = self.context.get('request')
-        if not request:
-            return None
-        
-        user_lat = request.query_params.get('lat')
-        user_lng = request.query_params.get('lng')
-        
-        if user_lat and user_lng:
-            try:
-                user_lat = float(user_lat)
-                user_lng = float(user_lng)
-                distance = calculate_distance(
-                    user_lat, user_lng,
-                    float(obj.latitude), float(obj.longitude)
-                )
-                return round(distance, 2)
-            except (ValueError, TypeError):
-                pass
-        
-        return None
-    
-    @extend_schema_field(serializers.BooleanField)
-    def get_is_favorite(self, obj) -> bool:
-        """Check if station is user's favorite"""
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return UserStationFavorite.objects.filter(
-                user=request.user, station=obj
-            ).exists()
-        return False
-    
-    @extend_schema_field(serializers.CharField(allow_null=True))
-    def get_primary_image(self, obj) -> Optional[str]:
-        """Get primary image URL"""
-        primary_media = obj.media.filter(is_primary=True, media_type='IMAGE').first()
-        return primary_media.media_upload.file_url if primary_media else None
 
 
-class StationDetailSerializer(serializers.ModelSerializer):
+
+class StationDetailSerializer(StationLocationMixin, serializers.ModelSerializer):
     """Serializer for station detail view"""
     slots = StationSlotSerializer(many=True, read_only=True)
     amenities = StationAmenityMappingSerializer(source='amenity_mappings', many=True, read_only=True)
@@ -148,23 +131,15 @@ class StationDetailSerializer(serializers.ModelSerializer):
     maintenance_slots = serializers.SerializerMethodField()
     is_favorite = serializers.SerializerMethodField()
     distance = serializers.SerializerMethodField()
-    average_rating = serializers.SerializerMethodField()
-    total_reviews = serializers.SerializerMethodField()
     
     class Meta:
         model = Station
         fields = [
-            'id', 'station_name', 'serial_number', 'imei', 'latitude', 'longitude',
+            'id', 'station_name', 'serial_number', 'latitude', 'longitude',
             'address', 'landmark', 'total_slots', 'status', 'is_maintenance',
-            'hardware_info', 'last_heartbeat', 'created_at', 'updated_at',
-            'slots', 'amenities', 'media', 'available_slots', 'occupied_slots',
-            'maintenance_slots', 'is_favorite', 'distance', 'average_rating',
-            'total_reviews'
+            'last_heartbeat', 'slots', 'amenities', 'media', 'available_slots', 
+            'occupied_slots', 'maintenance_slots', 'is_favorite', 'distance'
         ]
-    
-    @extend_schema_field(serializers.IntegerField)
-    def get_available_slots(self, obj) -> int:
-        return obj.slots.filter(status='AVAILABLE').count()
     
     @extend_schema_field(serializers.IntegerField)
     def get_occupied_slots(self, obj) -> int:
@@ -173,45 +148,6 @@ class StationDetailSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.IntegerField)
     def get_maintenance_slots(self, obj) -> int:
         return obj.slots.filter(status='MAINTENANCE').count()
-    
-    @extend_schema_field(serializers.BooleanField)
-    def get_is_favorite(self, obj) -> bool:
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return UserStationFavorite.objects.filter(
-                user=request.user, station=obj
-            ).exists()
-        return False
-    
-    @extend_schema_field(serializers.FloatField)
-    def get_distance(self, obj) -> Optional[float]:
-        request = self.context.get('request')
-        if not request:
-            return None
-        
-        user_lat = request.query_params.get('lat')
-        user_lng = request.query_params.get('lng')
-        
-        if user_lat and user_lng:
-            try:
-                distance = calculate_distance(
-                    float(user_lat), float(user_lng),
-                    float(obj.latitude), float(obj.longitude)
-                )
-                return round(distance, 2)
-            except (ValueError, TypeError):
-                pass
-        return None
-    
-    @extend_schema_field(serializers.FloatField)
-    def get_average_rating(self, obj) -> float:
-        # Placeholder for future rating system
-        return 4.5
-    
-    @extend_schema_field(serializers.IntegerField)
-    def get_total_reviews(self, obj) -> int:
-        # Placeholder for future review system
-        return 0
 
 
 class StationIssueSerializer(serializers.ModelSerializer):
@@ -247,14 +183,7 @@ class StationIssueCreateSerializer(serializers.ModelSerializer):
         return value.strip()
 
 
-class UserStationFavoriteSerializer(serializers.ModelSerializer):
-    """Serializer for user favorite stations"""
-    station = StationListSerializer(read_only=True)
-    
-    class Meta:
-        model = UserStationFavorite
-        fields = ['id', 'station', 'created_at']
-        read_only_fields = ['id', 'created_at']
+# REMOVED: UserStationFavoriteSerializer - Not used in views, replaced with StationListSerializer
 
 
 class StationCreateSerializer(serializers.ModelSerializer):
@@ -316,49 +245,57 @@ class NearbyStationsSerializer(serializers.Serializer):
         return value
 
 
-class StationAnalyticsSerializer(serializers.Serializer):
-    """Serializer for station analytics data"""
-    station_id = serializers.UUIDField()
-    station_name = serializers.CharField()
-    total_rentals = serializers.IntegerField()
-    total_revenue = serializers.DecimalField(max_digits=10, decimal_places=2)
-    average_rental_duration = serializers.FloatField()
-    utilization_rate = serializers.FloatField()
-    popular_time_slots = serializers.ListField()
-    issues_count = serializers.IntegerField()
-    uptime_percentage = serializers.FloatField()
-    last_maintenance = serializers.DateTimeField(allow_null=True)
+# REMOVED: StationAnalyticsSerializer - No corresponding view implemented
 
 
 # ===============================
 # RESPONSE SERIALIZERS FOR SWAGGER
 # ===============================
 
-class StationListResponseSerializer(BaseResponseSerializer):
+# ===============================
+# RESPONSE SERIALIZERS FOR SWAGGER
+# ===============================
+
+class StationListResponseSerializer(serializers.Serializer):
     """Response serializer for station list"""
-    data = serializers.ListField(child=StationListSerializer())
+    count = serializers.IntegerField()
+    next = serializers.BooleanField()
+    previous = serializers.BooleanField()
+    results = serializers.ListField(child=StationListSerializer())
 
 
-class StationDetailResponseSerializer(BaseResponseSerializer):
+class StationDetailResponseSerializer(serializers.Serializer):
     """Response serializer for station detail"""
+    success = serializers.BooleanField()
+    message = serializers.CharField()
     data = StationDetailSerializer()
 
 
-class StationFavoriteResponseSerializer(BaseResponseSerializer):
+class StationFavoriteResponseSerializer(serializers.Serializer):
     """Response serializer for station favorite operations"""
+    success = serializers.BooleanField()
+    message = serializers.CharField()
     data = serializers.DictField()
 
 
-class StationIssueResponseSerializer(BaseResponseSerializer):
+class StationIssueResponseSerializer(serializers.Serializer):
     """Response serializer for station issue creation"""
+    success = serializers.BooleanField()
+    message = serializers.CharField()
     data = StationIssueSerializer()
 
 
-class UserFavoriteStationsResponseSerializer(BaseResponseSerializer):
+class UserFavoriteStationsResponseSerializer(serializers.Serializer):
     """Response serializer for user favorite stations"""
-    data = serializers.DictField()
+    count = serializers.IntegerField()
+    next = serializers.BooleanField()
+    previous = serializers.BooleanField()
+    results = serializers.ListField(child=StationListSerializer())
 
 
-class UserStationReportsResponseSerializer(BaseResponseSerializer):
+class UserStationReportsResponseSerializer(serializers.Serializer):
     """Response serializer for user station reports"""
-    data = serializers.DictField()
+    count = serializers.IntegerField()
+    next = serializers.BooleanField()
+    previous = serializers.BooleanField()
+    results = serializers.ListField(child=StationIssueSerializer())
