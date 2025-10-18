@@ -16,10 +16,11 @@ app.autodiscover_tasks(
         "api.points",
         "api.notifications",
         "api.rentals",
-        "api.admin_panel",
+        "api.admin",
         "api.content",
         "api.social",
         "api.promotions",
+        "api.system",  # System app tasks (app updates)
     ]
 )
 
@@ -38,7 +39,9 @@ app.conf.task_routes = {
     # Rental tasks (critical)
     "api.rentals.tasks.*": {"queue": "rentals"},
     # Admin and analytics tasks
-    "api.admin_panel.tasks.*": {"queue": "admin"},
+    "api.admin.tasks.*": {"queue": "admin"},
+    # System tasks (app updates, health checks)
+    "api.system.tasks.*": {"queue": "system"},
     # Low priority tasks
     "api.content.tasks.*": {"queue": "low_priority"},
     "api.social.tasks.*": {"queue": "low_priority"},
@@ -96,16 +99,16 @@ app.conf.beat_schedule = {
         "schedule": 86400.0,  # Daily
     },
     "monitor-system-health": {
-        "task": "api.admin_panel.tasks.monitor_system_health",
+        "task": "api.admin.tasks.monitor_system_health",
         "schedule": 3600.0,  # Every hour
     },
     "send-admin-digest-report": {
-        "task": "api.admin_panel.tasks.send_admin_digest_report",
+        "task": "api.admin.tasks.send_admin_digest_report",
         "schedule": 86400.0,  # Daily at 8 AM
         "options": {"eta": "08:00"},
     },
     "backup-critical-data": {
-        "task": "api.admin_panel.tasks.backup_critical_data",
+        "task": "api.admin.tasks.backup_critical_data",
         "schedule": 86400.0,  # Daily at 1 AM
         "options": {"eta": "01:00"},
     },
@@ -123,11 +126,11 @@ app.conf.beat_schedule = {
         "schedule": 604800.0,  # Weekly
     },
     "cleanup-old-admin-logs": {
-        "task": "api.admin_panel.tasks.cleanup_old_admin_logs",
+        "task": "api.admin.tasks.cleanup_old_admin_logs",
         "schedule": 604800.0,  # Weekly
     },
     "cleanup-old-system-logs": {
-        "task": "api.admin_panel.tasks.cleanup_old_system_logs",
+        "task": "api.admin.tasks.cleanup_old_system_logs",
         "schedule": 259200.0,  # Every 3 days
     },
     "cleanup-old-coupon-data": {
@@ -150,11 +153,11 @@ app.conf.beat_schedule = {
         "options": {"eta": "02:30"},
     },
     "generate-admin-dashboard-report": {
-        "task": "api.admin_panel.tasks.generate_admin_dashboard_report",
+        "task": "api.admin.tasks.generate_admin_dashboard_report",
         "schedule": 300.0,  # Every 5 minutes
     },
     "generate-revenue-report": {
-        "task": "api.admin_panel.tasks.generate_revenue_report",
+        "task": "api.admin.tasks.generate_revenue_report",
         "schedule": 86400.0,  # Daily
         "options": {"eta": "04:00"},
     },

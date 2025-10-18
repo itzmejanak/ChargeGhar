@@ -1,0 +1,26 @@
+api/users/views/
+├── __init__.py                 # Main router that merges all sub-routers
+├── auth_views.py              # Authentication and OTP (9 classes)
+│   ├── OTPRequestView
+│   ├── OTPVerifyView
+│   ├── RegisterView
+│   ├── LoginView
+│   ├── LogoutView
+│   ├── CustomTokenRefreshView
+│   ├── DeviceView
+│   ├── MeView
+│   └── DeleteAccountView
+├── social_auth_views.py       # Social authentication (5 classes)
+│   ├── GoogleLoginView
+│   ├── AppleLoginView
+│   ├── SocialAuthSuccessView
+│   ├── SocialAuthErrorView
+│   └── DebugHeadersView
+├── profile_views.py           # User profile and KYC (5 classes)
+│   ├── UserProfileView
+│   ├── UserKYCView
+│   ├── UserKYCStatusView
+│   ├── UserWalletView
+│   └── UserAnalyticsView
+└── admin_views.py             # Admin user management (1 ViewSet)
+    └── UserViewSet

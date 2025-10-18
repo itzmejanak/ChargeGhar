@@ -516,5 +516,19 @@
       "created_at": "2025-09-13T10:00:00Z",
       "updated_at": "2025-09-13T10:00:00Z"
     }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 38,
+    "fields": {
+      "name": "App Update Available",
+      "slug": "app_update_available",
+      "notification_type": "update",
+      "title_template": "🚀 New ChargeGhar Update Available!",
+      "message_template": "Version {{version}} is now available for {{platform}}. {{#is_mandatory}}This is a mandatory update. Please update now to continue using ChargeGhar.{{/is_mandatory}}{{^is_mandatory}}Update now to get the latest features and improvements!{{/is_mandatory}}",
+      "is_active": true,
+      "created_at": "2025-10-18T10:00:00Z",
+      "updated_at": "2025-10-18T10:00:00Z"
+    }
   }
 ]

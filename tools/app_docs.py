@@ -433,7 +433,7 @@ class DjangoAppDocumentationGenerator:
                 {'method': 'GET', 'url': '/api/content/contact', 'purpose': 'Returns contact information', 'input': 'None', 'service': 'ContentService().get_contact_info()', 'output': 'ContentSerializer data', 'auth': 'No'},
                 {'method': 'GET', 'url': '/api/content/faq', 'purpose': 'Returns FAQ content', 'input': 'None', 'service': 'ContentService().get_faq()', 'output': 'List of FAQSerializer data', 'auth': 'No'}
             ],
-            'admin_panel': [
+            'admin': [
                 {'method': 'GET', 'url': '/api/admin/users', 'purpose': 'Lists all users (paginated)', 'input': 'page, page_size params', 'service': 'AdminUserService().get_all_users()', 'output': 'Paginated UserSerializer data', 'auth': 'Admin Required'},
                 {'method': 'GET', 'url': '/api/admin/stations', 'purpose': 'Lists all stations (paginated)', 'input': 'page, page_size params', 'service': 'AdminStationService().get_all_stations()', 'output': 'Paginated StationSerializer data', 'auth': 'Admin Required'},
                 {'method': 'GET', 'url': '/api/admin/analytics/dashboard', 'purpose': 'Returns dashboard metrics', 'input': 'None', 'service': 'AdminAnalyticsService().get_dashboard_metrics()', 'output': 'DashboardMetricsSerializer data', 'auth': 'Admin Required'}
@@ -695,7 +695,7 @@ class DjangoAppDocumentationGenerator:
             'promotions': 'Marketing campaigns and promotions',
             'social': 'Social features and user interactions',
             'content': 'Content management and static data',
-            'admin_panel': 'Administrative dashboard and controls',
+            'admin': 'Administrative dashboard and controls',
             'common': 'Shared utilities and base components'
         }
         return purposes.get(app_name.lower(), f'{app_name.title()} app functionality')

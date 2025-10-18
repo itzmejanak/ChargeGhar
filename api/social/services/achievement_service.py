@@ -167,7 +167,7 @@ class AchievementService(CRUDService):
             )
 
             # Log admin action
-            from api.admin_panel.models import AdminActionLog
+            from api.admin.models import AdminActionLog
 
             AdminActionLog.objects.create(
                 admin_user=admin_user,

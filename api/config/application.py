@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.apple",
     # PowerBank Apps
+    "api.system",  # NEW: System configuration and country data
+    "api.media",   # NEW: Media management
     "api.common.apps.CommonConfig",
     "api.users.apps.UserConfig",
     "api.stations.apps.StationsConfig",
@@ -59,7 +61,7 @@ INSTALLED_APPS = [
     "api.social.apps.SocialConfig",
     "api.promotions.apps.PromotionsConfig",
     "api.content.apps.ContentConfig",
-    "api.admin_panel.apps.AdminPanelConfig",
+    "api.admin.apps.AdminConfig",
     "api.config.apps.ConfigConfig",
 ]
 

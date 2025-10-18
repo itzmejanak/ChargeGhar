@@ -1,0 +1,177 @@
+[
+  {
+    "model": "system.appconfig",
+    "pk": "550e8400-e29b-41d4-a716-446655440501",
+    "fields": {
+      "key": "RENTAL_PRICE_PER_HOUR",
+      "value": "50",
+      "description": "Price per hour for power bank rental in NPR",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "pk": "550e8400-e29b-41d4-a716-446655440502",
+    "fields": {
+      "key": "MAX_RENTAL_HOURS",
+      "value": "24",
+      "description": "Maximum rental duration in hours",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "pk": "550e8400-e29b-41d4-a716-446655440503",
+    "fields": {
+      "key": "REFERRAL_BONUS_POINTS",
+      "value": "100",
+      "description": "Points awarded for successful referral",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appversion",
+    "pk": "550e8400-e29b-41d4-a716-446655440601",
+    "fields": {
+      "version": "1.0.0",
+      "platform": "android",
+      "is_mandatory": false,
+      "download_url": "https://play.google.com/store/apps/details?id=com.powerbank.app",
+      "release_notes": "Initial release with basic rental functionality",
+      "released_at": "2024-01-01T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appversion",
+    "pk": "550e8400-e29b-41d4-a716-446655440602",
+    "fields": {
+      "version": "1.0.1",
+      "platform": "ios",
+      "is_mandatory": false,
+      "download_url": "https://apps.apple.com/app/powerbank/id123456789",
+      "release_notes": "Initial release with basic rental functionality",
+      "released_at": "2024-01-01T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "POINTS_SIGNUP",
+      "value": "50",
+      "description": "Points awarded for New User Signup",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "POINTS_REFERRAL_INVITER",
+      "value": "100",
+      "description": "Points awarded for Referral (Inviter)",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "POINTS_REFERRAL_INVITEE",
+      "value": "50",
+      "description": "Points awarded for Referral (Invitee)",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "POINTS_TOPUP",
+      "value": "10",
+      "description": "Points awarded for Top-Up (per NPR 100)",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "POINTS_RENTAL_COMPLETE",
+      "value": "5",
+      "description": "Points awarded for Completed Rental",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "POINTS_TIMELY_RETURN",
+      "value": "50",
+      "description": "Points awarded for Timely Returns",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "POINTS_TOPUP_PER_NPR",
+      "value": "100",
+      "description": "NPR amount per points award for top-up",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "POINTS_KYC",
+      "value": "30",
+      "description": "Points awarded for KYC Verification Completion",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "POINTS_PROFILE",
+      "value": "20",
+      "description": "Points awarded for Profile Completion (100%)",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "POINTS_TIMELY_RETURN_HOURS",
+      "value": "24",
+      "description": "Hours threshold for timely return bonus",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]
+

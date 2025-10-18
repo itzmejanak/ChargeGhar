@@ -1,0 +1,12 @@
+api/promotions/views/
+├── __init__.py                 # Main router that merges all sub-routers
+├── coupon_views.py            # User coupon operations (3 classes)
+│   ├── CouponApplyView
+│   ├── CouponValidateView
+│   └── MyCouponsView
+├── public_views.py            # Public promotion information (1 class)
+│   └── ActiveCouponsView
+└── admin_views.py             # Admin coupon management (3 classes)
+    ├── AdminCouponViewSet
+    ├── AdminPromotionAnalyticsView
+    └── AdminCouponFilterView

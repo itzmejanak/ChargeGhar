@@ -13,54 +13,11 @@ class BaseModel(models.Model):
     class Meta:
         abstract = True
 
-class Country(BaseModel):
-    """
-    Country - Countries with dialing codes
-    """
-    name = models.CharField(max_length=100)
-    code = models.CharField(max_length=10, unique=True)  # ISO country code
-    dial_code = models.CharField(max_length=10)
-    flag_url = models.URLField(null=True, blank=True)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        db_table = "countries"
-        verbose_name = "Country"
-        verbose_name_plural = "Countries"
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-
-
-class MediaUpload(BaseModel):
-    """
-    MediaUpload - Uploaded media files
-    """
-    MEDIA_TYPE_CHOICES = [
-        ('IMAGE', 'Image'),
-        ('VIDEO', 'Video'),
-        ('DOCUMENT', 'Document'),
-    ]
-
-    file_url = models.URLField()
-    file_type = models.CharField(max_length=50, choices=MEDIA_TYPE_CHOICES)
-    original_name = models.CharField(max_length=255)
-    file_size = models.IntegerField()
-    uploaded_by = models.ForeignKey('users.User', on_delete=models.CASCADE, null=True, blank=True)
-    
-    # Cloud storage metadata
-    cloud_provider = models.CharField(max_length=50, default='cloudinary')
-    public_id = models.CharField(max_length=255, null=True, blank=True)
-    metadata = models.JSONField(default=dict)
-
-    class Meta:
-        db_table = "media_uploads"
-        verbose_name = "Media Upload"
-        verbose_name_plural = "Media Uploads"
-
-    def __str__(self):
-        return self.original_name
+# MIGRATED: Country model moved to api.system.models
+# MIGRATED: MediaUpload model moved to api.media.models
+# Import them from new locations:
+# from api.system.models import Country
+# from api.media.models import MediaUpload
 
 
 class LateFeeConfiguration(BaseModel):
@@ -171,7 +128,16 @@ class LateFeeConfiguration(BaseModel):
     # Activation Settings
     is_active = models.BooleanField(
         default=True,
-        help_text="""
+        help_text="""api/notifications/views/
+├── __init__.py                 # Main router that merges all sub-routers
+├── core_views.py              # Core notification operations (2 classes)
+│   ├── NotificationListView
+│   └── NotificationStatsView
+├── detail_views.py            # Individual notification operations (1 class)
+│   └── NotificationDetailView
+└── action_views.py            # Bulk notification actions (1 class)
+    └── NotificationMarkAllReadView
+
         Only ONE late fee configuration can be active at a time.
 
         ✓ Active = This configuration will be used to calculate all late fees

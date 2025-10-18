@@ -16,6 +16,7 @@ class NotificationTemplate(BaseModel):
         ACHIEVEMENT = 'achievement', 'Achievement'
         SECURITY = 'security', 'Security'
         POINTS = 'points', 'Points'
+        UPDATE = 'update', 'Update'
         OTP_SMS = 'otp_sms', 'OTP SMS'
         OTP_EMAIL = 'otp_email', 'OTP Email'
     
@@ -68,6 +69,7 @@ class Notification(BaseModel):
         SYSTEM = 'system', 'System'
         ACHIEVEMENT = 'achievement', 'Achievement'
         POINTS = 'points', 'Points'
+        UPDATE = 'update', 'Update'
         OTP_SMS = 'otp_sms', 'OTP SMS'
         OTP_EMAIL = 'otp_email', 'OTP Email'
     

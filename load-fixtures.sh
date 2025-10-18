@@ -212,9 +212,14 @@ load_fixtures() {
             local fixture_name=$(basename "$fixture")
             print_status "Loading $fixture_name..."
 
-            # Use the correct API container to run the loaddata command
-            if docker exec -i "$API_CONTAINER" python manage.py loaddata "$fixture" 2>/dev/null; then
+            # Capture both stdout and stderr to check for duplicate key errors
+            local output=$(docker exec -i "$API_CONTAINER" python manage.py loaddata "$fixture" 2>&1)
+            local exit_code=$?
+            
+            if [[ $exit_code -eq 0 ]]; then
                 print_status "✓ Successfully loaded $fixture_name"
+            elif echo "$output" | grep -q "duplicate key value violates unique constraint"; then
+                print_status "✓ $fixture_name already loaded (skipping duplicates)"
             else
                 print_warning "⚠ Failed to load $fixture_name (adding to retry queue)"
                 failed_fixtures+=("$fixture")
@@ -232,8 +237,14 @@ load_fixtures() {
                 local fixture_name=$(basename "$fixture")
                 print_status "Retrying $fixture_name..."
                 
-                if docker exec -i "$API_CONTAINER" python manage.py loaddata "$fixture" 2>/dev/null; then
+                # Capture output to check for duplicate key errors
+                local output=$(docker exec -i "$API_CONTAINER" python manage.py loaddata "$fixture" 2>&1)
+                local exit_code=$?
+                
+                if [[ $exit_code -eq 0 ]]; then
                     print_status "✓ Successfully loaded $fixture_name on retry"
+                elif echo "$output" | grep -q "duplicate key value violates unique constraint"; then
+                    print_status "✓ $fixture_name already loaded (skipping duplicates)"
                 else
                     print_warning "⚠ Still failing: $fixture_name"
                     new_failed_fixtures+=("$fixture")
@@ -375,11 +386,11 @@ create_superuser
 print_step "Loading fixtures in dependency order with retry logic..."
 echo ""
 
-# 1. Common - Countries, late fee configs, and other foundational data
-load_fixtures "common"
+# 1. System - Countries, app configs, and other foundational system data
+load_fixtures "system"
 
-# 2. Config - Basic app configuration
-load_fixtures "config"
+# 2. Common - Late fee configs and other common data
+load_fixtures "common"
 
 # 3. Users - Foundational user data
 load_fixtures "users"
@@ -408,8 +419,8 @@ load_fixtures "social"
 # 11. Notifications - Notification system (depends on users, use smart loading)
 load_fixtures_smart "notifications"
 
-# 12. Admin Panel - Admin specific data (if exists)
-load_fixtures "admin_panel"
+# 12. Admin - Admin specific data (if exists)
+load_fixtures "admin"
 
 # Generate admin JWT token for immediate testing
 generate_admin_token
@@ -459,8 +470,8 @@ SERVER_IP=$(hostname -I | awk '{print $1}')
 
 print_status "Summary:"
 print_status "- Superuser created with OTP-based user model (username: janak, email: janak@powerbank.com)"
-print_status "- Common fixtures loaded (countries, late fee configs)"
-print_status "- Config fixtures loaded"
+print_status "- System fixtures loaded (countries, app configs)"
+print_status "- Common fixtures loaded (late fee configs)"
 print_status "- User fixtures loaded"
 print_status "- Content fixtures loaded"
 print_status "- Station fixtures loaded (stations, amenities, slots, power banks)"
@@ -470,7 +481,7 @@ print_status "- Points fixtures loaded"
 print_status "- Promotions fixtures loaded"
 print_status "- Social fixtures loaded"
 print_status "- Notifications fixtures loaded"
-print_status "- Admin panel fixtures loaded (if available)"
+print_status "- Admin fixtures loaded (if available)"
 echo ""
 print_status "🌐 Your PowerBank API is ready!"
 print_status "API Base URL: http://$SERVER_IP:${API_PORT:-8010}"

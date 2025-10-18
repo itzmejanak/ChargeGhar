@@ -37,8 +37,8 @@ class TaskAnalyzer:
         """Discover all tasks from all apps"""
         apps = [
             'api.users', 'api.stations', 'api.payments', 'api.points',
-            'api.notifications', 'api.rentals', 'api.admin_panel',
-            'api.content', 'api.social', 'api.promotions'
+            'api.notifications', 'api.rentals', 'api.admin',
+            'api.content', 'api.social', 'api.promotions', 'api.system'
         ]
         
         for app_name in apps:

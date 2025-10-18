@@ -203,7 +203,7 @@ class AuthService(BaseService):
             
             # Award signup points (after transaction commits)
             from api.points.services import award_points
-            from api.config.services import AppConfigService
+            from api.system.services import AppConfigService
             from django.db import transaction
             
             config_service = AppConfigService()
@@ -513,7 +513,7 @@ class UserProfileService(BaseService):
             # Award points for profile completion (first time only)
             if profile.is_profile_complete and not was_complete:
                 from api.points.services import award_points
-                from api.config.services import AppConfigService
+                from api.system.services import AppConfigService
                 from django.db import transaction
                 
                 config_service = AppConfigService()
@@ -634,7 +634,7 @@ class UserKYCService(BaseService):
                 
                 # Award KYC completion points (after transaction commits)
                 from api.points.services import award_points
-                from api.config.services import AppConfigService
+                from api.system.services import AppConfigService
                 from django.db import transaction
                 
                 config_service = AppConfigService()

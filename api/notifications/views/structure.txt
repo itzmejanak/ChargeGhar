@@ -1,0 +1,9 @@
+api/notifications/views/
+├── __init__.py                 # Main router that merges all sub-routers
+├── core_views.py              # Core notification operations (2 classes)
+│   ├── NotificationListView
+│   └── NotificationStatsView
+├── detail_views.py            # Individual notification operations (1 class)
+│   └── NotificationDetailView
+└── action_views.py            # Bulk notification actions (1 class)
+    └── NotificationMarkAllReadView

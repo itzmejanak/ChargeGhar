@@ -51,7 +51,7 @@ class ContentPageService(CRUDService):
             cache.delete(cache_key)
             
             # Log admin action
-            from api.admin_panel.models import AdminActionLog
+            from api.admin.models import AdminActionLog
             AdminActionLog.objects.create(
                 admin_user=admin_user,
                 action_type='UPDATE_CONTENT_PAGE',

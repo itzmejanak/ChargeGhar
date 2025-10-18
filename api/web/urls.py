@@ -74,9 +74,9 @@ urlpatterns = [
     path("api/", include("api.social.urls")),
     path("api/", include("api.promotions.urls")),
     path("api/", include("api.content.urls")),
-    path("api/", include("api.admin_panel.urls")),
-    path("api/", include("api.common.urls")),
-    path("api/", include("api.config.urls")),
+    path("api/", include("api.admin.urls")),
+    path("api/", include("api.system.urls")),  # System app (countries, app config, versions)
+    path("api/", include("api.media.urls")),   # Media app (file uploads)
 ]
 
 if USE_SILK:

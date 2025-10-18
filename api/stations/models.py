@@ -159,7 +159,7 @@ class StationMedia(BaseModel):
     ]
 
     station = models.ForeignKey(Station, on_delete=models.CASCADE, related_name='media')
-    media_upload = models.ForeignKey('common.MediaUpload', on_delete=models.CASCADE)
+    media_upload = models.ForeignKey('media.MediaUpload', on_delete=models.CASCADE)
     media_type = models.CharField(max_length=50, choices=MEDIA_TYPE_CHOICES)
     title = models.CharField(max_length=255, null=True, blank=True)
     description = models.CharField(max_length=255, null=True, blank=True)

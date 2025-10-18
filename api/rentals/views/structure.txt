@@ -1,0 +1,16 @@
+api/rentals/views/
+├── __init__.py                 # Main router that merges all sub-routers
+├── core_views.py              # Core rental operations (4 classes)
+│   ├── RentalStartView
+│   ├── RentalCancelView
+│   ├── RentalExtendView
+│   └── RentalActiveView
+├── history_views.py           # Rental history and statistics (2 classes)
+│   ├── RentalHistoryView
+│   └── RentalStatsView
+├── support_views.py           # Support operations (3 classes)
+│   ├── RentalPayDueView
+│   ├── RentalIssueView
+│   └── RentalLocationView
+└── package_views.py           # Rental packages (1 class)
+    └── RentalPackageView

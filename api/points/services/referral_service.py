@@ -105,7 +105,7 @@ class ReferralService(CRUDService):
             
             # Award points to both users using universal API
             from api.points.services.points_api import award_points
-            from api.config.services import AppConfigService
+            from api.system.services import AppConfigService
             config_service = AppConfigService()
             
             inviter_points = int(config_service.get_config_cached('POINTS_REFERRAL_INVITER', 100))

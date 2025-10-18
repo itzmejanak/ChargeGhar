@@ -1,7 +1,0 @@
-[2025-09-07 00:14:45] INFO: 🚀 Starting PowerBank Docker Migration Process
-[2025-09-07 00:14:45] INFO: ================================================================================
-[2025-09-07 00:14:45] INFO: 🔍 Checking Docker services...
-[2025-09-07 00:14:45] INFO: Running: docker compose ps --services --filter status=running - Check running services
-[2025-09-07 00:14:45] INFO: ✅ Success: Check running services
-[2025-09-07 00:14:45] ERROR: ❌ Missing services: ['db']
-[2025-09-07 00:14:45] INFO: Please start Docker services with: docker compose up -d

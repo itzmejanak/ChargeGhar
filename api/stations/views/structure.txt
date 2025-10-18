@@ -1,0 +1,14 @@
+api/stations/views/
+├── __init__.py                 # Main router that merges all sub-routers
+├── core_views.py              # Core station operations (3 classes)
+│   ├── StationListView
+│   ├── NearbyStationsView
+│   └── StationDetailView
+├── user_views.py              # User-specific operations (2 classes)
+│   ├── UserFavoriteStationsView
+│   └── UserStationReportsView
+├── interaction_views.py       # User interactions (2 classes)
+│   ├── StationFavoriteView
+│   └── StationReportIssueView
+└── admin_views.py             # Admin management (1 class)
+    └── AdminStationViewSet

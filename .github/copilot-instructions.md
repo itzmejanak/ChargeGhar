@@ -16,7 +16,7 @@ api/
 ├── payments/       # Wallet, payments, multi-gateway integration
 ├── notifications/  # FCM push notifications and in-app alerts
 ├── points/         # Gamification and rewards system
-├── admin_panel/    # Custom admin interface
+├── admin/          # Custom admin interface
 ├── common/         # Shared utilities, base classes, services
 └── config/         # Split Django settings architecture
 ```

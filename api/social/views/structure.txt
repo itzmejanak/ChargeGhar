@@ -1,0 +1,12 @@
+api/social/views/
+├── __init__.py                 # Main router that merges all sub-routers
+├── achievement_views.py       # Achievement operations (3 classes)
+│   ├── UserAchievementsView
+│   ├── UnlockAchievementView
+│   └── BulkUnlockAchievementView
+├── social_views.py           # Social features (2 classes)
+│   ├── LeaderboardView
+│   └── SocialStatsView
+└── admin_views.py            # Admin management (2 classes)
+    ├── AdminAchievementsView
+    └── AdminSocialAnalyticsView
