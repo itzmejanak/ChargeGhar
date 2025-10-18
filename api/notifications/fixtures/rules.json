@@ -124,5 +124,19 @@
       "created_at": "2025-10-18T10:00:00Z",
       "updated_at": "2025-10-18T10:00:00Z"
     }
+  },
+  {
+    "model": "notifications.notificationrule",
+    "pk": 10,
+    "fields": {
+      "notification_type": "admin",
+      "send_in_app": true,
+      "send_push": true,
+      "send_sms": false,
+      "send_email": true,
+      "is_critical": true,
+      "created_at": "2025-10-18T10:00:00Z",
+      "updated_at": "2025-10-18T10:00:00Z"
+    }
   }
 ]

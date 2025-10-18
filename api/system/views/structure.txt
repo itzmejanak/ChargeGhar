@@ -1,0 +1,15 @@
+api/system/views/
+├── __init__.py                      # Main router that merges all sub-routers
+├── country_views.py                # Country operations (2 classes)
+│   ├── CountryListView
+│   └── CountrySearchView
+├── app_info_views.py               # App information and health (3 classes)
+│   ├── AppInitDataView
+│   ├── AppVersionCheckView
+│   └── AppHealthView
+├── app_updates_views.py            # App updates and version history (2 classes)
+│   ├── AppUpdatesView
+│   └── AppUpdatesSinceView
+└── config_views.py                 # Configuration management (2 classes)
+    ├── PublicConfigView
+    └── AdminConfigView

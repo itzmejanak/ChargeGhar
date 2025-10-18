@@ -1,0 +1,6 @@
+api/users/services/
+├── __init__.py                    # Backward compatibility exports
+├── auth_service.py               # Authentication operations (AuthService)
+├── user_profile_service.py       # Profile management (UserProfileService)
+├── user_kyc_service.py           # KYC verification (UserKYCService)
+└── user_device_service.py        # Device management (UserDeviceService)

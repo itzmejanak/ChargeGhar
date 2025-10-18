@@ -1,0 +1,6 @@
+api/stations/services/
+├── __init__.py                    # Backward compatibility exports
+├── station_service.py            # Core station operations (StationService)
+├── station_favorite_service.py   # Station favorites management (StationFavoriteService)
+├── station_issue_service.py      # Station issue reporting (StationIssueService)
+└── power_bank_service.py         # Power bank operations (PowerBankService)

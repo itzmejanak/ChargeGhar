@@ -1,0 +1,4 @@
+api/promotions/services/
+├── __init__.py                      # Backward compatibility exports
+├── coupon_service.py               # Coupon operations (CouponService)
+└── promotion_analytics_service.py  # Promotion analytics (PromotionAnalyticsService)
