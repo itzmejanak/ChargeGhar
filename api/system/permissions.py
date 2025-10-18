@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from rest_framework import permissions
-
-if TYPE_CHECKING:
-    from rest_framework.request import Request
-
+from rest_framework.request import Request
 
 class IsSystemAdminPermission(permissions.BasePermission):
     """

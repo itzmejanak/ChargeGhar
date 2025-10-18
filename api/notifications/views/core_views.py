@@ -1,16 +1,17 @@
 """
 Core notification operations - list and statistics
 """
-from __future__ import annotations
+
 
 import logging
-from typing import TYPE_CHECKING
+
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.request import Request
 
 
 from api.common.routers import CustomViewRouter
@@ -19,8 +20,8 @@ from api.common.decorators import log_api_call, cached_response
 from api.notifications import serializers
 from api.notifications.services.notification import NotificationService
 
-if TYPE_CHECKING:
-    from rest_framework.request import Request
+
+
 
 core_router = CustomViewRouter()
 

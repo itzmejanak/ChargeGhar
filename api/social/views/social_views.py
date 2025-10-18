@@ -1,15 +1,16 @@
 """
 Social features - leaderboard and user statistics
 """
-from __future__ import annotations
+
 
 import logging
-from typing import TYPE_CHECKING
+
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiParameter
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.request import Request
 
 
 from api.common.routers import CustomViewRouter
@@ -22,8 +23,8 @@ from api.social.services import (
     SocialAnalyticsService,
 )
 
-if TYPE_CHECKING:
-    from rest_framework.request import Request
+
+
 
 social_router = CustomViewRouter()
 
@@ -150,6 +151,3 @@ class SocialStatsView(GenericAPIView, BaseAPIView):
             "Social statistics retrieved successfully",
             "Failed to retrieve social statistics",
         )
-
-
-# Admin endpoints

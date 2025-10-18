@@ -1,15 +1,16 @@
 """
 Admin analytics and reporting for referrals
 """
-from __future__ import annotations
+
 
 import logging
-from typing import TYPE_CHECKING
+
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
+from rest_framework.request import Request
 
 
 from api.common.routers import CustomViewRouter
@@ -18,8 +19,8 @@ from api.common.decorators import log_api_call, cached_response
 from api.points import serializers
 from api.points.services.referral_service import ReferralService
 
-if TYPE_CHECKING:
-    from rest_framework.request import Request
+
+
 
 admin_analytics_router = CustomViewRouter()
 

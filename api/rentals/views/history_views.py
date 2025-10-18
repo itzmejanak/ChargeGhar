@@ -1,29 +1,22 @@
 """
 Rental history and user statistics
 """
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
+from rest_framework.request import Request
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
 from api.common.decorators import log_api_call, cached_response
 from api.common.serializers import BaseResponseSerializer
 from api.rentals import serializers
-from api.rentals.services import (
-    RentalService
-)
+from api.rentals.services import RentalService
 
-if TYPE_CHECKING:
-    from rest_framework.request import Request
 
 history_router = CustomViewRouter()
 

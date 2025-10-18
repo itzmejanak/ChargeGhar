@@ -1,17 +1,14 @@
 """
 Core payment functionality - transactions, packages, and methods
 """
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.request import Request
 from rest_framework.response import Response
-
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
@@ -20,12 +17,7 @@ from api.common.serializers import BaseResponseSerializer
 from api.payments import serializers
 from api.payments.models import PaymentMethod
 from api.rentals.models import RentalPackage
-from api.payments.services import (
-    TransactionService, PaymentCalculationService
-)
-
-if TYPE_CHECKING:
-    from rest_framework.request import Request
+from api.payments.services import TransactionService, PaymentCalculationService
 
 core_router = CustomViewRouter()
 

@@ -1,17 +1,14 @@
 """
 User profile and KYC views
 """
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
+from rest_framework.request import Request
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
@@ -19,9 +16,6 @@ from api.common.decorators import log_api_call
 from api.common.serializers import BaseResponseSerializer
 from api.users import serializers
 from api.users.services import UserKYCService, UserProfileService
-
-if TYPE_CHECKING:
-    from rest_framework.request import Request
 
 profile_router = CustomViewRouter()
 

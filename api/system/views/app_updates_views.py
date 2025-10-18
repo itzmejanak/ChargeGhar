@@ -4,11 +4,11 @@ App updates and version history
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from rest_framework.generics import GenericAPIView
+from rest_framework.request import Request
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
@@ -18,9 +18,6 @@ from api.common.decorators import log_api_call
 from api.common.serializers import BaseResponseSerializer, PaginatedResponseSerializer
 from api.system.services import AppUpdateService
 from api.system.serializers import AppUpdateListSerializer
-
-if TYPE_CHECKING:
-    from rest_framework.request import Request
 
 app_updates_router = CustomViewRouter()
 

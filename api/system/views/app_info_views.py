@@ -4,10 +4,10 @@ App information and health
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 from drf_spectacular.utils import extend_schema, OpenApiExample
 from rest_framework.generics import GenericAPIView
+from rest_framework.request import Request
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
@@ -26,9 +26,6 @@ from api.system.serializers import (
     AppVersionCheckResponseSerializer,
     AppHealthSerializer
 )
-
-if TYPE_CHECKING:
-    from rest_framework.request import Request
 
 app_info_router = CustomViewRouter()
 

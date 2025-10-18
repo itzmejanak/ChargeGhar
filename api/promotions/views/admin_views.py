@@ -1,13 +1,15 @@
 """
 Admin coupon management - CRUD operations, analytics, and filtering
 """
-from __future__ import annotations
+
+
 
 import logging
-from typing import TYPE_CHECKING
+
 
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status, mixins
+from rest_framework.request import Request
 from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -22,9 +24,6 @@ from api.promotions.models import Coupon
 from api.promotions.services import CouponService, PromotionAnalyticsService
 from api.users.permissions import IsStaffPermission
 from api.common.services.base import ServiceException
-
-if TYPE_CHECKING:
-    from rest_framework.request import Request
 
 admin_router = CustomViewRouter()
 

@@ -1,15 +1,11 @@
 """
 Admin management - station CRUD operations
 """
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
 
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
-
 
 from api.common.routers import CustomViewRouter
 from api.stations import serializers
@@ -17,9 +13,6 @@ from api.stations.models import Station
 from api.stations.services import StationService
 from api.users.permissions import IsStaffPermission
 from api.common.services.base import ServiceException
-
-if TYPE_CHECKING:
-    pass
 
 admin_router = CustomViewRouter()
 

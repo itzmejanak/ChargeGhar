@@ -1,6 +1,14 @@
 from __future__ import annotations
 
+import os
+
 from celery import Celery
+
+# Set up Django before any imports that might use Django models
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "api.config.settings")
+
+import django
+django.setup()
 
 from api.config import celery as config
 

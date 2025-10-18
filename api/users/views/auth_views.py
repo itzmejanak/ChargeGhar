@@ -1,15 +1,13 @@
 """
 Authentication and OTP views
 """
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
@@ -24,9 +22,6 @@ from api.common.serializers import BaseResponseSerializer
 from api.users import serializers
 from api.users.models import User
 from api.users.services import AuthService, UserDeviceService
-
-if TYPE_CHECKING:
-    from rest_framework.request import Request
 
 auth_router = CustomViewRouter()
 

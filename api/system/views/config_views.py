@@ -4,10 +4,10 @@ Configuration management
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
+from rest_framework.request import Request
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
@@ -26,9 +26,6 @@ from api.system.permissions import (
     IsSystemAdminPermission, 
     PublicConfigAccessPermission
 )
-
-if TYPE_CHECKING:
-    from rest_framework.request import Request
 
 config_router = CustomViewRouter()
 

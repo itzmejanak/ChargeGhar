@@ -1,15 +1,16 @@
 """
 Static content pages - terms, privacy policy, and about
 """
-from __future__ import annotations
+
 
 import logging
-from typing import TYPE_CHECKING
+
 
 from drf_spectacular.utils import extend_schema
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.request import Request
 
 
 from api.common.routers import CustomViewRouter
@@ -21,8 +22,8 @@ from api.content.services import (
     ContentPageService
 )
 
-if TYPE_CHECKING:
-    from rest_framework.request import Request
+
+
 
 static_pages_router = CustomViewRouter()
 

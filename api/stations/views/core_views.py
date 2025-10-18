@@ -1,17 +1,14 @@
 """
 Core station operations - list, nearby, and detail views
 """
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-
+from rest_framework.request import Request
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
@@ -20,9 +17,6 @@ from api.stations import serializers
 from api.stations.models import Station
 from api.stations.services import StationService
 from api.common.services.base import ServiceException
-
-if TYPE_CHECKING:
-    from rest_framework.request import Request
 
 core_router = CustomViewRouter()
 

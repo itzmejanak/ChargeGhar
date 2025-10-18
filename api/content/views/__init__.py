@@ -2,7 +2,7 @@
 Views package for content app
 Maintains backward compatibility by exposing single router
 """
-from __future__ import annotations
+
 
 from api.common.routers import CustomViewRouter
 

@@ -1,25 +1,20 @@
 """
 Referral system - codes, validation, claims, and user referrals
 """
-from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.generics import GenericAPIView
+from rest_framework.request import Request
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
 from api.common.decorators import log_api_call
 from api.points import serializers
 from api.points.services.referral_service import ReferralService
-
-if TYPE_CHECKING:
-    from rest_framework.request import Request
 
 referrals_router = CustomViewRouter()
 

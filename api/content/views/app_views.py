@@ -1,16 +1,17 @@
 """
 App-related functionality - version check and content search
 """
-from __future__ import annotations
+
 
 import logging
-from typing import TYPE_CHECKING
+
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.request import Request
 
 
 from api.common.routers import CustomViewRouter
@@ -22,8 +23,8 @@ from api.content.services import (
     AppInfoService, ContentSearchService
 )
 
-if TYPE_CHECKING:
-    from rest_framework.request import Request
+
+
 
 app_router = CustomViewRouter()
 
