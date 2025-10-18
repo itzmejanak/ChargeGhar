@@ -322,3 +322,49 @@ class StationIssueService(CRUDService):
 
 
 # REMOVED: PowerBankService - Not used in current station views, belongs in rentals app
+
+
+class PowerBankService(BaseService):
+    """Service for power bank operations - handles assignments and returns for rentals"""
+    
+    def assign_power_bank_to_rental(self, power_bank, rental):
+        """Assign power bank to a rental (update status and references)"""
+        try:
+            from api.stations.models import PowerBank
+            
+            # Update power bank status
+            power_bank.status = 'RENTED'
+            power_bank.save(update_fields=['status', 'last_updated'])
+            
+            # Update slot to occupied
+            if power_bank.current_slot:
+                power_bank.current_slot.status = 'OCCUPIED'
+                power_bank.current_slot.current_rental = rental
+                power_bank.current_slot.save(update_fields=['status', 'current_rental', 'last_updated'])
+            
+            self.log_info(f"Power bank {power_bank.serial_number} assigned to rental {rental.rental_code}")
+            
+        except Exception as e:
+            self.handle_service_error(e, "Failed to assign power bank to rental")
+    
+    def return_power_bank(self, power_bank, return_station, return_slot):
+        """Return power bank to a station slot"""
+        try:
+            from api.stations.models import PowerBank
+            
+            # Update power bank location and status
+            power_bank.current_station = return_station
+            power_bank.current_slot = return_slot
+            power_bank.status = 'AVAILABLE'
+            power_bank.save(update_fields=['current_station', 'current_slot', 'status', 'last_updated'])
+            
+            # Update slot status
+            if return_slot:
+                return_slot.status = 'OCCUPIED'  # Occupied by returned power bank
+                return_slot.current_rental = None
+                return_slot.save(update_fields=['status', 'current_rental', 'last_updated'])
+            
+            self.log_info(f"Power bank {power_bank.serial_number} returned to station {return_station.station_name}")
+            
+        except Exception as e:
+            self.handle_service_error(e, "Failed to return power bank")

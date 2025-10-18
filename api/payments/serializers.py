@@ -209,32 +209,24 @@ class TopupIntentCreateSerializer(serializers.Serializer):
 
 
 class CalculatePaymentOptionsSerializer(serializers.Serializer):
-    """Serializer for calculating payment options"""
+    """Serializer for calculating payment options for rental scenarios"""
     SCENARIO_CHOICES = [
-        ('wallet_topup', 'Wallet Top-up'),
-        ('pre_payment', 'Pre-payment'),
-        ('post_payment', 'Post-payment'),
+        ('pre_payment', 'Pre-payment - For PREPAID rental packages'),
+        ('post_payment', 'Post-payment - For clearing outstanding rental charges'),
     ]
 
     scenario = serializers.ChoiceField(choices=SCENARIO_CHOICES)
     package_id = serializers.UUIDField(required=False, allow_null=True)
     rental_id = serializers.UUIDField(required=False, allow_null=True)
-    amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('0'), required=False)
 
     def validate(self, attrs):
         scenario = attrs.get('scenario')
 
-        if scenario == 'wallet_topup' and not attrs.get('amount'):
-            raise serializers.ValidationError("amount is required for wallet_topup scenario")
-
         if scenario == 'pre_payment' and not attrs.get('package_id'):
             raise serializers.ValidationError("package_id is required for pre_payment scenario")
 
-        if scenario == 'post_payment':
-            if not attrs.get('package_id'):
-                raise serializers.ValidationError("package_id is required for post-payment scenario")
-            if not attrs.get('rental_id'):
-                raise serializers.ValidationError("rental_id is required for post-payment scenario")
+        if scenario == 'post_payment' and not attrs.get('rental_id'):
+            raise serializers.ValidationError("rental_id is required for post_payment scenario")
 
         return attrs
 

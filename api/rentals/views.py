@@ -43,6 +43,7 @@ class RentalStartView(GenericAPIView, BaseAPIView):
         responses={201: BaseResponseSerializer}
     )
     @rate_limit(max_requests=3, window_seconds=60)  # Max 3 rental attempts per minute
+    @log_api_call()
     def post(self, request: Request) -> Response:
         """Start new rental"""
         def operation():
@@ -53,8 +54,7 @@ class RentalStartView(GenericAPIView, BaseAPIView):
             rental = service.start_rental(
                 user=request.user,
                 station_sn=serializer.validated_data['station_sn'],
-                package_id=serializer.validated_data['package_id'],
-                payment_scenario=serializer.validated_data.get('payment_scenario')
+                package_id=serializer.validated_data['package_id']
             )
             
             response_serializer = serializers.RentalDetailSerializer(rental)
@@ -86,6 +86,7 @@ class RentalCancelView(GenericAPIView, BaseAPIView):
         responses={200: BaseResponseSerializer}
     )
     @log_api_call(include_request_data=True)
+    @log_api_call()
     def post(self, request: Request, rental_id: str) -> Response:
         """Cancel rental"""
         def operation():
@@ -126,6 +127,7 @@ class RentalExtendView(GenericAPIView, BaseAPIView):
         request=serializers.RentalExtensionCreateSerializer,
         responses={200: BaseResponseSerializer}
     )
+    @log_api_call()
     def post(self, request: Request, rental_id: str) -> Response:
         """Extend rental"""
         def operation():
@@ -165,6 +167,7 @@ class RentalActiveView(GenericAPIView, BaseAPIView):
         description="Returns user's current active rental if any",
         responses={200: BaseResponseSerializer}
     )
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get active rental"""
         def operation():
@@ -242,6 +245,7 @@ class RentalHistoryView(GenericAPIView, BaseAPIView):
             )
         ]
     )
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get rental history"""
         def operation():
@@ -284,6 +288,7 @@ class RentalPayDueView(GenericAPIView, BaseAPIView):
         request=serializers.RentalPayDueSerializer,
         responses={200: BaseResponseSerializer}
     )
+    @log_api_call()
     def post(self, request: Request, rental_id: str) -> Response:
         """Settle rental dues"""
         def operation():
@@ -366,6 +371,7 @@ class RentalIssueView(GenericAPIView, BaseAPIView):
         request=serializers.RentalIssueCreateSerializer,
         responses={201: BaseResponseSerializer}
     )
+    @log_api_call()
     def post(self, request: Request, rental_id: str) -> Response:
         """Report rental issue"""
         def operation():
@@ -407,6 +413,7 @@ class RentalLocationView(GenericAPIView, BaseAPIView):
         request=serializers.RentalLocationUpdateSerializer,
         responses={200: BaseResponseSerializer}
     )
+    @log_api_call()
     def post(self, request: Request, rental_id: str) -> Response:
         """Update rental location"""
         def operation():
@@ -464,6 +471,7 @@ class RentalPackageView(GenericAPIView, BaseAPIView):
         ]
     )
     @cached_response(timeout=3600)  # Cache for 1 hour - packages don't change frequently
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get rental packages"""
         def operation():
@@ -499,6 +507,7 @@ class RentalStatsView(GenericAPIView, BaseAPIView):
         responses={200: BaseResponseSerializer}
     )
     @cached_response(timeout=300)  # Cache for 5 minutes - stats update periodically
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get rental statistics"""
         def operation():

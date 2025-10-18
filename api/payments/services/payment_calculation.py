@@ -13,34 +13,43 @@ class PaymentCalculationService(BaseService):
     """Service for payment calculations"""
 
     def calculate_payment_options(self, user, scenario: str, **kwargs) -> Dict[str, Any]:
-        """Calculate payment options for different scenarios"""
+        """
+        Calculate payment options for rental scenarios.
+        
+        Scenarios:
+        - pre_payment: Calculate package cost using package.payment_model (PREPAID only)
+        - post_payment: Calculate rental dues including overdue charges
+        
+        Points are ALWAYS used first, then wallet balance.
+        """
         try:
-            # Extract package_id or rental_id from kwargs
+            # Extract parameters
             package_id = kwargs.get('package_id')
             rental_id = kwargs.get('rental_id')
-            amount = kwargs.get('amount')
 
             # Determine amount based on scenario
-            if scenario == 'wallet_topup':
-                if not amount:
-                    raise ServiceException(
-                        detail="Amount required for wallet topup",
-                        code="amount_required"
-                    )
-            elif scenario == 'pre_payment':
+            if scenario == 'pre_payment':
                 if not package_id:
                     raise ServiceException(
-                        detail="Package ID required for pre-payment",
+                        detail="Package ID required for pre-payment calculation",
                         code="package_required"
                     )
                 # Get amount from package price
                 from api.rentals.models import RentalPackage
                 package = RentalPackage.objects.get(id=package_id, is_active=True)
                 amount = package.price
-            elif scenario == 'settle_dues':
+                
+                # Validate this is a prepaid package
+                if package.payment_model != 'PREPAID':
+                    raise ServiceException(
+                        detail=f"Package '{package.name}' uses {package.payment_model} model, not suitable for pre-payment calculation",
+                        code="invalid_package_payment_model"
+                    )
+                    
+            elif scenario == 'post_payment':
                 if not rental_id:
                     raise ServiceException(
-                        detail="Rental ID required for settling dues",
+                        detail="Rental ID required for post-payment calculation",
                         code="rental_required"
                     )
                 # Calculate amount based on rental dues
@@ -73,11 +82,11 @@ class PaymentCalculationService(BaseService):
                         # Use package price if duration not available
                         amount = rental.package.price
                 else:
-                    # Use package price for prepaid models with dues
-                    amount = rental.overdue_amount
+                    # Use overdue amount for prepaid models with dues
+                    amount = rental.overdue_amount or rental.package.price
             else:
                 raise ServiceException(
-                    detail="Invalid scenario",
+                    detail="Invalid scenario. Supported scenarios: pre_payment, post_payment",
                     code="invalid_scenario"
                 )
 
@@ -123,11 +132,39 @@ class PaymentCalculationService(BaseService):
                 },
                 'is_sufficient': is_sufficient,
                 'shortfall': shortfall,
-                'suggested_topup': suggested_topup
+                'suggested_topup': suggested_topup,
+                'wallet_topup_note': 'If insufficient funds, use /api/payments/wallet/topup-intent to add money to wallet'
             }
 
         except Exception as e:
             self.handle_service_error(e, "Failed to calculate payment options")
+
+    def calculate_package_payment_options(self, user, package_id: str) -> Dict[str, Any]:
+        """
+        Calculate payment options for a specific rental package.
+        Automatically determines scenario based on package.payment_model.
+        
+        This is the preferred method for rental-related calculations.
+        """
+        try:
+            from api.rentals.models import RentalPackage
+            package = RentalPackage.objects.get(id=package_id, is_active=True)
+            
+            # Determine scenario based on package payment model
+            if package.payment_model == 'PREPAID':
+                scenario = 'pre_payment'
+            else:
+                # For POSTPAID, we still show what would be charged (for preview)
+                scenario = 'pre_payment'  # Use same calculation logic
+                
+            return self.calculate_payment_options(
+                user=user,
+                scenario=scenario,
+                package_id=package_id
+            )
+            
+        except Exception as e:
+            self.handle_service_error(e, "Failed to calculate package payment options")
 
     def _get_user_points(self, user) -> int:
         """Get user's current points"""

@@ -11,6 +11,8 @@ from drf_spectacular.types import OpenApiTypes
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
+from api.common.decorators import log_api_call
+from api.common.services.base import ServiceException
 from api.common.serializers import BaseResponseSerializer, PaginatedResponseSerializer
 from api.config import serializers
 from api.config.models import AppVersion, AppUpdate
@@ -47,6 +49,7 @@ class AppVersionCheckView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.AppVersionCheckSerializer
     permission_classes = [AllowAny]
     
+    @log_api_call()
     def post(self, request: Request) -> Response:
         """Check for app version updates"""
         def operation():
@@ -82,6 +85,7 @@ class AppHealthView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.AppHealthSerializer
     permission_classes = [AllowAny]
     
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get real-time health status"""
         def operation():
@@ -118,6 +122,7 @@ class AppUpdatesView(GenericAPIView, BaseAPIView):
         """Use MVP serializer for list performance"""
         return serializers.AppUpdateListSerializer
     
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get paginated recent updates"""
         def operation():
@@ -157,6 +162,7 @@ class AppUpdatesSinceView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.AppUpdateListSerializer
     permission_classes = [AllowAny]
     
+    @log_api_call()
     def get(self, request: Request, version: str) -> Response:
         """Get updates since specified version"""
         def operation():
@@ -189,6 +195,7 @@ class PublicConfigView(GenericAPIView, BaseAPIView):
     permission_classes = [PublicConfigAccessPermission]
     serializer_class = serializers.AppConfigPublicSerializer
     
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get public configurations"""
         def operation():
@@ -220,6 +227,7 @@ class AdminConfigView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.AppConfigSerializer
     permission_classes = [IsSystemAdminPermission]
     
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get all configurations with pagination"""
         def operation():
@@ -241,6 +249,7 @@ class AdminConfigView(GenericAPIView, BaseAPIView):
             error_message="Failed to retrieve configurations"
         )
     
+    @log_api_call()
     def post(self, request: Request) -> Response:
         """Create or update configuration"""
         def operation():
@@ -282,6 +291,7 @@ class AdminVersionsView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.AppVersionSerializer
     permission_classes = [IsAdminOrReadOnlyPermission]
     
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get all app versions with pagination"""
         def operation():
@@ -306,6 +316,7 @@ class AdminVersionsView(GenericAPIView, BaseAPIView):
             error_message="Failed to retrieve app versions"
         )
     
+    @log_api_call()
     def post(self, request: Request) -> Response:
         """Create new app version"""
         def operation():
@@ -349,6 +360,7 @@ class AdminUpdatesView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.AppUpdateSerializer
     permission_classes = [IsAdminOrReadOnlyPermission]
     
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get all app updates with pagination"""
         def operation():
@@ -369,6 +381,7 @@ class AdminUpdatesView(GenericAPIView, BaseAPIView):
             error_message="Failed to retrieve app updates"
         )
     
+    @log_api_call()
     def post(self, request: Request) -> Response:
         """Create new app update"""
         def operation():

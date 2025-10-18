@@ -24,10 +24,10 @@ your target should be:
 
 ---
 
-at last, use the manual caching finder script in each app, and you can run it using:
+at last, use the manual caching finder script, and consistent helper of views script in each app, and you can run it using:
 
 ```bash
-python ./tools/find_cache_manual.py --<app_name>
+python ./tools/find_cache_manual.py --<app_name> and python ./tools/view_extractor.py
 ```
 
 after running it, update the services to remove manual caching since we're using decorators.

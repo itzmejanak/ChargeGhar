@@ -123,9 +123,10 @@ class TransactionListView(GenericAPIView, BaseAPIView):
 @extend_schema(
     tags=["Payments"],
     summary="Rental Packages",
-    description="Get available rental packages"
+    description="Get available rental packages",
+    responses={200: BaseResponseSerializer}
 )
-class RentalPackageListView(GenericAPIView):
+class RentalPackageListView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.RentalPackageSerializer
     permission_classes = [AllowAny]
     
@@ -133,22 +134,23 @@ class RentalPackageListView(GenericAPIView):
         summary="Get Rental Packages",
         description="Retrieve all active rental packages with pricing"
     )
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get available rental packages"""
-        try:
+        def operation():
             packages = RentalPackage.objects.filter(is_active=True).order_by('duration_minutes')
             serializer = self.get_serializer(packages, many=True)
             
-            return Response({
+            return {
                 'packages': serializer.data,
                 'count': packages.count()
-            })
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get packages: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            "Packages retrieved successfully",
+            "Failed to get packages"
+        )
 
 # done the testing for fetching the payment method
 @router.register(r"payments/methods", name="payment-methods")
@@ -166,6 +168,7 @@ class PaymentMethodListView(GenericAPIView, BaseAPIView):
         summary="Get Payment Methods",
         description="Retrieve all active payment gateways and their configurations"
     )
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get available payment methods"""
         def operation():
@@ -200,6 +203,7 @@ class TopupIntentCreateView(GenericAPIView, BaseAPIView):
         description="Create a payment intent for wallet top-up with selected payment method",
         request=serializers.TopupIntentCreateSerializer
     )
+    @log_api_call()
     def post(self, request: Request) -> Response:
         """Create payment intent for wallet top-up with complete gateway data"""
         def operation():
@@ -255,6 +259,7 @@ class PaymentVerifyView(GenericAPIView, BaseAPIView):
         description="Verify payment with gateway and update wallet balance. Supports both web and mobile flows.",
         request=serializers.VerifyTopupSerializer
     )
+    @log_api_call()
     def post(self, request: Request) -> Response:
         """Verify payment and update wallet"""
         def operation():
@@ -284,21 +289,23 @@ class PaymentVerifyView(GenericAPIView, BaseAPIView):
 @router.register(r"payments/calculate-options", name="payment-calculate-options")
 @extend_schema(
     tags=["Payments"],
-    summary="Calculate Payment Options",
-    description="Calculate payment options for different scenarios"
+    summary="Calculate Rental Payment Options",
+    description="Calculate payment options for rental scenarios (pre-payment and settling dues)",
+    responses={200: BaseResponseSerializer}
 )
-class CalculatePaymentOptionsView(GenericAPIView):
+class CalculatePaymentOptionsView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.CalculatePaymentOptionsSerializer
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
-        summary="Calculate Payment Options",
-        description="Calculate available payment options (wallet, points, combination) for a given scenario",
+        summary="Calculate Rental Payment Options",
+        description="Calculate available payment options (wallet, points, combination) for rental scenarios only",
         request=serializers.CalculatePaymentOptionsSerializer
     )
+    @log_api_call()
     def post(self, request: Request) -> Response:
-        """Calculate payment options for scenarios"""
-        try:
+        """Calculate payment options for rental scenarios"""
+        def operation():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
 
@@ -311,18 +318,13 @@ class CalculatePaymentOptionsView(GenericAPIView):
                 amount=serializer.validated_data.get('amount')
             )
 
-            # Format response to match requirements
-            response_data = {
-                "success": True,
-                "data": options
-            }
-            return Response(response_data)
-
-        except Exception as e:
-            return Response(
-                {'success': False, 'error': {'code': 'CALCULATION_ERROR', 'message': str(e)}},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return options
+        
+        return self.handle_service_operation(
+            operation,
+            "Payment options calculated successfully",
+            "Failed to calculate payment options"
+        )
 
 
 # REMOVED: PaymentStatusView - Status available through payment-form endpoint
@@ -341,6 +343,7 @@ class WalletBalanceView(GenericAPIView, BaseAPIView):
         summary="Get Wallet Balance",
         description="Retrieve current user's wallet balance and recent transactions"
     )
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get user wallet balance"""
         def operation():
@@ -359,9 +362,10 @@ class WalletBalanceView(GenericAPIView, BaseAPIView):
 @extend_schema(
     tags=["Payments"],
     summary="Cancel Payment",
-    description="Cancel a pending payment intent"
+    description="Cancel a pending payment intent",
+    responses={200: BaseResponseSerializer}
 )
-class PaymentCancelView(GenericAPIView):
+class PaymentCancelView(GenericAPIView, BaseAPIView):
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
@@ -379,28 +383,29 @@ class PaymentCancelView(GenericAPIView):
         request=None,  # Explicitly tell Swagger there is no request body
         responses={200: serializers.PaymentStatusSerializer}
     )
+    @log_api_call()
     def post(self, request: Request, intent_id: str) -> Response:
         """Cancel payment intent"""
-        try:
+        def operation():
             service = PaymentIntentService()
             result = service.cancel_payment_intent(intent_id, request.user)
-            
-            return Response(result)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to cancel payment: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return result
+        
+        return self.handle_service_operation(
+            operation,
+            "Payment intent cancelled successfully",
+            "Failed to cancel payment"
+        )
 
 
 @router.register(r"payments/refunds", name="payment-refunds")
 @extend_schema(
     tags=["Payments"],
     summary="Refund Requests",
-    description="Manage refund requests"
+    description="Manage refund requests",
+    responses={200: BaseResponseSerializer}
 )
-class RefundListView(GenericAPIView):
+class RefundListView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.RefundSerializer
     permission_classes = [IsAuthenticated]
     
@@ -424,9 +429,10 @@ class RefundListView(GenericAPIView):
             )
         ]
     )
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get user refund requests"""
-        try:
+        def operation():
             service = RefundService()
             
             page = int(request.query_params.get('page', 1))
@@ -436,7 +442,7 @@ class RefundListView(GenericAPIView):
             
             serializer = self.get_serializer(result['results'], many=True)
             
-            return Response({
+            return {
                 'refunds': serializer.data,
                 'pagination': {
                     'count': result['pagination']['total_count'],
@@ -446,22 +452,23 @@ class RefundListView(GenericAPIView):
                     'has_next': result['pagination']['has_next'],
                     'has_previous': result['pagination']['has_previous']
                 }
-            })
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get refunds: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            "Refunds retrieved successfully",
+            "Failed to get refunds"
+        )
     
     @extend_schema(
         summary="Request Refund",
         description="Request a refund for a transaction",
         request=serializers.RefundRequestSerializer
     )
+    @log_api_call()
     def post(self, request: Request) -> Response:
         """Request refund for a transaction"""
-        try:
+        def operation():
             # Validate request data
             serializer = serializers.RefundRequestSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -476,54 +483,26 @@ class RefundListView(GenericAPIView):
             
             # Prepare success response
             response_serializer = self.get_serializer(refund)
-            return Response({
-                'success': True,
-                'message': 'Refund request submitted successfully',
-                'data': response_serializer.data
-            }, status=status.HTTP_201_CREATED)
-            
-        except ServiceException as e:
-            # Handle business rule violations with proper status code
-            return Response({
-                'success': False,
-                'error': {
-                    'code': getattr(e, 'code', 'refund_error'),
-                    'message': str(e)
-                }
-            }, status=getattr(e, 'status_code', status.HTTP_400_BAD_REQUEST))
-            
-        except ValidationError as e:
-            # Handle data validation errors
-            return Response({
-                'success': False,
-                'error': {
-                    'code': 'validation_error',
-                    'message': str(e) if str(e) else 'Invalid request data'
-                }
-            }, status=status.HTTP_400_BAD_REQUEST)
-            
-        except Exception as e:
-            # Log unexpected errors and return a safe message
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Unexpected error in refund request: {str(e)}")
-            
-            return Response({
-                'success': False,
-                'error': {
-                    'code': 'internal_error',
-                    'message': 'An unexpected error occurred while processing your request'
-                }
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return {
+                'refund': response_serializer.data
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            "Refund request submitted successfully",
+            "Failed to process refund request",
+            status.HTTP_201_CREATED
+        )
 
 
 @router.register(r"admin/refunds", name="admin-refunds")
 @extend_schema(
     tags=["Admin", "Payments"],
     summary="Admin Refund Management",
-    description="Admin endpoints for managing refund requests"
+    description="Admin endpoints for managing refund requests",
+    responses={200: BaseResponseSerializer}
 )
-class AdminRefundRequestsView(GenericAPIView):
+class AdminRefundRequestsView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.RefundSerializer
     permission_classes = [IsAuthenticated]
     
@@ -547,9 +526,10 @@ class AdminRefundRequestsView(GenericAPIView):
             )
         ]
     )
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get pending refund requests for admin review"""
-        try:
+        def operation():
             service = RefundService()
             
             page = int(request.query_params.get('page', 1))
@@ -559,7 +539,7 @@ class AdminRefundRequestsView(GenericAPIView):
             
             serializer = self.get_serializer(result['results'], many=True)
             
-            return Response({
+            return {
                 'refunds': serializer.data,
                 'pagination': {
                     'count': result['pagination']['total_count'],
@@ -569,21 +549,22 @@ class AdminRefundRequestsView(GenericAPIView):
                     'has_next': result['pagination']['has_next'],
                     'has_previous': result['pagination']['has_previous']
                 }
-            })
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to get refund requests: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            "Refund requests retrieved successfully",
+            "Failed to get refund requests"
+        )
 
 @router.register(r"admin/refunds/approve", name="admin-refund-approve")
 @extend_schema(
     tags=["Admin", "Payments"],
     summary="Approve Refund Request",
-    description="Admin endpoint to approve a refund request"
+    description="Admin endpoint to approve a refund request",
+    responses={200: BaseResponseSerializer}
 )
-class AdminApproveRefundView(GenericAPIView):
+class AdminApproveRefundView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.RefundActionSerializer
     permission_classes = [IsAuthenticated]
     
@@ -598,9 +579,10 @@ class AdminApproveRefundView(GenericAPIView):
             status.HTTP_500_INTERNAL_SERVER_ERROR: OpenApiTypes.OBJECT
         }
     )
+    @log_api_call()
     def post(self, request: Request) -> Response:
         """Approve a refund request"""
-        try:
+        def operation():
             # Validate request data
             serializer = serializers.RefundActionSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -614,43 +596,24 @@ class AdminApproveRefundView(GenericAPIView):
             
             # Prepare success response
             response_serializer = serializers.RefundSerializer(refund)
-            return Response({
-                'success': True,
-                'message': 'Refund request approved successfully',
-                'data': response_serializer.data
-            })
-            
-        except ServiceException as e:
-            # Handle business rule violations
-            return Response({
-                'success': False,
-                'error': {
-                    'code': getattr(e, 'code', 'refund_error'),
-                    'message': str(e)
-                }
-            }, status=getattr(e, 'status_code', status.HTTP_400_BAD_REQUEST))
-            
-        except Exception as e:
-            # Log unexpected errors
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Error approving refund: {str(e)}")
-            
-            return Response({
-                'success': False,
-                'error': {
-                    'code': 'internal_error',
-                    'message': 'An unexpected error occurred while processing the request'
-                }
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return {
+                'refund': response_serializer.data
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            "Refund request approved successfully",
+            "Failed to approve refund request"
+        )
 
 @router.register(r"admin/refunds/reject", name="admin-refund-reject")
 @extend_schema(
     tags=["Admin", "Payments"],
     summary="Reject Refund Request",
-    description="Admin endpoint to reject a refund request"
+    description="Admin endpoint to reject a refund request",
+    responses={200: BaseResponseSerializer}
 )
-class AdminRejectRefundView(GenericAPIView):
+class AdminRejectRefundView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.RefundRejectSerializer
     permission_classes = [IsAuthenticated]
     
@@ -665,9 +628,10 @@ class AdminRejectRefundView(GenericAPIView):
             status.HTTP_500_INTERNAL_SERVER_ERROR: OpenApiTypes.OBJECT
         }
     )
+    @log_api_call()
     def post(self, request: Request) -> Response:
         """Reject a refund request"""
-        try:
+        def operation():
             # Validate request data
             serializer = serializers.RefundRejectSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -682,32 +646,12 @@ class AdminRejectRefundView(GenericAPIView):
             
             # Prepare success response
             response_serializer = serializers.RefundSerializer(refund)
-            return Response({
-                'success': True,
-                'message': 'Refund request rejected successfully',
-                'data': response_serializer.data
-            })
-            
-        except ServiceException as e:
-            # Handle business rule violations
-            return Response({
-                'success': False,
-                'error': {
-                    'code': getattr(e, 'code', 'refund_error'),
-                    'message': str(e)
-                }
-            }, status=getattr(e, 'status_code', status.HTTP_400_BAD_REQUEST))
-            
-        except Exception as e:
-            # Log unexpected errors
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Error rejecting refund: {str(e)}")
-            
-            return Response({
-                'success': False,
-                'error': {
-                    'code': 'internal_error',
-                    'message': 'An unexpected error occurred while processing the request'
-                }
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return {
+                'refund': response_serializer.data
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            "Refund request rejected successfully",
+            "Failed to reject refund request"
+        )

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: ChargeGhar Nepal API
-  version: a1c9e50
+  version: a315307-dirty
   description: ChargeGhar API - Shared Power Bank Network for Nepal. This documentation
     only shows endpoints documented in our Features TOC.
   contact:
@@ -2644,7 +2644,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Rental'
+                $ref: '#/components/schemas/BaseResponse'
           description: ''
   /api/rentals/{rental_id}/extend:
     post:
@@ -2680,7 +2680,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RentalExtension'
+                $ref: '#/components/schemas/BaseResponse'
           description: ''
   /api/rentals/{rental_id}/issues:
     post:
@@ -2716,7 +2716,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RentalIssue'
+                $ref: '#/components/schemas/BaseResponse'
           description: ''
   /api/rentals/{rental_id}/location:
     post:
@@ -2752,7 +2752,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RentalLocation'
+                $ref: '#/components/schemas/BaseResponse'
           description: ''
   /api/rentals/{rental_id}/pay-due:
     post:
@@ -2788,12 +2788,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  data:
-                    type: object
+                $ref: '#/components/schemas/BaseResponse'
           description: ''
   /api/rentals/active:
     get:
@@ -2811,7 +2806,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Rental'
+                $ref: '#/components/schemas/BaseResponse'
           description: ''
   /api/rentals/history:
     get:
@@ -2862,13 +2857,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RentalList'
+                $ref: '#/components/schemas/BaseResponse'
           description: ''
   /api/rentals/packages:
     get:
-      operationId: api_rentals_packages_list
-      description: Get list of available rental packages
+      operationId: api_rentals_packages_retrieve
+      description: Get list of available rental packages with pagination
       summary: Get Rental Packages
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Items per page
       tags:
       - Rentals
       security:
@@ -2881,9 +2887,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RentalPackageDetail'
+                $ref: '#/components/schemas/BaseResponse'
           description: ''
   /api/rentals/start:
     post:
@@ -2914,7 +2918,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Rental'
+                $ref: '#/components/schemas/BaseResponse'
           description: ''
   /api/rentals/stats:
     get:
@@ -2932,14 +2936,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RentalStats'
+                $ref: '#/components/schemas/BaseResponse'
           description: ''
   /api/social/achievements:
     get:
       operationId: api_social_achievements_retrieve
-      description: Retrieve all achievements for the authenticated user with progress
-        information
-      summary: Get user achievements
+      description: Retrieve all achievements with real-time progress calculation.
+        Unlocks achievements when criteria are met.
+      summary: Get user achievements (Real-Time)
       tags:
       - Social
       security:
@@ -3010,17 +3014,74 @@ paths:
               schema:
                 $ref: '#/components/schemas/SocialStatsResponse'
           description: ''
+  /api/social/unlock/{achievement_id}:
+    post:
+      operationId: api_social_unlock_create
+      description: Claim an achievement that has been unlocked. Awards points and
+        updates leaderboard.
+      summary: Claim unlocked achievement
+      parameters:
+      - in: path
+        name: achievement_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Social
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimAchievementResponse'
+          description: ''
+        '400':
+          description: Achievement not unlocked
+        '404':
+          description: Achievement not found
+        '409':
+          description: Achievement already claimed
+  /api/social/unlock/bulk:
+    post:
+      operationId: api_social_unlock_bulk_create
+      description: Claim multiple unlocked achievements at once
+      summary: Claim multiple achievements
+      tags:
+      - Social
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BulkClaimRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkClaimRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BulkClaimRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkClaimResponse'
+          description: ''
   /api/stations:
     get:
       operationId: api_stations_list
-      description: Lists all active stations with real-time status and proper pagination.
+      description: Get list of active charging stations with basic info and availability
       summary: List Stations
       parameters:
-      - in: query
-        name: has_available_slots
-        schema:
-          type: boolean
-        description: Filter stations with available slots
       - in: query
         name: lat
         schema:
@@ -3042,23 +3103,12 @@ paths:
         name: page_size
         schema:
           type: integer
-        description: Items per page (max 100)
-      - in: query
-        name: radius
-        schema:
-          type: number
-          format: float
-        description: 'Search radius in kilometers (default: 5km)'
+        description: Items per page (max 50)
       - in: query
         name: search
         schema:
           type: string
         description: Search by station name or address
-      - in: query
-        name: status
-        schema:
-          type: string
-        description: Filter by station status
       tags:
       - Stations
       security:
@@ -3073,14 +3123,53 @@ paths:
               schema:
                 $ref: '#/components/schemas/StationListResponse'
           description: ''
-  /api/stations/{sn}/favorite:
+  /api/stations/{serial_number}:
+    get:
+      operationId: api_stations_retrieve
+      description: Get detailed station information including slots, amenities, and
+        real-time status
+      summary: Station Detail
+      parameters:
+      - in: query
+        name: lat
+        schema:
+          type: number
+          format: float
+        description: User latitude for distance calculation
+      - in: query
+        name: lng
+        schema:
+          type: number
+          format: float
+        description: User longitude for distance calculation
+      - in: path
+        name: serial_number
+        schema:
+          type: string
+        description: Station serial number
+        required: true
+      tags:
+      - Stations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StationDetailResponse'
+          description: ''
+  /api/stations/{serial_number}/favorite:
     post:
-      operationId: station_favorite_add
-      description: Add station to user's favorite list
-      summary: Add Station to Favorites
+      operationId: api_stations_favorite_create
+      description: Add or remove station from user's favorites
+      summary: Toggle Station Favorite
       parameters:
       - in: path
-        name: sn
+        name: serial_number
         schema:
           type: string
         description: Station serial number
@@ -3098,39 +3187,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/StationFavoriteResponse'
           description: ''
-    delete:
-      operationId: station_favorite_remove
-      description: Remove station from user's favorite list
-      summary: Remove Station from Favorites
-      parameters:
-      - in: path
-        name: sn
-        schema:
-          type: string
-        description: Station serial number
-        required: true
-      tags:
-      - Stations
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StationFavoriteResponse'
-          description: ''
-  /api/stations/{sn}/report-issue:
+  /api/stations/{serial_number}/report-issue:
     post:
       operationId: api_stations_report_issue_create
-      description: Report station issues (offline, damaged, dirty, location wrong,
-        etc.)
+      description: Report problems with a charging station
       summary: Report Station Issue
       parameters:
       - in: path
-        name: sn
+        name: serial_number
         schema:
           type: string
         description: Station serial number
@@ -3160,50 +3224,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/StationIssueResponse'
           description: ''
-  /api/stations/detail/{sn}:
-    get:
-      operationId: api_stations_detail_by_serial
-      description: 'Returns detailed real-time station data: location, slot availability,
-        battery levels, and online status.'
-      summary: Station Detail
-      parameters:
-      - in: query
-        name: lat
-        schema:
-          type: number
-          format: float
-        description: User latitude for distance calculation
-      - in: query
-        name: lng
-        schema:
-          type: number
-          format: float
-        description: User longitude for distance calculation
-      - in: path
-        name: sn
-        schema:
-          type: string
-        description: Station serial number
-        required: true
-      tags:
-      - Stations
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - jwtAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StationDetailResponse'
-          description: ''
   /api/stations/favorites:
     get:
       operationId: api_stations_favorites_retrieve
-      description: Returns all stations marked as favorites by the user
-      summary: User Favorite Stations
+      description: Get user's favorite stations list
+      summary: My Favorite Stations
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Items per page (max 50)
       tags:
       - Stations
       security:
@@ -3220,8 +3256,19 @@ paths:
   /api/stations/my-reports:
     get:
       operationId: api_stations_my_reports_retrieve
-      description: Returns all issues reported by the authenticated user
-      summary: My Reported Issues
+      description: Get issues reported by the authenticated user
+      summary: My Issue Reports
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Items per page (max 50)
       tags:
       - Stations
       security:
@@ -3238,9 +3285,29 @@ paths:
   /api/stations/nearby:
     get:
       operationId: api_stations_nearby_retrieve
-      description: 'Fetches stations within radius for map integration (params: lat,
-        lng, radius)'
+      description: Get stations within specified radius for map display
       summary: Nearby Stations
+      parameters:
+      - in: query
+        name: lat
+        schema:
+          type: number
+          format: float
+        description: Latitude
+        required: true
+      - in: query
+        name: lng
+        schema:
+          type: number
+          format: float
+        description: Longitude
+        required: true
+      - in: query
+        name: radius
+        schema:
+          type: number
+          format: float
+        description: 'Search radius in km (default: 5, max: 20)'
       tags:
       - Stations
       security:
@@ -3662,6 +3729,23 @@ components:
       - message
       - success
       - timestamp
+    AchievementClaimData:
+      type: object
+      properties:
+        achievement:
+          $ref: '#/components/schemas/UserAchievement'
+        points_awarded:
+          type: integer
+        new_rank:
+          type: integer
+          nullable: true
+        total_points:
+          type: integer
+      required:
+      - achievement
+      - new_rank
+      - points_awarded
+      - total_points
     AchievementCreateRequest:
       type: object
       description: Serializer for creating achievements (Admin)
@@ -4050,6 +4134,62 @@ components:
       - failed_count
       - total_points_awarded
       - total_users
+    BulkClaimData:
+      type: object
+      properties:
+        claimed_count:
+          type: integer
+        failed_count:
+          type: integer
+        total_points_awarded:
+          type: integer
+        achievements:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserAchievement'
+        failed_claims:
+          type: array
+          items:
+            $ref: '#/components/schemas/FailedClaim'
+      required:
+      - achievements
+      - claimed_count
+      - failed_claims
+      - failed_count
+      - total_points_awarded
+    BulkClaimRequest:
+      type: object
+      description: Serializer for bulk achievement claiming
+      properties:
+        achievement_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of UserAchievement IDs (not Achievement IDs) to claim.
+            These are the IDs from the achievements endpoint.
+          maxItems: 50
+          minItems: 1
+      required:
+      - achievement_ids
+    BulkClaimResponse:
+      type: object
+      description: Response serializer for bulk claim endpoint
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/BulkClaimData'
+        timestamp:
+          type: string
+          format: date-time
+      required:
+      - data
+      - message
+      - success
+      - timestamp
     BulkPointsAwardRequest:
       type: object
       description: Serializer for bulk points award (Admin)
@@ -4172,6 +4312,24 @@ components:
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
       required:
       - scenario
+    ClaimAchievementResponse:
+      type: object
+      description: Response serializer for achievement claim endpoint
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/AchievementClaimData'
+        timestamp:
+          type: string
+          format: date-time
+      required:
+      - data
+      - message
+      - success
+      - timestamp
     ClaimData:
       type: object
       properties:
@@ -4759,6 +4917,21 @@ components:
       - message
       - success
       - timestamp
+    FailedClaim:
+      type: object
+      description: Serializer for failed achievement claims
+      properties:
+        achievement_id:
+          type: string
+          format: uuid
+        error:
+          type: string
+        code:
+          type: string
+      required:
+      - achievement_id
+      - code
+      - error
     LeaderboardData:
       type: object
       properties:
@@ -4987,6 +5160,9 @@ components:
           - promotion
           - system
           - achievement
+          - points
+          - otp_sms
+          - otp_email
           type: string
           description: |-
             * `rental` - Rental
@@ -4994,7 +5170,10 @@ components:
             * `promotion` - Promotion
             * `system` - System
             * `achievement` - Achievement
-          x-spec-enum-id: 471f054a2577e023
+            * `points` - Points
+            * `otp_sms` - OTP SMS
+            * `otp_email` - OTP Email
+          x-spec-enum-id: 56588618c10b89b2
         data: {}
         channel:
           enum:
@@ -5070,6 +5249,9 @@ components:
           - promotion
           - system
           - achievement
+          - points
+          - otp_sms
+          - otp_email
           type: string
           description: |-
             * `rental` - Rental
@@ -5077,7 +5259,10 @@ components:
             * `promotion` - Promotion
             * `system` - System
             * `achievement` - Achievement
-          x-spec-enum-id: 471f054a2577e023
+            * `points` - Points
+            * `otp_sms` - OTP SMS
+            * `otp_email` - OTP Email
+          x-spec-enum-id: 56588618c10b89b2
         is_read:
           type: boolean
         created_at:
@@ -6024,240 +6209,33 @@ components:
       required:
       - reason
       - transaction_id
-    Rental:
-      type: object
-      description: Serializer for rental details
-      properties:
-        id:
-          type: string
-          format: uuid
-          readOnly: true
-        rental_code:
-          type: string
-          readOnly: true
-        status:
-          enum:
-          - PENDING
-          - ACTIVE
-          - COMPLETED
-          - CANCELLED
-          - OVERDUE
-          type: string
-          description: |-
-            * `PENDING` - Pending
-            * `ACTIVE` - Active
-            * `COMPLETED` - Completed
-            * `CANCELLED` - Cancelled
-            * `OVERDUE` - Overdue
-          x-spec-enum-id: 89773b47b9e06f3f
-          readOnly: true
-        payment_status:
-          enum:
-          - PENDING
-          - PAID
-          - FAILED
-          - REFUNDED
-          type: string
-          description: |-
-            * `PENDING` - Pending
-            * `PAID` - Paid
-            * `FAILED` - Failed
-            * `REFUNDED` - Refunded
-          x-spec-enum-id: cb6193cb861935f0
-          readOnly: true
-        started_at:
-          type: string
-          format: date-time
-          readOnly: true
-          nullable: true
-        ended_at:
-          type: string
-          format: date-time
-          readOnly: true
-          nullable: true
-        due_at:
-          type: string
-          format: date-time
-        amount_paid:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          readOnly: true
-        overdue_amount:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-          readOnly: true
-        is_returned_on_time:
-          type: boolean
-          readOnly: true
-        timely_return_bonus_awarded:
-          type: boolean
-          readOnly: true
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        station_name:
-          type: string
-          readOnly: true
-        return_station_name:
-          type: string
-          readOnly: true
-        package_name:
-          type: string
-          readOnly: true
-        power_bank_serial:
-          type: string
-          readOnly: true
-        formatted_amount_paid:
-          type: string
-          readOnly: true
-        formatted_overdue_amount:
-          type: string
-          readOnly: true
-        duration_used:
-          type: string
-          readOnly: true
-        time_remaining:
-          type: string
-          nullable: true
-          readOnly: true
-        is_overdue:
-          type: boolean
-          readOnly: true
-      required:
-      - amount_paid
-      - created_at
-      - due_at
-      - duration_used
-      - ended_at
-      - formatted_amount_paid
-      - formatted_overdue_amount
-      - id
-      - is_overdue
-      - is_returned_on_time
-      - overdue_amount
-      - package_name
-      - payment_status
-      - power_bank_serial
-      - rental_code
-      - return_station_name
-      - started_at
-      - station_name
-      - status
-      - time_remaining
-      - timely_return_bonus_awarded
-      - updated_at
     RentalCancelRequest:
       type: object
-      description: Serializer for rental cancellation
+      description: |-
+        Request serializer for rental cancellation.
+        Used in: POST /api/rentals/{id}/cancel
       properties:
         reason:
           type: string
+          description: Optional cancellation reason
           maxLength: 255
-    RentalExtension:
-      type: object
-      description: Serializer for rental extensions
-      properties:
-        id:
-          type: string
-          format: uuid
-          readOnly: true
-        extended_minutes:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-        extension_cost:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-        extended_at:
-          type: string
-          format: date-time
-          readOnly: true
-        package_name:
-          type: string
-          readOnly: true
-        formatted_extension_cost:
-          type: string
-          readOnly: true
-      required:
-      - extended_at
-      - extended_minutes
-      - extension_cost
-      - formatted_extension_cost
-      - id
-      - package_name
     RentalExtensionCreateRequest:
       type: object
-      description: Serializer for creating rental extension
+      description: |-
+        Request serializer for extending a rental.
+        Used in: POST /api/rentals/{id}/extend
       properties:
         package_id:
           type: string
           format: uuid
+          description: Extension package ID
       required:
       - package_id
-    RentalIssue:
-      type: object
-      description: Serializer for rental issues
-      properties:
-        id:
-          type: string
-          format: uuid
-          readOnly: true
-        issue_type:
-          enum:
-          - POWER_BANK_DAMAGED
-          - POWER_BANK_LOST
-          - CHARGING_ISSUE
-          - RETURN_ISSUE
-          type: string
-          description: |-
-            * `POWER_BANK_DAMAGED` - Power Bank Damaged
-            * `POWER_BANK_LOST` - Power Bank Lost
-            * `CHARGING_ISSUE` - Charging Issue
-            * `RETURN_ISSUE` - Return Issue
-          x-spec-enum-id: 9d97377ca8c5f924
-        description:
-          type: string
-          maxLength: 255
-        images: {}
-        status:
-          enum:
-          - REPORTED
-          - RESOLVED
-          type: string
-          description: |-
-            * `REPORTED` - Reported
-            * `RESOLVED` - Resolved
-          x-spec-enum-id: c4d2d0c6888181d0
-        reported_at:
-          type: string
-          format: date-time
-          readOnly: true
-        resolved_at:
-          type: string
-          format: date-time
-          readOnly: true
-          nullable: true
-        rental_code:
-          type: string
-          readOnly: true
-      required:
-      - description
-      - id
-      - issue_type
-      - rental_code
-      - reported_at
-      - resolved_at
     RentalIssueCreateRequest:
       type: object
-      description: Serializer for creating rental issues
+      description: |-
+        Request serializer for reporting rental issues.
+        Used in: POST /api/rentals/{id}/issue
       properties:
         issue_type:
           enum:
@@ -6280,125 +6258,25 @@ components:
       required:
       - description
       - issue_type
-    RentalList:
-      type: object
-      description: Serializer for rental list (minimal data)
-      properties:
-        id:
-          type: string
-          format: uuid
-          readOnly: true
-        rental_code:
-          type: string
-          maxLength: 10
-        status:
-          enum:
-          - PENDING
-          - ACTIVE
-          - COMPLETED
-          - CANCELLED
-          - OVERDUE
-          type: string
-          description: |-
-            * `PENDING` - Pending
-            * `ACTIVE` - Active
-            * `COMPLETED` - Completed
-            * `CANCELLED` - Cancelled
-            * `OVERDUE` - Overdue
-          x-spec-enum-id: 89773b47b9e06f3f
-        payment_status:
-          enum:
-          - PENDING
-          - PAID
-          - FAILED
-          - REFUNDED
-          type: string
-          description: |-
-            * `PENDING` - Pending
-            * `PAID` - Paid
-            * `FAILED` - Failed
-            * `REFUNDED` - Refunded
-          x-spec-enum-id: cb6193cb861935f0
-        started_at:
-          type: string
-          format: date-time
-          nullable: true
-        ended_at:
-          type: string
-          format: date-time
-          nullable: true
-        amount_paid:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        station_name:
-          type: string
-          readOnly: true
-        package_name:
-          type: string
-          readOnly: true
-        formatted_amount_paid:
-          type: string
-          readOnly: true
-        duration_display:
-          type: string
-          readOnly: true
-      required:
-      - created_at
-      - duration_display
-      - formatted_amount_paid
-      - id
-      - package_name
-      - rental_code
-      - station_name
-    RentalLocation:
-      type: object
-      description: Serializer for rental location tracking
-      properties:
-        id:
-          type: string
-          format: uuid
-          readOnly: true
-        latitude:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,4}(?:\.\d{0,6})?$
-        longitude:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,4}(?:\.\d{0,6})?$
-        accuracy:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-        recorded_at:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-      - accuracy
-      - id
-      - latitude
-      - longitude
-      - recorded_at
     RentalLocationUpdateRequest:
       type: object
-      description: Serializer for updating rental location
+      description: |-
+        Request serializer for updating rental location.
+        Used in: POST /api/rentals/{id}/location
       properties:
         latitude:
           type: number
           format: double
+          description: GPS latitude (-90 to 90)
         longitude:
           type: number
           format: double
+          description: GPS longitude (-180 to 180)
         accuracy:
           type: number
           format: double
           default: 10.0
+          description: GPS accuracy in meters
       required:
       - latitude
       - longitude
@@ -6460,170 +6338,64 @@ components:
       - package_type
       - payment_model
       - price
-    RentalPackageDetail:
-      type: object
-      description: Serializer for rental packages (detailed view)
-      properties:
-        id:
-          type: string
-          format: uuid
-          readOnly: true
-        name:
-          type: string
-          maxLength: 100
-        description:
-          type: string
-          maxLength: 255
-        duration_minutes:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-        price:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-        package_type:
-          enum:
-          - HOURLY
-          - DAILY
-          - WEEKLY
-          - MONTHLY
-          type: string
-          description: |-
-            * `HOURLY` - Hourly
-            * `DAILY` - Daily
-            * `WEEKLY` - Weekly
-            * `MONTHLY` - Monthly
-          x-spec-enum-id: 9e1546a52c56f5bd
-        payment_model:
-          enum:
-          - PREPAID
-          - POSTPAID
-          type: string
-          description: |-
-            * `PREPAID` - Prepaid
-            * `POSTPAID` - Postpaid
-          x-spec-enum-id: 7a3ae01e10e187da
-        is_active:
-          type: boolean
-        duration_display:
-          type: string
-          readOnly: true
-        formatted_price:
-          type: string
-          readOnly: true
-      required:
-      - description
-      - duration_display
-      - duration_minutes
-      - formatted_price
-      - id
-      - name
-      - package_type
-      - payment_model
-      - price
     RentalPayDueRequest:
       type: object
-      description: Serializer for paying rental dues - Same as calculate-options for
-        settle_dues
+      description: |-
+        Request serializer for paying rental dues.
+        Used in: POST /api/rentals/pay-due
+        Note: Same structure as calculate-options for settle_dues scenario
       properties:
         scenario:
           enum:
           - settle_dues
           type: string
-          description: '* `settle_dues` - settle_dues'
           x-spec-enum-id: dce4e640f37717d2
+          description: |-
+            Payment scenario (only settle_dues supported)
+
+            * `settle_dues` - settle_dues
         package_id:
           type: string
           format: uuid
+          description: Package ID for settlement
         rental_id:
           type: string
           format: uuid
+          description: Rental ID with outstanding dues
       required:
       - package_id
       - rental_id
       - scenario
     RentalStartRequest:
       type: object
-      description: Serializer for starting a rental
+      description: |-
+        Request serializer for starting a rental.
+        Used in: POST /api/rentals/start
       properties:
         station_sn:
           type: string
           minLength: 1
+          description: Station serial number where powerbank is picked up
           maxLength: 255
         package_id:
           type: string
           format: uuid
+          description: Selected rental package ID
         payment_scenario:
           enum:
           - pre_payment
           - post_payment
           type: string
+          x-spec-enum-id: 96b65b92ff822ca5
           description: |-
+            Payment timing preference
+
             * `pre_payment` - pre_payment
             * `post_payment` - post_payment
-          x-spec-enum-id: 96b65b92ff822ca5
       required:
       - package_id
       - payment_scenario
       - station_sn
-    RentalStats:
-      type: object
-      description: Serializer for user rental statistics
-      properties:
-        total_rentals:
-          type: integer
-        completed_rentals:
-          type: integer
-        active_rentals:
-          type: integer
-        cancelled_rentals:
-          type: integer
-        total_spent:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-        total_time_used:
-          type: integer
-        average_rental_duration:
-          type: number
-          format: double
-        timely_returns:
-          type: integer
-        late_returns:
-          type: integer
-        timely_return_rate:
-          type: number
-          format: double
-        favorite_station:
-          type: string
-          nullable: true
-        favorite_package:
-          type: string
-          nullable: true
-        last_rental_date:
-          type: string
-          format: date-time
-          nullable: true
-        first_rental_date:
-          type: string
-          format: date-time
-          nullable: true
-      required:
-      - active_rentals
-      - average_rental_duration
-      - cancelled_rentals
-      - completed_rentals
-      - favorite_package
-      - favorite_station
-      - first_rental_date
-      - last_rental_date
-      - late_returns
-      - timely_return_rate
-      - timely_returns
-      - total_rentals
-      - total_spent
-      - total_time_used
     SocialStats:
       type: object
       description: Serializer for social statistics
@@ -6821,9 +6593,6 @@ components:
         serial_number:
           type: string
           maxLength: 255
-        imei:
-          type: string
-          maxLength: 255
         latitude:
           type: string
           format: decimal
@@ -6856,19 +6625,10 @@ components:
           x-spec-enum-id: b4a3d9b4a10c8604
         is_maintenance:
           type: boolean
-        hardware_info: {}
         last_heartbeat:
           type: string
           format: date-time
           nullable: true
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
         slots:
           type: array
           items:
@@ -6886,6 +6646,7 @@ components:
           readOnly: true
         available_slots:
           type: integer
+          description: Get count of available slots
           readOnly: true
         occupied_slots:
           type: integer
@@ -6895,27 +6656,20 @@ components:
           readOnly: true
         is_favorite:
           type: boolean
+          description: Check if station is user's favorite
           readOnly: true
         distance:
           type: number
           format: double
-          readOnly: true
-        average_rating:
-          type: number
-          format: double
-          readOnly: true
-        total_reviews:
-          type: integer
+          nullable: true
+          description: Calculate distance from user location if provided
           readOnly: true
       required:
       - address
       - amenities
       - available_slots
-      - average_rating
-      - created_at
       - distance
       - id
-      - imei
       - is_favorite
       - latitude
       - longitude
@@ -6925,9 +6679,7 @@ components:
       - serial_number
       - slots
       - station_name
-      - total_reviews
       - total_slots
-      - updated_at
     StationDetailResponse:
       type: object
       description: Response serializer for station detail
@@ -6938,14 +6690,10 @@ components:
           type: string
         data:
           $ref: '#/components/schemas/StationDetail'
-        timestamp:
-          type: string
-          format: date-time
       required:
       - data
       - message
       - success
-      - timestamp
     StationFavoriteResponse:
       type: object
       description: Response serializer for station favorite operations
@@ -6957,14 +6705,10 @@ components:
         data:
           type: object
           additionalProperties: {}
-        timestamp:
-          type: string
-          format: date-time
       required:
       - data
       - message
       - success
-      - timestamp
     StationIssue:
       type: object
       description: Serializer for station issues
@@ -7072,7 +6816,13 @@ components:
           type: string
           minLength: 1
           maxLength: 255
-        images: {}
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+            minLength: 1
+          description: List of image URLs
       required:
       - description
       - issue_type
@@ -7086,21 +6836,20 @@ components:
           type: string
         data:
           $ref: '#/components/schemas/StationIssue'
-        timestamp:
-          type: string
-          format: date-time
       required:
       - data
       - message
       - success
-      - timestamp
     StationList:
       type: object
-      description: MVP serializer for station list views - minimal fields for performance
+      description: Serializer for station list views with essential fields
       properties:
         id:
           type: string
           format: uuid
+          readOnly: true
+        serial_number:
+          type: string
           readOnly: true
         station_name:
           type: string
@@ -7115,6 +6864,9 @@ components:
           format: decimal
           pattern: ^-?\d{0,4}(?:\.\d{0,6})?$
           readOnly: true
+        address:
+          type: string
+          readOnly: true
         status:
           enum:
           - ONLINE
@@ -7127,55 +6879,54 @@ components:
             * `MAINTENANCE` - Maintenance
           x-spec-enum-id: b4a3d9b4a10c8604
           readOnly: true
-        available_slots:
+        total_slots:
           type: integer
           readOnly: true
-        is_online:
-          type: boolean
+        available_slots:
+          type: integer
+          description: Get count of available slots
           readOnly: true
         distance:
           type: number
           format: double
           nullable: true
+          description: Calculate distance from user location if provided
           readOnly: true
         is_favorite:
           type: boolean
-          readOnly: true
-        primary_image:
-          type: string
-          nullable: true
+          description: Check if station is user's favorite
           readOnly: true
       required:
+      - address
       - available_slots
       - distance
       - id
       - is_favorite
-      - is_online
       - latitude
       - longitude
-      - primary_image
+      - serial_number
       - station_name
       - status
+      - total_slots
     StationListResponse:
       type: object
       description: Response serializer for station list
       properties:
-        success:
+        count:
+          type: integer
+        next:
           type: boolean
-        message:
-          type: string
-        data:
+        previous:
+          type: boolean
+        results:
           type: array
           items:
             $ref: '#/components/schemas/StationList'
-        timestamp:
-          type: string
-          format: date-time
       required:
-      - data
-      - message
-      - success
-      - timestamp
+      - count
+      - next
+      - previous
+      - results
     StationMedia:
       type: object
       description: Serializer for station media
@@ -7415,23 +7166,35 @@ components:
           minimum: -2147483648
         is_unlocked:
           type: boolean
-        points_awarded:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-          nullable: true
         unlocked_at:
           type: string
           format: date-time
           readOnly: true
           nullable: true
+        is_claimed:
+          type: boolean
+        claimed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        points_awarded:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
         progress_percentage:
           type: number
           format: double
           readOnly: true
+        can_claim:
+          type: boolean
+          readOnly: true
       required:
       - achievement_description
       - achievement_name
+      - can_claim
+      - claimed_at
       - criteria_type
       - criteria_value
       - id
@@ -7570,21 +7333,21 @@ components:
       type: object
       description: Response serializer for user favorite stations
       properties:
-        success:
+        count:
+          type: integer
+        next:
           type: boolean
-        message:
-          type: string
-        data:
-          type: object
-          additionalProperties: {}
-        timestamp:
-          type: string
-          format: date-time
+        previous:
+          type: boolean
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StationList'
       required:
-      - data
-      - message
-      - success
-      - timestamp
+      - count
+      - next
+      - previous
+      - results
     UserKYCRequest:
       type: object
       description: Serializer for user KYC
@@ -7768,21 +7531,21 @@ components:
       type: object
       description: Response serializer for user station reports
       properties:
-        success:
+        count:
+          type: integer
+        next:
           type: boolean
-        message:
-          type: string
-        data:
-          type: object
-          additionalProperties: {}
-        timestamp:
-          type: string
-          format: date-time
+        previous:
+          type: boolean
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StationIssue'
       required:
-      - data
-      - message
-      - success
-      - timestamp
+      - count
+      - next
+      - previous
+      - results
     ValidationData:
       type: object
       properties:
@@ -7804,6 +7567,7 @@ components:
           type: string
           minLength: 1
         callback_data:
+          type: string
           nullable: true
         gateway_reference:
           type: string

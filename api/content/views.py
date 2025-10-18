@@ -40,6 +40,7 @@ class TermsOfServiceView(GenericAPIView, BaseAPIView):
     permission_classes = [AllowAny]
 
     @cached_response(timeout=3600)  # 1 hour cache for static content
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get terms of service with caching"""
         def operation():
@@ -68,6 +69,7 @@ class PrivacyPolicyView(GenericAPIView, BaseAPIView):
     permission_classes = [AllowAny]
 
     @cached_response(timeout=3600)  # 1 hour cache for static content
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get privacy policy with caching"""
         def operation():
@@ -96,6 +98,7 @@ class AboutView(GenericAPIView, BaseAPIView):
     permission_classes = [AllowAny]
 
     @cached_response(timeout=3600)  # 1 hour cache for static content
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get about information with caching"""
         def operation():
@@ -167,6 +170,7 @@ class FAQView(GenericAPIView, BaseAPIView):
         return serializers.FAQCategorySerializer
 
     @cached_response(timeout=1800)  # 30 minutes cache for FAQ content
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get FAQ content with caching and pagination"""
         def operation():
@@ -225,6 +229,7 @@ class BannersView(GenericAPIView, BaseAPIView):
     permission_classes = [AllowAny]
 
     @cached_response(timeout=900)  # 15 minutes cache for banners (promotional content)
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get active banners with light caching"""
         def operation():
@@ -255,6 +260,7 @@ class AppVersionView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.AppVersionSerializer
     permission_classes = [AllowAny]
 
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get app version information"""
         def operation():
@@ -398,6 +404,7 @@ class AdminContentAnalyticsView(GenericAPIView, BaseAPIView):
     permission_classes = [IsAdminUser]
 
     @cached_response(timeout=1800)  # 30 minutes cache for analytics
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get content analytics with caching"""
         def operation():

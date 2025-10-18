@@ -29,8 +29,16 @@ class RentalService(CRUDService):
     model = Rental
     
     @transaction.atomic
-    def start_rental(self, user, station_sn: str, package_id: str, payment_scenario: str = None) -> Rental:
-        """Start a new rental session"""
+    def start_rental(self, user, station_sn: str, package_id: str) -> Rental:
+        """
+        Start a new rental session.
+        
+        Payment flow is determined by package.payment_model:
+        - PREPAID: Points + wallet charged immediately, rental starts
+        - POSTPAID: Rental starts, payment charged at return
+        
+        Points are always used first, then wallet balance.
+        """
         try:
             # Validate prerequisites
             self._validate_rental_prerequisites(user)
@@ -45,7 +53,7 @@ class RentalService(CRUDService):
             # Get available power bank and slot
             power_bank, slot = self._get_available_power_bank_and_slot(station)
             
-            # For pre-payment model, check and process payment
+            # Process payment based on package payment model
             if package.payment_model == 'PREPAID':
                 self._process_prepayment(user, package)
             

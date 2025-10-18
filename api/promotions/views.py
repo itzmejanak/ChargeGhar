@@ -366,7 +366,7 @@ class AdminPromotionAnalyticsView(GenericAPIView, BaseAPIView):
 
 
 @router.register(r"admin/promotions/coupons/filter", name="admin-coupons-filter")
-class AdminCouponFilterView(GenericAPIView):
+class AdminCouponFilterView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.CouponFilterSerializer
     permission_classes = [IsStaffPermission]
     
@@ -376,18 +376,20 @@ class AdminCouponFilterView(GenericAPIView):
         description="Get filtered and paginated list of coupons (Staff only)",
         operation_id="filter_admin_coupons"
     )
+    @log_api_call()
     def post(self, request: Request) -> Response:
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        try:
+        """Filter coupons with pagination (Admin only)"""
+        def operation():
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
             coupon_service = CouponService()
             result = coupon_service.get_coupons_list(serializer.validated_data)
             
             # Serialize the results
             coupon_serializer = serializers.CouponSerializer(result['results'], many=True)
             
-            return Response({
+            return {
                 'results': coupon_serializer.data,
                 'pagination': {
                     'count': result['pagination']['total_count'],
@@ -397,16 +399,10 @@ class AdminCouponFilterView(GenericAPIView):
                     'has_next': result['pagination']['has_next'],
                     'has_previous': result['pagination']['has_previous']
                 }
-            }, status=status.HTTP_200_OK)
-            
-        except ServiceException as e:
-            return Response(
-                {'detail': str(e)}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            logger.error(f"Failed to filter coupons: {str(e)}")
-            return Response(
-                {'detail': 'Failed to filter coupons'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            "Coupons filtered successfully",
+            "Failed to filter coupons"
+        )

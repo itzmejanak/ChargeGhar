@@ -34,9 +34,10 @@ class RentalPackageListSerializer(serializers.ModelSerializer):
     """
     Minimal serializer for rental packages list.
     Used in: GET /api/rentals/packages
-    Fields: 7 (optimized for list view)
+    Fields: 8 (optimized for list view + payment model info)
     """
     formatted_price = serializers.SerializerMethodField()
+    payment_model_display = serializers.SerializerMethodField()
     
     class Meta:
         model = RentalPackage
@@ -45,15 +46,25 @@ class RentalPackageListSerializer(serializers.ModelSerializer):
             'name', 
             'duration_minutes', 
             'price',
-            'package_type', 
+            'package_type',
+            'payment_model',
             'is_active', 
-            'formatted_price'
+            'formatted_price',
+            'payment_model_display'
         ]
     
     @extend_schema_field(serializers.CharField)
     def get_formatted_price(self, obj) -> str:
         """Format price in Nepal Rupees"""
         return f"NPR {obj.price:,.2f}"
+    
+    @extend_schema_field(serializers.CharField)
+    def get_payment_model_display(self, obj) -> str:
+        """Human-readable payment model description"""
+        if obj.payment_model == 'PREPAID':
+            return "Pay Before Use"
+        else:
+            return "Pay After Use"
 
 
 class RentalListSerializer(serializers.ModelSerializer):
@@ -298,17 +309,16 @@ class RentalStartSerializer(serializers.Serializer):
     """
     Request serializer for starting a rental.
     Used in: POST /api/rentals/start
+    
+    Note: Payment model (PREPAID/POSTPAID) is determined by the selected package,
+    not by user choice. Users select packages, backend handles payment flow.
     """
     station_sn = serializers.CharField(
         max_length=255,
         help_text="Station serial number where powerbank is picked up"
     )
     package_id = serializers.UUIDField(
-        help_text="Selected rental package ID"
-    )
-    payment_scenario = serializers.ChoiceField(
-        choices=['pre_payment', 'post_payment'],
-        help_text="Payment timing preference"
+        help_text="Selected rental package ID (payment model determined by package)"
     )
     
     def validate_station_sn(self, value):
@@ -326,10 +336,24 @@ class RentalStartSerializer(serializers.Serializer):
     def validate_package_id(self, value):
         """Validate package exists and is active"""
         try:
-            RentalPackage.objects.get(id=value, is_active=True)
+            package = RentalPackage.objects.get(id=value, is_active=True)
             return value
         except RentalPackage.DoesNotExist:
             raise serializers.ValidationError("Package not found or inactive")
+    
+    def validate(self, attrs):
+        """Cross-validation to ensure package and station compatibility"""
+        # Get package to validate payment model compatibility
+        try:
+            package = RentalPackage.objects.get(id=attrs['package_id'], is_active=True)
+            
+            # Store package payment model for service layer access
+            attrs['_package_payment_model'] = package.payment_model
+            
+        except RentalPackage.DoesNotExist:
+            raise serializers.ValidationError({"package_id": "Package not found or inactive"})
+        
+        return attrs
 
 
 class RentalCancelSerializer(serializers.Serializer):

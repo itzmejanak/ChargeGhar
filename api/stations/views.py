@@ -50,6 +50,7 @@ class StationListView(GenericAPIView, BaseAPIView):
     permission_classes = [AllowAny]
     serializer_class = serializers.StationListSerializer
     
+    @log_api_call()
     def get(self, request: Request) -> Response:
         """Get paginated list of active stations"""
         def operation():
@@ -268,6 +269,7 @@ class StationDetailView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.StationDetailSerializer
     permission_classes = [AllowAny]
     
+    @log_api_call()
     def get(self, request: Request, serial_number: str) -> Response:
         """Get detailed station information"""
         def operation():
