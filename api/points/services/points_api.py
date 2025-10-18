@@ -17,7 +17,7 @@ Usage:
 
 from __future__ import annotations
 
-from typing import Dict, Any, Union
+from typing import Union
 from api.points.models import PointsTransaction
 
 

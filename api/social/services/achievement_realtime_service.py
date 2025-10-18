@@ -97,7 +97,7 @@ class AchievementRealtimeService(BaseService):
                 )
 
                 # Update progress
-                old_progress = user_achievement.current_progress
+                user_achievement.current_progress
                 user_achievement.current_progress = current_value
 
                 # Check if should be unlocked (criteria met + not already unlocked)

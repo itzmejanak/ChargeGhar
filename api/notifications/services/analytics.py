@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Any
 from django.utils import timezone
-from django.db.models import Count, Q
+from django.db.models import Count
 
 from api.common.services.base import BaseService
 from api.notifications.models import Notification, SMS_FCMLog

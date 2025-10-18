@@ -80,7 +80,6 @@ class S3Service(CloudStorageService):
 
     def upload_file(self, file: InMemoryUploadedFile, folder: str = '', public: bool = True) -> Dict:
         import uuid
-        import os
         filename = file.name
         key = f"{folder}/{uuid.uuid4().hex}_{filename}"
         extra_args = {'ACL': 'public-read'} if public else {}
@@ -115,7 +114,6 @@ class CloudStorageFactory:
     @staticmethod
     def get_storage_service() -> CloudStorageService:
         import os
-        from django.conf import settings
         
         # Try to get provider from AppConfig first
         try:

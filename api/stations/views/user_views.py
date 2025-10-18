@@ -6,28 +6,18 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
-from rest_framework import status, mixins
-from rest_framework.decorators import action
 from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
-from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
-from api.common.decorators import rate_limit, log_api_call, cached_response
-from api.common.serializers import BaseResponseSerializer, PaginatedResponseSerializer
+from api.common.decorators import log_api_call
 from api.stations import serializers
-from api.stations.models import Station
-from api.stations.services import StationService, StationFavoriteService, StationIssueService
-from api.common.services.base import ServiceException
+from api.stations.services import StationFavoriteService, StationIssueService
 
 if TYPE_CHECKING:
     from rest_framework.request import Request

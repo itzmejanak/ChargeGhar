@@ -4,7 +4,7 @@ from typing import Dict, Any
 from decimal import Decimal
 from django.db import transaction
 
-from api.common.services.base import BaseService, ServiceException
+from api.common.services.base import BaseService
 from api.common.utils.helpers import generate_transaction_id
 from api.payments.models import Transaction
 from api.payments.services.wallet import WalletService

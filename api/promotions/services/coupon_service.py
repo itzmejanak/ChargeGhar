@@ -15,14 +15,12 @@ import string
 from typing import Dict, Any, List
 from django.db import transaction
 from django.utils import timezone
-from django.db.models import Count, Sum, Q
-from api.common.services.base import BaseService, CRUDService, ServiceException
+from django.db.models import Q
+from api.common.services.base import CRUDService, ServiceException
 from api.common.utils.helpers import paginate_queryset
 from api.promotions.models import Coupon, CouponUsage
 
 # Additional imports for this module
-from api.admin.models import AdminActionLog
-from api.points.services import award_points
 
 class CouponService(CRUDService):
     """Service for coupon operations"""

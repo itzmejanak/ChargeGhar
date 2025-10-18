@@ -10,15 +10,10 @@ Date: 2025-10-18 23:29:38
 from __future__ import annotations
 
 from __future__ import annotations
-from typing import Dict, Any, List, Optional
-from django.db import transaction
+from typing import Dict, Any
 from django.utils import timezone
-from django.db.models import Q, Count
-from django.core.cache import cache
-import logging
-from api.common.services.base import BaseService, CRUDService, ServiceException
-from api.common.utils.helpers import paginate_queryset
-from api.content.models import ContentPage, FAQ, ContactInfo, Banner
+from api.common.services.base import BaseService
+from api.content.models import ContentPage, FAQ, Banner
 
 class ContentAnalyticsService(BaseService):
     """Service for content analytics"""

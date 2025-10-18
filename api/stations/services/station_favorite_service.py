@@ -10,15 +10,12 @@ Date: 2025-10-18 23:01:23
 from __future__ import annotations
 
 from __future__ import annotations
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from django.db import transaction
-from django.db.models import Q, Count
-from django.utils import timezone
-from api.common.services.base import BaseService, CRUDService, ServiceException
-from api.common.utils.helpers import calculate_distance, paginate_queryset
+from api.common.services.base import BaseService, ServiceException
+from api.common.utils.helpers import paginate_queryset
 from api.stations.models import (
-    Station, StationSlot, StationIssue, UserStationFavorite, 
-    StationAmenity, StationAmenityMapping
+    Station, UserStationFavorite
 )
 
 class StationFavoriteService(BaseService):

@@ -10,15 +10,12 @@ Date: 2025-10-18 23:29:38
 from __future__ import annotations
 
 from __future__ import annotations
-from typing import Dict, Any, List, Optional
+from typing import List
 from django.db import transaction
 from django.utils import timezone
-from django.db.models import Q, Count
-from django.core.cache import cache
-import logging
-from api.common.services.base import BaseService, CRUDService, ServiceException
-from api.common.utils.helpers import paginate_queryset
-from api.content.models import ContentPage, FAQ, ContactInfo, Banner
+from django.db.models import Count
+from api.common.services.base import CRUDService
+from api.content.models import Banner
 
 class BannerService(CRUDService):
     """Service for banner operations"""

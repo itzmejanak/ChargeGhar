@@ -10,14 +10,10 @@ Date: 2025-10-18 23:21:06
 from __future__ import annotations
 
 from __future__ import annotations
-import random
-import string
-from typing import Dict, Any, List
-from django.db import transaction
+from typing import Dict, Any
 from django.utils import timezone
-from django.db.models import Count, Sum, Q
-from api.common.services.base import BaseService, CRUDService, ServiceException
-from api.common.utils.helpers import paginate_queryset
+from django.db.models import Count, Sum
+from api.common.services.base import BaseService, ServiceException
 from api.promotions.models import Coupon, CouponUsage
 
 class PromotionAnalyticsService(BaseService):

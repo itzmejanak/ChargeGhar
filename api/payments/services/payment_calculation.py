@@ -5,7 +5,6 @@ from decimal import Decimal
 
 from api.common.services.base import BaseService, ServiceException
 from api.common.utils.helpers import convert_points_to_amount
-from api.payments.models import Wallet
 from api.users.models import UserPoints
 
 

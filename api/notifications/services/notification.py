@@ -8,15 +8,15 @@ It bridges the gap between old API and new clean notify system.
 
 from __future__ import annotations
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from django.db import transaction
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
 
-from api.common.services.base import BaseService, ServiceException
-from api.notifications.models import Notification, NotificationTemplate
+from api.common.services.base import BaseService
+from api.notifications.models import Notification
 from api.notifications.services.notify import NotifyService
 
 User = get_user_model()

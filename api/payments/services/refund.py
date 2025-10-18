@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Dict, Any
 from django.db import transaction
 from django.core.exceptions import ValidationError
-from django.core.cache import cache
 
 from api.common.services.base import CRUDService, ServiceException
 from api.common.utils.helpers import paginate_queryset

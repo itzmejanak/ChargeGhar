@@ -9,21 +9,13 @@ Date: 2025-10-18 23:47:47
 """
 from __future__ import annotations
 
-from __future__ import annotations
-import logging
-from typing import Any, Dict, List, Optional
-from django.db import models
-from django.db.models import Q
+from typing import Any, Dict
 from django.utils import timezone
 from django.core.cache import cache
-from django.conf import settings
 from django.db import connection
-from packaging import version as version_parser
-from api.common.services.base import BaseService, CRUDService, ServiceException
-from api.system.models import Country, AppConfig, AppVersion, AppUpdate
+from api.system.services.app_config_service import AppConfigService
 
 # Additional imports for this module
-from celery import current_app
 
 class AppHealthService:
     """Service for app health monitoring"""

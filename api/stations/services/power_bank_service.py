@@ -10,16 +10,7 @@ Date: 2025-10-18 23:01:23
 from __future__ import annotations
 
 from __future__ import annotations
-from typing import Dict, Any, List, Optional
-from django.db import transaction
-from django.db.models import Q, Count
-from django.utils import timezone
-from api.common.services.base import BaseService, CRUDService, ServiceException
-from api.common.utils.helpers import calculate_distance, paginate_queryset
-from api.stations.models import (
-    Station, StationSlot, StationIssue, UserStationFavorite, 
-    StationAmenity, StationAmenityMapping
-)
+from api.common.services.base import BaseService
 
 class PowerBankService(BaseService):
     """Service for power bank operations - handles assignments and returns for rentals"""
@@ -27,7 +18,7 @@ class PowerBankService(BaseService):
     def assign_power_bank_to_rental(self, power_bank, rental):
         """Assign power bank to a rental (update status and references)"""
         try:
-            from api.stations.models import PowerBank
+            pass
             
             # Update power bank status
             power_bank.status = 'RENTED'
@@ -47,7 +38,7 @@ class PowerBankService(BaseService):
     def return_power_bank(self, power_bank, return_station, return_slot):
         """Return power bank to a station slot"""
         try:
-            from api.stations.models import PowerBank
+            pass
             
             # Update power bank location and status
             power_bank.current_station = return_station

@@ -23,7 +23,7 @@ Example Usage:
 
 from __future__ import annotations
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from django.template import Template, Context
 from django.db import transaction
 from django.contrib.auth import get_user_model

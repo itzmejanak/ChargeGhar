@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from decimal import Decimal
 from django.db import transaction
-from django.db.models import Model
 
 from api.common.services.base import CRUDService, ServiceException
 from api.payments.models import Wallet, WalletTransaction, Transaction

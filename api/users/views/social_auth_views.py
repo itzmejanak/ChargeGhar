@@ -6,28 +6,17 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
-from drf_spectacular.types import OpenApiTypes
-from rest_framework import status, mixins
-from rest_framework.decorators import action
+from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
-from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
-from api.common.decorators import rate_limit, log_api_call, cached_response
-from api.common.serializers import BaseResponseSerializer, PaginatedResponseSerializer
-from api.users import serializers
-from api.users.models import *
-from api.users.permissions import *
-from api.users.services import *
+from api.common.decorators import log_api_call
+from api.common.serializers import BaseResponseSerializer
 from api.common.services.base import ServiceException
 
 if TYPE_CHECKING:
@@ -52,7 +41,6 @@ class GoogleLoginView(GenericAPIView, BaseAPIView):
         """Get Google OAuth login URL"""
         def operation():
             from django.urls import reverse
-            from django.conf import settings
             
             # Use django-allauth's built-in Google login URL
             google_login_url = request.build_absolute_uri(reverse('google_login'))
@@ -86,7 +74,6 @@ class AppleLoginView(GenericAPIView, BaseAPIView):
         """Get Apple OAuth login URL"""
         def operation():
             from django.urls import reverse
-            from django.conf import settings
             
             # Use django-allauth's built-in Apple login URL
             apple_login_url = request.build_absolute_uri(reverse('apple_login'))

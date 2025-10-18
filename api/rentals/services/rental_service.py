@@ -14,11 +14,11 @@ from typing import Dict, Any, Optional, Tuple
 from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
-from django.db.models import Count, Sum, Avg, Q
-from api.common.services.base import BaseService, CRUDService, ServiceException
+from django.db.models import Count, Sum
+from api.common.services.base import CRUDService, ServiceException
 from api.common.utils.helpers import generate_rental_code, paginate_queryset
 from api.rentals.models import (
-    Rental, RentalExtension, RentalIssue, RentalLocation, RentalPackage
+    Rental, RentalExtension, RentalPackage
 )
 from api.stations.models import Station, StationSlot, PowerBank
 from api.common.permissions.base import CanRentPowerBank

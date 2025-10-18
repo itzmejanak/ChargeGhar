@@ -10,16 +10,15 @@ Date: 2025-10-15
 
 from __future__ import annotations
 
-from typing import Dict, Any, List, Optional
-from decimal import Decimal
-from django.db import transaction
+from typing import Dict, Any, List, Optional, TYPE_CHECKING
 from django.utils import timezone
-from django.db.models import Sum, Count, Q
-from django.contrib.auth import get_user_model
-from api.common.services.base import BaseService, CRUDService, ServiceException
-from api.common.utils.helpers import convert_points_to_amount, paginate_queryset
+from django.db.models import Sum, Count
+from api.common.services.base import BaseService
 from api.points.models import PointsTransaction, Referral
 from api.users.models import UserPoints
+
+if TYPE_CHECKING:
+    from api.users.models import User
 
 
 class PointsLeaderboardService(BaseService):
