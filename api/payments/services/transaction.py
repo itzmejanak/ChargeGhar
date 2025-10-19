@@ -6,7 +6,6 @@ from api.common.services.base import CRUDService
 from api.common.utils.helpers import paginate_queryset
 from api.payments.models import Transaction
 
-
 class TransactionService(CRUDService):
     """Service for transaction operations"""
     model = Transaction

@@ -20,7 +20,6 @@ Example Usage:
     # - Channel distribution (in-app, push, SMS, email)
     # - Rule-based delivery
 """
-
 from __future__ import annotations
 
 from typing import Dict, Any
@@ -362,7 +361,6 @@ class NotifyService(BaseService):
 # Initialize service instance
 _notify_service = NotifyService()
 
-
 def notify(user, template_slug: str, async_send: bool = False, **context):
     """
     🚀 Universal notification sender - Works for ALL scenarios
@@ -408,7 +406,6 @@ def notify(user, template_slug: str, async_send: bool = False, **context):
     else:
         # Send sync (immediate)
         return _notify_service.send(user, template_slug, **context)
-
 
 def notify_bulk(users: list, template_slug: str, async_send: bool = True, **context):
     """

@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Dict, Optional
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-
 class CloudStorageService(ABC):
     """
     Abstract base class for cloud storage services.
@@ -18,7 +17,6 @@ class CloudStorageService(ABC):
     @abstractmethod
     def get_file_info(self, file_identifier: str) -> Optional[Dict]:
         pass
-
 
 class CloudinaryService(CloudStorageService):
     def __init__(self):

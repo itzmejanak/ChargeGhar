@@ -10,7 +10,6 @@ from django.conf import settings
 from api.common.services.base import BaseService
 from api.notifications.models import SMS_FCMLog
 
-
 class FCMService(BaseService):
     """Service for FCM (Firebase Cloud Messaging) operations"""
     

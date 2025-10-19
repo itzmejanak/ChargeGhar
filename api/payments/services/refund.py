@@ -8,7 +8,6 @@ from api.common.services.base import CRUDService, ServiceException
 from api.common.utils.helpers import paginate_queryset
 from api.payments.models import Refund, Transaction
 
-
 class RefundService(CRUDService):
     """Service for refund operations"""
     model = Refund

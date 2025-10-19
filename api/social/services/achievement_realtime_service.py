@@ -21,7 +21,6 @@ from api.social.models import Achievement, UserAchievement
 
 User = get_user_model()
 
-
 class AchievementRealtimeService(BaseService):
     """Service for real-time achievement calculation"""
 

@@ -24,8 +24,6 @@ from api.users.models import User, UserProfile, UserPoints, UserAuditLog
 from api.payments.models import Wallet
 from api.notifications.services import notify
 
-# Additional imports for this module
-
 class AuthService(BaseService):
     """Service for authentication operations"""
     

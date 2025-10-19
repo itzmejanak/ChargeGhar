@@ -6,7 +6,6 @@ from django.db import transaction
 from api.common.services.base import CRUDService, ServiceException
 from api.payments.models import Wallet, WalletTransaction, Transaction
 
-
 class WalletService(CRUDService):
     """Service for wallet operations"""
     model = Wallet

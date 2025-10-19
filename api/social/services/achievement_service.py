@@ -20,7 +20,6 @@ from api.social.models import Achievement, UserAchievement
 
 User = get_user_model()
 
-
 class AchievementService(CRUDService):
     """Service for achievement operations (legacy/existing)"""
 

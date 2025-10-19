@@ -7,7 +7,6 @@ from django.db.models import Count
 from api.common.services.base import BaseService
 from api.notifications.models import Notification, SMS_FCMLog
 
-
 class NotificationAnalyticsService(BaseService):
     """Service for notification analytics and reporting"""
     

@@ -12,7 +12,6 @@ from api.payments.models import PaymentIntent, Transaction, PaymentMethod
 from api.payments.services.wallet import WalletService
 from api.payments.services.nepal_gateway import NepalGatewayService
 
-
 class PaymentIntentService(CRUDService):
     """Service for payment intents"""
     model = PaymentIntent

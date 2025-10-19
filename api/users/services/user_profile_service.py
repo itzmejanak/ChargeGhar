@@ -13,8 +13,6 @@ from django.db import transaction
 from api.common.services.base import BaseService
 from api.users.models import User, UserProfile, UserPoints
 
-# Additional imports for this module
-
 class UserProfileService(BaseService):
     """Service for user profile operations"""
     

@@ -7,7 +7,6 @@ from api.common.services.base import BaseService, ServiceException
 from api.common.utils.helpers import convert_points_to_amount
 from api.users.models import UserPoints
 
-
 class PaymentCalculationService(BaseService):
     """Service for payment calculations"""
 

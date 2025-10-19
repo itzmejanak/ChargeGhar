@@ -11,7 +11,6 @@ from api.media.models import MediaUpload
 
 logger = logging.getLogger(__name__)
 
-
 class MediaUploadService(CRUDService):
     """Service for media upload operations"""
     model = MediaUpload

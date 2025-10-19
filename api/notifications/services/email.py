@@ -8,9 +8,7 @@ from django.template.loader import render_to_string
 from django.conf import settings
 
 from api.common.services.base import BaseService, ServiceException
-
 logger = logging.getLogger(__name__)
-
 
 class EmailService(BaseService):
     """Service for sending emails"""

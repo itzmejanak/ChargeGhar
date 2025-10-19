@@ -17,8 +17,6 @@ from api.common.utils.helpers import paginate_queryset
 from api.admin.models import AdminActionLog
 from api.users.models import User
 
-# Additional imports for this module
-
 class AdminUserService(CRUDService):
     """Service for admin user management"""
     model = User

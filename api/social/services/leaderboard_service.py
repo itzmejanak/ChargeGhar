@@ -7,7 +7,6 @@ Service for leaderboard operations
 Created: 2025-01-16
 Part of: Social App Real-Time Achievement Update
 """
-
 from __future__ import annotations
 
 from typing import Dict, Any
@@ -19,7 +18,6 @@ from api.common.services.base import CRUDService
 from api.social.models import UserLeaderboard
 
 User = get_user_model()
-
 
 class LeaderboardService(CRUDService):
     """Service for leaderboard operations"""

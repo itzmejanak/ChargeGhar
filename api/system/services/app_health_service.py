@@ -15,8 +15,6 @@ from django.core.cache import cache
 from django.db import connection
 from api.system.services.app_config_service import AppConfigService
 
-# Additional imports for this module
-
 class AppHealthService:
     """Service for app health monitoring"""
     

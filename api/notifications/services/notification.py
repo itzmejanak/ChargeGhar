@@ -5,7 +5,6 @@
 This service provides the legacy API that views and other services expect.
 It bridges the gap between old API and new clean notify system.
 """
-
 from __future__ import annotations
 
 from typing import Dict, Any
@@ -20,7 +19,6 @@ from api.notifications.models import Notification
 from api.notifications.services.notify import NotifyService
 
 User = get_user_model()
-
 
 class NotificationService(BaseService):
     """

@@ -15,8 +15,6 @@ from api.common.services.base import BaseService
 from api.users.models import User, UserKYC
 from api.notifications.services import notify
 
-# Additional imports for this module
-
 class UserKYCService(BaseService):
     """Service for KYC operations"""
     

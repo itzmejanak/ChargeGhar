@@ -9,7 +9,6 @@ from api.common.utils.helpers import generate_transaction_id
 from api.payments.models import Transaction
 from api.payments.services.wallet import WalletService
 
-
 class RentalPaymentService(BaseService):
     """Service for rental payments"""
 

@@ -7,7 +7,6 @@ Service for social analytics
 Created: 2025-01-16
 Part of: Social App Real-Time Achievement Update
 """
-
 from __future__ import annotations
 
 from typing import Dict, Any, List
@@ -19,7 +18,6 @@ from api.common.services.base import BaseService
 from api.social.models import Achievement, UserAchievement, UserLeaderboard
 
 User = get_user_model()
-
 
 class SocialAnalyticsService(BaseService):
     """Service for social analytics"""
