@@ -46,6 +46,12 @@ class CountrySearchView(GenericAPIView, BaseAPIView):
     serializer_class = CountryListSerializer
     permission_classes = [AllowAny]
     
+    @extend_schema(
+        tags=["App"],
+        summary="Search Countries",
+        description="Search countries by name or dialing code. Requires 'q' query parameter.",
+        operation_id="api_app_countries_search_retrieve",
+    )
     @log_api_call()
     def get(self, request: Request) -> Response:
         """Search countries by query parameter"""

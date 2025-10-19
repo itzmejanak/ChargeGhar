@@ -36,6 +36,12 @@ class AppInitDataView(GenericAPIView, BaseAPIView):
     serializer_class = AppInitDataSerializer
     permission_classes = [AllowAny]
     
+    @extend_schema(
+        tags=["App"],
+        summary="Get App Initialization Data",
+        description="Returns initial data needed when app starts (config, features, etc.)",
+        operation_id="api_app_init_data_retrieve",
+    )
     @log_api_call()
     def get(self, request: Request) -> Response:
         """Get app initialization data"""
