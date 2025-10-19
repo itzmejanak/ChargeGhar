@@ -74,9 +74,6 @@ class StationSlotSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'last_updated']
 
 
-# REMOVED: PowerBankSerializer - Not used in current station views
-
-
 class StationMediaSerializer(serializers.ModelSerializer):
     """Serializer for station media"""
     media_url = serializers.SerializerMethodField()
@@ -117,9 +114,6 @@ class StationListSerializer(StationLocationMixin, serializers.ModelSerializer):
             'distance', 'is_favorite'
         ]
         read_only_fields = fields
-    
-
-
 
 class StationDetailSerializer(StationLocationMixin, serializers.ModelSerializer):
     """Serializer for station detail view"""
@@ -193,52 +187,6 @@ class StationIssueCreateSerializer(serializers.ModelSerializer):
             return []
         return value
 
-
-# REMOVED: UserStationFavoriteSerializer - Not used in views, replaced with StationListSerializer
-
-
-class StationCreateSerializer(serializers.ModelSerializer):
-    """Serializer for creating stations (Admin only)"""
-    
-    class Meta:
-        model = Station
-        fields = [
-            'station_name', 'serial_number', 'imei', 'latitude', 'longitude',
-            'address', 'landmark', 'total_slots', 'hardware_info'
-        ]
-    
-    def validate_serial_number(self, value):
-        if Station.objects.filter(serial_number=value).exists():
-            raise serializers.ValidationError("Station with this serial number already exists")
-        return value
-    
-    def validate_imei(self, value):
-        if Station.objects.filter(imei=value).exists():
-            raise serializers.ValidationError("Station with this IMEI already exists")
-        return value
-    
-    def validate_total_slots(self, value):
-        if value < 1 or value > 50:
-            raise serializers.ValidationError("Total slots must be between 1 and 50")
-        return value
-
-
-class StationUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for updating stations (Admin only)"""
-    
-    class Meta:
-        model = Station
-        fields = [
-            'station_name', 'latitude', 'longitude', 'address', 'landmark',
-            'total_slots', 'status', 'is_maintenance', 'hardware_info'
-        ]
-    
-    def validate_total_slots(self, value):
-        if value < 1 or value > 50:
-            raise serializers.ValidationError("Total slots must be between 1 and 50")
-        return value
-
-
 class NearbyStationsSerializer(serializers.Serializer):
     """Serializer for nearby stations request"""
     lat = serializers.FloatField()
@@ -254,18 +202,6 @@ class NearbyStationsSerializer(serializers.Serializer):
         if not -180 <= value <= 180:
             raise serializers.ValidationError("Longitude must be between -180 and 180")
         return value
-
-
-# REMOVED: StationAnalyticsSerializer - No corresponding view implemented
-
-
-# ===============================
-# RESPONSE SERIALIZERS FOR SWAGGER
-# ===============================
-
-# ===============================
-# RESPONSE SERIALIZERS FOR SWAGGER
-# ===============================
 
 class StationListResponseSerializer(serializers.Serializer):
     """Response serializer for station list"""

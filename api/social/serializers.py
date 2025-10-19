@@ -9,10 +9,6 @@ from api.common.serializers import BaseResponseSerializer
 
 User = get_user_model()
 
-
-# MVP Pattern: List vs Detail Serializers
-
-
 class AchievementListSerializer(serializers.ModelSerializer):
     """Minimal serializer for achievement lists - MVP optimized"""
 
@@ -125,10 +121,8 @@ class AchievementDetailSerializer(serializers.ModelSerializer):
         except UserAchievement.DoesNotExist:
             return False
 
-
 # Backward compatibility alias
 AchievementSerializer = AchievementDetailSerializer
-
 
 class UserAchievementSerializer(serializers.ModelSerializer):
     """Serializer for user achievements"""
@@ -190,7 +184,6 @@ class LeaderboardEntryListSerializer(serializers.ModelSerializer):
         model = UserLeaderboard
         fields = ["rank", "username", "total_points_earned", "total_rentals"]
 
-
 class LeaderboardEntryDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for leaderboard entries - Full data"""
 
@@ -219,7 +212,6 @@ class LeaderboardEntryDetailSerializer(serializers.ModelSerializer):
 
 # Backward compatibility alias
 LeaderboardEntrySerializer = LeaderboardEntryDetailSerializer
-
 
 class UserLeaderboardSerializer(serializers.ModelSerializer):
     """Serializer for user's own leaderboard position"""
@@ -252,72 +244,6 @@ class UserLeaderboardSerializer(serializers.ModelSerializer):
     def get_rank_change(self, obj) -> int:
         # Mock rank change calculation - would need historical data
         return 0  # 0 = no change, positive = moved up, negative = moved down
-
-
-class AchievementCreateSerializer(serializers.ModelSerializer):
-    """Serializer for creating achievements (Admin)"""
-
-    class Meta:
-        model = Achievement
-        fields = [
-            "name",
-            "description",
-            "criteria_type",
-            "criteria_value",
-            "reward_type",
-            "reward_value",
-            "is_active",
-        ]
-
-    def validate_name(self, value):
-        if len(value.strip()) < 3:
-            raise serializers.ValidationError(
-                "Achievement name must be at least 3 characters"
-            )
-        return value.strip()
-
-    def validate_description(self, value):
-        if len(value.strip()) < 10:
-            raise serializers.ValidationError(
-                "Description must be at least 10 characters"
-            )
-        return value.strip()
-
-    def validate_criteria_value(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("Criteria value must be greater than 0")
-        if value > 10000:
-            raise serializers.ValidationError("Criteria value cannot exceed 10,000")
-        return value
-
-    def validate_reward_value(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("Reward value must be greater than 0")
-        if value > 5000:
-            raise serializers.ValidationError("Reward value cannot exceed 5,000 points")
-        return value
-
-
-class AchievementUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for updating achievements (Admin)"""
-
-    class Meta:
-        model = Achievement
-        fields = ["name", "description", "criteria_value", "reward_value", "is_active"]
-
-    def validate_name(self, value):
-        if len(value.strip()) < 3:
-            raise serializers.ValidationError(
-                "Achievement name must be at least 3 characters"
-            )
-        return value.strip()
-
-    def validate_description(self, value):
-        if len(value.strip()) < 10:
-            raise serializers.ValidationError(
-                "Description must be at least 10 characters"
-            )
-        return value.strip()
 
 
 class LeaderboardFilterSerializer(serializers.Serializer):
@@ -364,28 +290,6 @@ class SocialStatsSerializer(serializers.Serializer):
     # Recent achievements
     recent_achievements = serializers.ListField()
 
-
-class AchievementAnalyticsSerializer(serializers.Serializer):
-    """Serializer for achievement analytics (Admin)"""
-
-    total_achievements = serializers.IntegerField()
-    active_achievements = serializers.IntegerField()
-    total_unlocks = serializers.IntegerField()
-
-    # Achievement popularity
-    most_unlocked = serializers.ListField()
-    least_unlocked = serializers.ListField()
-
-    # Unlock rates
-    unlock_rate_by_achievement = serializers.ListField()
-
-    # User engagement
-    users_with_achievements = serializers.IntegerField()
-    average_achievements_per_user = serializers.FloatField()
-
-    last_updated = serializers.DateTimeField()
-
-
 class BulkClaimSerializer(serializers.Serializer):
     """Serializer for bulk achievement claiming"""
 
@@ -411,7 +315,6 @@ class BulkClaimSerializer(serializers.Serializer):
         
         return unique_ids
 
-
 class ClaimAchievementResponseSerializer(BaseResponseSerializer):
     """Response serializer for achievement claim endpoint"""
 
@@ -430,7 +333,6 @@ class FailedClaimSerializer(serializers.Serializer):
     error = serializers.CharField()
     code = serializers.CharField()
 
-
 class BulkClaimResponseSerializer(BaseResponseSerializer):
     """Response serializer for bulk claim endpoint"""
 
@@ -442,10 +344,6 @@ class BulkClaimResponseSerializer(BaseResponseSerializer):
         failed_claims = FailedClaimSerializer(many=True)
 
     data = BulkClaimDataSerializer()
-
-
-# Response Serializers for Swagger Documentation
-
 
 class UserAchievementsResponseSerializer(BaseResponseSerializer):
     """Response serializer for user achievements endpoint"""
@@ -472,13 +370,4 @@ class SocialStatsResponseSerializer(BaseResponseSerializer):
     data = SocialStatsSerializer()
 
 
-class AchievementCreateResponseSerializer(BaseResponseSerializer):
-    """Response serializer for achievement creation endpoint"""
 
-    data = AchievementDetailSerializer()
-
-
-class AchievementAnalyticsResponseSerializer(BaseResponseSerializer):
-    """Response serializer for achievement analytics endpoint"""
-
-    data = AchievementAnalyticsSerializer()

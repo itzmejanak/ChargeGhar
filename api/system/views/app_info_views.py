@@ -54,8 +54,6 @@ class AppInitDataView(GenericAPIView, BaseAPIView):
 # ============================================================================
 # App Version Views
 # ============================================================================
-
-
 @app_info_router.register(r"app/versionCheck", name="app-version-check")
 @extend_schema(
     tags=["App"],
@@ -102,8 +100,6 @@ class AppVersionCheckView(GenericAPIView, BaseAPIView):
 # ============================================================================
 # App Health Views
 # ============================================================================
-
-
 @app_info_router.register(r"app/health", name="app-health")
 @extend_schema(
     tags=["App"],

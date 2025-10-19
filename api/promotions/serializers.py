@@ -97,64 +97,7 @@ class CouponPublicSerializer(CouponListSerializer):
         return remaining.days
 
 
-class CouponCreateSerializer(serializers.ModelSerializer):
-    """Serializer for creating coupons (Admin)"""
-    
-    class Meta:
-        model = Coupon
-        fields = [
-            'code', 'name', 'points_value', 'max_uses_per_user',
-            'valid_from', 'valid_until', 'status'
-        ]
-    
-    def validate_code(self, value):
-        if len(value.strip()) < 3:
-            raise serializers.ValidationError("Coupon code must be at least 3 characters")
-        if len(value.strip()) > 10:
-            raise serializers.ValidationError("Coupon code cannot exceed 10 characters")
-        return value.strip().upper()
-    
-    def validate_name(self, value):
-        if len(value.strip()) < 5:
-            raise serializers.ValidationError("Coupon name must be at least 5 characters")
-        return value.strip()
-    
-    def validate_points_value(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("Points value must be greater than 0")
-        if value > 10000:
-            raise serializers.ValidationError("Points value cannot exceed 10,000")
-        return value
-    
-    def validate_max_uses_per_user(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("Max uses per user must be greater than 0")
-        if value > 100:
-            raise serializers.ValidationError("Max uses per user cannot exceed 100")
-        return value
 
-
-class CouponUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for updating coupons (Admin)"""
-    
-    class Meta:
-        model = Coupon
-        fields = [
-            'name', 'points_value', 'max_uses_per_user',
-            'valid_from', 'valid_until', 'status'
-        ]
-    
-    def validate_name(self, value):
-        if len(value.strip()) < 5:
-            raise serializers.ValidationError("Coupon name must be at least 5 characters")
-        return value.strip()
-    
-    def validate_points_value(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("Points value must be greater than 0")
-        if value > 10000:
-            raise serializers.ValidationError("Points value cannot exceed 10,000")
-        return value
 
 
 class CouponUsageListSerializer(serializers.ModelSerializer):
@@ -216,50 +159,7 @@ class UserCouponHistorySerializer(CouponUsageListSerializer):
         fields = CouponUsageListSerializer.Meta.fields + ['coupon_name']
 
 
-class CouponAnalyticsSerializer(serializers.Serializer):
-    """Serializer for coupon analytics (Admin)"""
-    total_coupons = serializers.IntegerField()
-    active_coupons = serializers.IntegerField()
-    expired_coupons = serializers.IntegerField()
-    total_uses = serializers.IntegerField()
-    total_points_awarded = serializers.IntegerField()
-    
-    # Popular coupons
-    most_used_coupons = serializers.ListField()
-    
-    # Usage trends
-    daily_usage = serializers.ListField()
-    
-    # User engagement
-    unique_users = serializers.IntegerField()
-    average_uses_per_user = serializers.FloatField()
-    
-    last_updated = serializers.DateTimeField()
 
-
-class BulkCouponCreateSerializer(serializers.Serializer):
-    """Serializer for bulk coupon creation (Admin)"""
-    name_prefix = serializers.CharField(max_length=50)
-    points_value = serializers.IntegerField(min_value=1, max_value=10000)
-    max_uses_per_user = serializers.IntegerField(min_value=1, max_value=100, default=1)
-    valid_from = serializers.DateTimeField()
-    valid_until = serializers.DateTimeField()
-    quantity = serializers.IntegerField(min_value=1, max_value=1000)
-    code_length = serializers.IntegerField(min_value=6, max_value=10, default=8)
-    
-    def validate_name_prefix(self, value):
-        if len(value.strip()) < 3:
-            raise serializers.ValidationError("Name prefix must be at least 3 characters")
-        return value.strip()
-    
-    def validate(self, attrs):
-        valid_from = attrs.get('valid_from')
-        valid_until = attrs.get('valid_until')
-        
-        if valid_from and valid_until and valid_from >= valid_until:
-            raise serializers.ValidationError("valid_from must be before valid_until")
-        
-        return attrs
 
 
 class CouponFilterSerializer(serializers.Serializer):
@@ -317,15 +217,4 @@ class MyCouponsResponseSerializer(BaseResponseSerializer):
     data = MyCouponsDataSerializer()
 
 
-class AdminCouponsResponseSerializer(BaseResponseSerializer):
-    """Response serializer for admin coupons endpoint"""
-    class AdminCouponsDataSerializer(serializers.Serializer):
-        results = CouponDetailSerializer(many=True)
-        pagination = serializers.DictField()
-    
-    data = AdminCouponsDataSerializer()
 
-
-class CouponAnalyticsResponseSerializer(BaseResponseSerializer):
-    """Response serializer for coupon analytics endpoint"""
-    data = CouponAnalyticsSerializer()

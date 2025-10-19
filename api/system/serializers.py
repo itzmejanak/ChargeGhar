@@ -9,7 +9,6 @@ from api.system.models import Country, AppConfig, AppVersion, AppUpdate
 # ============================================================================
 # Country Serializers
 # ============================================================================
-
 class CountrySerializer(serializers.ModelSerializer):
     """Serializer for Country model"""
     
@@ -33,36 +32,6 @@ class CountryListSerializer(serializers.ModelSerializer):
 # ============================================================================
 # App Config Serializers
 # ============================================================================
-
-class AppConfigSerializer(serializers.ModelSerializer):
-    """Serializer for AppConfig model"""
-    
-    class Meta:
-        model = AppConfig
-        fields = [
-            'id', 'key', 'value', 'description', 'is_active', 
-            'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-    
-    def validate_key(self, value):
-        """Validate config key format"""
-        if not value.replace('_', '').replace('.', '').isalnum():
-            raise serializers.ValidationError(
-                "Config key can only contain alphanumeric characters, underscores, and dots"
-            )
-        return value.lower()
-
-
-class AppConfigListSerializer(serializers.ModelSerializer):
-    """MVP serializer for config list views - minimal fields"""
-    
-    class Meta:
-        model = AppConfig
-        fields = ['key', 'value', 'is_active']
-        read_only_fields = fields
-
-
 class AppConfigPublicSerializer(serializers.ModelSerializer):
     """Public serializer for app configs (only non-sensitive data)"""
     
@@ -89,7 +58,6 @@ class AppConfigPublicSerializer(serializers.ModelSerializer):
 # ============================================================================
 # App Version Serializers
 # ============================================================================
-
 class AppVersionSerializer(serializers.ModelSerializer):
     """Serializer for AppVersion model"""
     
@@ -187,7 +155,6 @@ class AppUpdateListSerializer(serializers.ModelSerializer):
 # ============================================================================
 # App Health & Initialization Serializers
 # ============================================================================
-
 class AppHealthSerializer(serializers.Serializer):
     """MVP serializer for app health check responses"""
     

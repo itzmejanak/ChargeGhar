@@ -240,44 +240,10 @@ class PointsSummarySerializer(serializers.Serializer):
     referral_points_earned = serializers.IntegerField()
 
 
-class PointsAdjustmentSerializer(serializers.Serializer):
-    """Serializer for admin points adjustment"""
-    user_id = serializers.UUIDField()
-    points = serializers.IntegerField()
-    reason = serializers.CharField(max_length=255)
-    adjustment_type = serializers.ChoiceField(choices=[('ADD', 'Add'), ('DEDUCT', 'Deduct')])
-    
-    def validate_points(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("Points must be greater than 0")
-        if value > 10000:  # Max 10,000 points per adjustment
-            raise serializers.ValidationError("Cannot adjust more than 10,000 points at once")
-        return value
-    
-    def validate_reason(self, value):
-        if len(value.strip()) < 10:
-            raise serializers.ValidationError("Reason must be at least 10 characters")
-        return value.strip()
-    
-    def validate_user_id(self, value):
-        try:
-            User.objects.get(id=value)
-            return value
-        except User.DoesNotExist:
-            raise serializers.ValidationError("User not found")
 
 
-class ReferralAnalyticsSerializer(serializers.Serializer):
-    """Serializer for referral analytics"""
-    total_referrals = serializers.IntegerField()
-    successful_referrals = serializers.IntegerField()
-    pending_referrals = serializers.IntegerField()
-    expired_referrals = serializers.IntegerField()
-    conversion_rate = serializers.FloatField()
-    total_points_awarded = serializers.IntegerField()
-    average_time_to_complete = serializers.FloatField()  # in days
-    top_referrers = serializers.ListField()
-    monthly_breakdown = serializers.ListField()
+
+
 
 
 class PointsLeaderboardListSerializer(serializers.Serializer):
@@ -304,27 +270,7 @@ class PointsLeaderboardDetailSerializer(serializers.Serializer):
 PointsLeaderboardSerializer = PointsLeaderboardDetailSerializer
 
 
-class BulkPointsAwardSerializer(serializers.Serializer):
-    """Serializer for bulk points award (Admin)"""
-    user_ids = serializers.ListField(
-        child=serializers.UUIDField(),
-        max_length=100  # Max 100 users at once
-    )
-    points = serializers.IntegerField(min_value=1, max_value=1000)
-    source = serializers.ChoiceField(choices=PointsTransaction.SOURCE_CHOICES)
-    description = serializers.CharField(max_length=255)
-    
-    def validate_user_ids(self, value):
-        # Check if all users exist
-        existing_users = User.objects.filter(id__in=value).count()
-        if existing_users != len(value):
-            raise serializers.ValidationError("Some users do not exist")
-        return value
-    
-    def validate_description(self, value):
-        if len(value.strip()) < 5:
-            raise serializers.ValidationError("Description must be at least 5 characters")
-        return value.strip()
+
 
 
 # Response Serializers for Swagger Documentation
@@ -387,29 +333,4 @@ class PointsLeaderboardResponseSerializer(BaseResponseSerializer):
     data = PointsLeaderboardListSerializer(many=True)
 
 
-class PointsAdjustmentResponseSerializer(BaseResponseSerializer):
-    """Response serializer for points adjustment endpoint"""
-    class AdjustmentDataSerializer(serializers.Serializer):
-        transaction_id = serializers.UUIDField()
-        user_id = serializers.UUIDField()
-        points_adjusted = serializers.IntegerField()
-        adjustment_type = serializers.CharField()
-        new_balance = serializers.IntegerField()
-    
-    data = AdjustmentDataSerializer()
 
-
-class BulkPointsAwardResponseSerializer(BaseResponseSerializer):
-    """Response serializer for bulk points award endpoint"""
-    class BulkAwardDataSerializer(serializers.Serializer):
-        total_users = serializers.IntegerField()
-        awarded_count = serializers.IntegerField()
-        failed_count = serializers.IntegerField()
-        total_points_awarded = serializers.IntegerField()
-    
-    data = BulkAwardDataSerializer()
-
-
-class ReferralAnalyticsResponseSerializer(BaseResponseSerializer):
-    """Response serializer for referral analytics endpoint"""
-    data = ReferralAnalyticsSerializer()

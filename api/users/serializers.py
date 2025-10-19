@@ -168,17 +168,6 @@ class UserDeviceSerializer(serializers.ModelSerializer):
         return value.strip()
 
 
-class UserListSerializer(serializers.ModelSerializer):
-    """MVP serializer for user list views - minimal fields for performance"""
-    
-    class Meta:
-        model = User
-        fields = [
-            'id', 'username', 'status', 'date_joined'
-        ]
-        read_only_fields = fields
-
-
 class UserSerializer(serializers.ModelSerializer):
     """Standard user serializer with essential real-time data"""
     profile_complete = serializers.SerializerMethodField()
@@ -218,80 +207,6 @@ class UserSerializer(serializers.ModelSerializer):
             return 'NOT_SUBMITTED'
 
 
-class UserDetailSerializer(serializers.ModelSerializer):
-    """Detailed user serializer with full profile data"""
-    profile = UserProfileSerializer(read_only=True)
-    kyc = UserKYCSerializer(read_only=True)
-    points = serializers.SerializerMethodField()
-    wallet_balance = serializers.SerializerMethodField()
-    masked_phone = serializers.SerializerMethodField()
-    masked_email = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = User
-        fields = [
-            'id', 'username', 'email', 'phone_number', 'profile_picture',
-            'referral_code', 'status', 'email_verified', 'phone_verified',
-            'date_joined', 'last_login', 'profile', 'kyc', 'points',
-            'wallet_balance', 'masked_phone', 'masked_email', 'social_provider',
-            'social_profile_data'
-        ]
-        read_only_fields = [
-            'id', 'referral_code', 'status', 'email_verified', 'phone_verified',
-            'date_joined', 'last_login'
-        ]
-    
-    @extend_schema_field(serializers.DictField)
-    def get_points(self, obj) -> Dict[str, int]:
-        """Get user points - real-time from DB"""
-        try:
-            if hasattr(obj, '_prefetched_objects_cache') and 'points' in obj._prefetched_objects_cache:
-                points = obj.points if obj.points else None
-            else:
-                points = getattr(obj, 'points', None)
-            
-            if points:
-                return {
-                    'current_points': points.current_points,
-                    'total_points': points.total_points
-                }
-            return {'current_points': 0, 'total_points': 0}
-        except:
-            return {'current_points': 0, 'total_points': 0}
-    
-    @extend_schema_field(serializers.DictField)
-    def get_wallet_balance(self, obj) -> Dict[str, str]:
-        """Get user wallet balance - real-time from DB"""
-        try:
-            if hasattr(obj, '_prefetched_objects_cache') and 'wallet' in obj._prefetched_objects_cache:
-                wallet = obj.wallet if obj.wallet else None
-            else:
-                wallet = getattr(obj, 'wallet', None)
-            
-            if wallet:
-                return {
-                    'balance': str(wallet.balance),
-                    'currency': wallet.currency
-                }
-            return {'balance': '0.00', 'currency': 'NPR'}
-        except:
-            return {'balance': '0.00', 'currency': 'NPR'}
-    
-    @extend_schema_field(serializers.CharField)
-    def get_masked_phone(self, obj) -> Optional[str]:
-        """Get masked phone number"""
-        if obj.phone_number:
-            return mask_sensitive_data(obj.phone_number, visible_chars=3)
-        return None
-    
-    @extend_schema_field(serializers.CharField)
-    def get_masked_email(self, obj) -> Optional[str]:
-        """Get masked email"""
-        if obj.email:
-            return mask_sensitive_data(obj.email, visible_chars=3)
-        return None
-
-
 class UserBasicSerializer(serializers.ModelSerializer):
     """Basic user info serializer"""
     
@@ -322,7 +237,6 @@ class UserWalletResponseSerializer(serializers.Serializer):
 
 
 # Password change removed - OTP-based authentication only
-
 class UserFilterSerializer(serializers.Serializer):
     """Serializer for user filtering parameters"""
     page = serializers.IntegerField(default=1, min_value=1)

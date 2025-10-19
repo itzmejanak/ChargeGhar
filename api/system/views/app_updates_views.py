@@ -66,8 +66,6 @@ class AppUpdatesView(GenericAPIView, BaseAPIView):
             error_message="Failed to retrieve app updates"
         )
 
-
-
 @app_updates_router.register(r"app/updates/since/{version}", name="app-updates-since")
 @extend_schema(
     tags=["App"],
