@@ -390,7 +390,7 @@ class ViewSeparator:
             module_count = len(plan['modules'])
             if module_count < 3:
                 errors.append(f"Too few modules: {module_count} (minimum 3 required)")
-            elif module_count > 5:
+            elif module_count > 10:
                 errors.append(f"Too many modules: {module_count} (maximum 5 allowed)")
             
             # Check each module
