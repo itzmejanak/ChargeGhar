@@ -15,7 +15,7 @@ This is a smart, scalable, and user-friendly ecosystem that solves the everyday 
 
 | Feature                | Endpoint               | Method | Description                                                                                     |
 |------------------------|------------------------|--------|-------------------------------------------------------------------------------------------------|
-| Check App Version      | `/api/app/version`    | GET    | Returns the latest app version. Triggers an update prompt if the user's version is outdated.   |
+| Check App Version      | `/api/app/versionCheck` | POST   | Returns the latest app version with real-time update check. Supports platform-specific versions. |
 | Health Check           | `/api/app/health`     | GET    | Verifies backend availability and uptime. Returns `200 OK` if operational.                      |
 | Upload Media | `/api/app/media/upload` | POST | Upload media files like images, videos to Cloudinary. Returns secure URLs for storage and CDN access. |
 | Get Banner List        | `/api/app/banners`    | GET    | Fetches active promotional banners (image URL, title, redirect URL) for the app's homepage.     |

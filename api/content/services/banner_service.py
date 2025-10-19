@@ -20,6 +20,42 @@ class BannerService(CRUDService):
     """Service for banner operations"""
     model = Banner
     
+    def get_all(self):
+        """Get all banners for admin"""
+        try:
+            return Banner.objects.all().order_by('display_order', '-created_at')
+        except Exception as e:
+            self.handle_service_error(e, "Failed to get all banners")
+    
+    def get_by_id(self, banner_id: str):
+        """Get banner by ID"""
+        try:
+            return Banner.objects.get(id=banner_id)
+        except Banner.DoesNotExist:
+            from api.common.services.base import ServiceException
+            raise ServiceException(
+                detail="Banner not found",
+                code="banner_not_found"
+            )
+        except Exception as e:
+            self.handle_service_error(e, "Failed to get banner")
+    
+    def delete_by_id(self, banner_id: str):
+        """Delete banner by ID"""
+        try:
+            banner = Banner.objects.get(id=banner_id)
+            banner.delete()
+            self.log_info(f"Banner deleted: {banner_id}")
+            return True
+        except Banner.DoesNotExist:
+            from api.common.services.base import ServiceException
+            raise ServiceException(
+                detail="Banner not found",
+                code="banner_not_found"
+            )
+        except Exception as e:
+            self.handle_service_error(e, "Failed to delete banner")
+    
     def get_active_banners(self) -> List[Banner]:
         """Get currently active banners - caching handled by view decorator"""
         try:
@@ -61,3 +97,34 @@ class BannerService(CRUDService):
             
         except Exception as e:
             self.handle_service_error(e, "Failed to create banner")
+    
+    @transaction.atomic
+    def update_banner(self, banner_id: str, title: str, description: str, 
+                     image_url: str, redirect_url: str, valid_from: timezone.datetime,
+                     valid_until: timezone.datetime) -> Banner:
+        """Update existing banner"""
+        try:
+            banner = Banner.objects.get(id=banner_id)
+            
+            banner.title = title
+            banner.description = description
+            banner.image_url = image_url
+            banner.redirect_url = redirect_url
+            banner.valid_from = valid_from
+            banner.valid_until = valid_until
+            banner.save(update_fields=[
+                'title', 'description', 'image_url', 'redirect_url',
+                'valid_from', 'valid_until', 'updated_at'
+            ])
+            
+            self.log_info(f"Banner updated: {banner_id}")
+            return banner
+            
+        except Banner.DoesNotExist:
+            from api.common.services.base import ServiceException
+            raise ServiceException(
+                detail="Banner not found",
+                code="banner_not_found"
+            )
+        except Exception as e:
+            self.handle_service_error(e, "Failed to update banner")

@@ -117,12 +117,12 @@ class BannerSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
-    def get_is_currently_active(self, obj):
+    def get_is_currently_active(self, obj) -> bool:
         now = timezone.now()
         return (obj.is_active and 
                 obj.valid_from <= now <= obj.valid_until)
     
-    def get_days_remaining(self, obj):
+    def get_days_remaining(self, obj) -> int:
         if not obj.is_active:
             return 0
         
@@ -159,23 +159,6 @@ class BannerPublicSerializer(serializers.ModelSerializer):
         model = Banner
         fields = ['id', 'title', 'description', 'image_url', 'redirect_url', 'display_order']
 
-
-class AppVersionSerializer(serializers.Serializer):
-    """Serializer for app version information"""
-    current_version = serializers.CharField()
-    minimum_version = serializers.CharField()
-    latest_version = serializers.CharField()
-    update_required = serializers.BooleanField()
-    update_available = serializers.BooleanField()
-    update_url = serializers.URLField(allow_null=True)
-    release_notes = serializers.CharField(allow_blank=True)
-    
-    def validate_current_version(self, value):
-        # Basic version format validation (e.g., "1.2.3")
-        import re
-        if not re.match(r'^\d+\.\d+\.\d+$', value):
-            raise serializers.ValidationError("Invalid version format. Use format: x.y.z")
-        return value
 
 
 class AppHealthSerializer(serializers.Serializer):

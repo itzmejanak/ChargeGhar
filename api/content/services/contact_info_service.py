@@ -9,14 +9,53 @@ Date: 2025-10-18 23:29:38
 """
 from __future__ import annotations
 
+import logging
 from typing import List
 from django.db import transaction
 from api.common.services.base import CRUDService
 from api.content.models import ContactInfo
 
+logger = logging.getLogger(__name__)
+
 class ContactInfoService(CRUDService):
     """Service for contact information operations"""
     model = ContactInfo
+    
+    def get_all(self):
+        """Get all contact info for admin"""
+        try:
+            return ContactInfo.objects.all().order_by('info_type')
+        except Exception as e:
+            self.handle_service_error(e, "Failed to get all contact info")
+    
+    def get_by_id(self, contact_id: str):
+        """Get contact info by ID"""
+        try:
+            return ContactInfo.objects.get(id=contact_id)
+        except ContactInfo.DoesNotExist:
+            from api.common.services.base import ServiceException
+            raise ServiceException(
+                detail="Contact info not found",
+                code="contact_not_found"
+            )
+        except Exception as e:
+            self.handle_service_error(e, "Failed to get contact info")
+    
+    def delete_by_id(self, contact_id: str):
+        """Delete contact info by ID"""
+        try:
+            contact_info = ContactInfo.objects.get(id=contact_id)
+            contact_info.delete()
+            self.log_info(f"Contact info deleted: {contact_id}")
+            return True
+        except ContactInfo.DoesNotExist:
+            from api.common.services.base import ServiceException
+            raise ServiceException(
+                detail="Contact info not found",
+                code="contact_not_found"
+            )
+        except Exception as e:
+            self.handle_service_error(e, "Failed to delete contact info")
     
     def get_all_contact_info(self) -> List[ContactInfo]:
         """Get all active contact information - caching handled by view decorator"""

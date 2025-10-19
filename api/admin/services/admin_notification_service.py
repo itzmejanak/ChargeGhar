@@ -27,7 +27,8 @@ class AdminNotificationService(BaseService):
             # Send bulk notification
             from api.notifications.services import notify_bulk
             
-            result = notify_bulk(
+            # Send notifications asynchronously
+            notify_bulk(
                 users,
                 'broadcast_message',
                 async_send=True,
@@ -35,6 +36,8 @@ class AdminNotificationService(BaseService):
                 message=message,
                 send_push=send_push
             )
+            
+            users_count = len(users)
             
             # Log admin action
             AdminActionLog.objects.create(
@@ -48,15 +51,22 @@ class AdminNotificationService(BaseService):
                     'target_audience': target_audience,
                     'send_push': send_push,
                     'send_email': send_email,
-                    'users_count': len(users)
+                    'users_count': users_count
                 },
-                description=f"Broadcast message sent to {len(users)} users",
+                description=f"Broadcast message sent to {users_count} users",
                 ip_address="127.0.0.1",
                 user_agent="Admin Panel"
             )
             
-            self.log_info(f"Broadcast message sent by {admin_user.username} to {len(users)} users")
-            return result
+            self.log_info(f"Broadcast message sent by {admin_user.username} to {users_count} users")
+            
+            # Return serializable data
+            return {
+                'users_notified': users_count,
+                'push_sent': users_count if send_push else 0,
+                'email_sent': users_count if send_email else 0,
+                'target_audience': target_audience
+            }
             
         except Exception as e:
             self.handle_service_error(e, "Failed to send broadcast message")

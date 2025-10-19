@@ -203,7 +203,7 @@ class RefundService(CRUDService):
             ).order_by('-requested_at')
 
             # Apply pagination
-            return self.paginate_queryset(queryset, page, page_size)
+            return paginate_queryset(queryset, page, page_size)
 
         except Exception as e:
             self.log_error(f"Error getting pending refunds: {str(e)}")

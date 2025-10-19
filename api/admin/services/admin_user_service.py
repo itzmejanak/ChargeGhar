@@ -81,7 +81,7 @@ class AdminUserService(CRUDService):
             old_status = user.status
             
             user.status = status
-            user.save(update_fields=['status', 'updated_at'])
+            user.save(update_fields=['status'])
             
             # Log admin action
             self._log_admin_action(

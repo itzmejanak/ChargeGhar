@@ -7,7 +7,7 @@ from api.config.application import PROJECT_VERBOSE_NAME
 # Define documented endpoints from Features TOC
 DOCUMENTED_ENDPOINTS = [
     # App Features
-    '/api/app/version',
+    '/api/app/versionCheck',
     '/api/app/health', 
     '/api/app/media/upload',
     '/api/app/banners',

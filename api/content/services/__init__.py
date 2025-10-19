@@ -14,14 +14,14 @@ from .content_page_service import ContentPageService
 from .faq_service import FAQService
 from .contact_info_service import ContactInfoService
 from .banner_service import BannerService
-from .app_info_service import AppInfoService
+
 from .content_search_service import ContentSearchService
 from .content_analytics_service import ContentAnalyticsService
 
 
 # Backward compatibility - all services available at package level
 __all__ = [
-    "AppInfoService",
+
     "BannerService",
     "ContactInfoService",
     "ContentAnalyticsService",

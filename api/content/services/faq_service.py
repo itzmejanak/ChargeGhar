@@ -19,6 +19,42 @@ class FAQService(CRUDService):
     """Service for FAQ operations"""
     model = FAQ
     
+    def get_all(self):
+        """Get all FAQs for admin"""
+        try:
+            return FAQ.objects.all().order_by('category', 'sort_order')
+        except Exception as e:
+            self.handle_service_error(e, "Failed to get all FAQs")
+    
+    def get_by_id(self, faq_id: str):
+        """Get FAQ by ID"""
+        try:
+            return FAQ.objects.get(id=faq_id)
+        except FAQ.DoesNotExist:
+            from api.common.services.base import ServiceException
+            raise ServiceException(
+                detail="FAQ not found",
+                code="faq_not_found"
+            )
+        except Exception as e:
+            self.handle_service_error(e, "Failed to get FAQ")
+    
+    def delete_by_id(self, faq_id: str):
+        """Delete FAQ by ID"""
+        try:
+            faq = FAQ.objects.get(id=faq_id)
+            faq.delete()
+            self.log_info(f"FAQ deleted: {faq_id}")
+            return True
+        except FAQ.DoesNotExist:
+            from api.common.services.base import ServiceException
+            raise ServiceException(
+                detail="FAQ not found",
+                code="faq_not_found"
+            )
+        except Exception as e:
+            self.handle_service_error(e, "Failed to delete FAQ")
+    
     def get_faqs_by_category(self) -> Dict[str, List[FAQ]]:
         """Get FAQs grouped by category - caching handled by view decorator"""
         try:

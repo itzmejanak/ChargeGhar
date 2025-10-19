@@ -15,51 +15,10 @@ from api.common.mixins import BaseAPIView
 from api.common.decorators import rate_limit, log_api_call
 from api.common.serializers import BaseResponseSerializer, PaginatedResponseSerializer
 from api.content import serializers
-from api.content.services import (
-    AppInfoService, ContentSearchService
-)
+from api.content.services import ContentSearchService
 
 app_router = CustomViewRouter()
 logger = logging.getLogger(__name__)
-
-@app_router.register("app/version", name="app-version")
-@extend_schema(
-    tags=["App"],
-    summary="App Version Info",
-    description="Check for app updates and version compatibility",
-    parameters=[
-        OpenApiParameter("current_version", OpenApiTypes.STR, description="Current app version", required=True),
-    ],
-    responses={200: BaseResponseSerializer}
-)
-class AppVersionView(GenericAPIView, BaseAPIView):
-    """App version endpoint"""
-    serializer_class = serializers.AppVersionSerializer
-    permission_classes = [AllowAny]
-
-    @log_api_call()
-    def get(self, request: Request) -> Response:
-        """Get app version information"""
-        def operation():
-            current_version = request.query_params.get('current_version')
-            if not current_version:
-                from api.common.services.base import ServiceException
-                raise ServiceException(
-                    detail="current_version parameter is required",
-                    code="missing_parameter"
-                )
-
-            service = AppInfoService()
-            version_info = service.get_app_version_info(current_version)
-            serializer = self.get_serializer(version_info)
-            return serializer.data
-
-        return self.handle_service_operation(
-            operation,
-            success_message="Version information retrieved successfully",
-            error_message="Failed to retrieve version information"
-        )
-
 
 
 @app_router.register("content/search", name="content-search")

@@ -56,7 +56,7 @@ class AppInitDataView(GenericAPIView, BaseAPIView):
 # ============================================================================
 
 
-@app_info_router.register(r"app/version", name="app-version-check")
+@app_info_router.register(r"app/versionCheck", name="app-version-check")
 @extend_schema(
     tags=["App"],
     summary="Check App Version",
