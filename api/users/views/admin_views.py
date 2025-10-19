@@ -2,14 +2,12 @@
 Admin user management views
 """
 from __future__ import annotations
-
 import logging
 
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
-
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
