@@ -1,0 +1,27 @@
+api/notifications/serializers.py          # Single file (392 lines)
+├── Authentication Serializers
+│   └── FCMTokenSerializer
+├── Notification Serializers
+│   ├── NotificationListSerializer
+│   ├── NotificationDetailSerializer
+│   ├── NotificationUpdateSerializer
+│   ├── NotificationCreateSerializer
+│   ├── NotificationTemplateSerializer
+│   ├── NotificationRuleSerializer
+│   ├── NotificationStatsSerializer
+│   ├── BulkNotificationSerializer
+│   ├── NotificationPreferencesSerializer
+│   ├── NotificationFilterSerializer
+│   ├── NotificationAnalyticsSerializer
+│   ├── NotificationListResponseSerializer
+│   ├── NotificationDetailResponseSerializer
+│   ├── NotificationStatsResponseSerializer
+│   ├── NotificationMarkAllReadResponseSerializer
+│   ├── NotificationTemplateResponseSerializer
+│   ├── NotificationAnalyticsResponseSerializer
+│   └── NotificationListDataSerializer
+└── Other Serializers
+    ├── SMS_FCMLogSerializer
+    └── MarkAllReadDataSerializer
+
+Total: 1 file, 21 serializers (3 categories)

@@ -1,0 +1,112 @@
+══════════════════════════════════════════════════════════════════════
+📦 APP: payments
+══════════════════════════════════════════════════════════════════════
+
+📄 VIEWS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/payments/views/
+├── __init__.py                # Router merge
+├── admin_views.py             # Admin refund management - approve and reject refunds (3 classes)
+│   ├── AdminRefundRequestsView
+│   ├── AdminApproveRefundView
+│   └── AdminRejectRefundView
+├── core_views.py              # Core payment functionality - transactions, packages, and methods (4 classes)
+│   ├── TransactionListView
+│   ├── RentalPackageListView
+│   ├── PaymentMethodListView
+│   └── CalculatePaymentOptionsView
+├── refund_views.py            # User refund operations - list and request refunds (1 classes)
+│   └── RefundListView
+└── wallet_views.py            # Wallet operations - topup, balance, verify, and cancel (4 classes)
+    ├── TopupIntentCreateView
+    ├── PaymentVerifyView
+    ├── WalletBalanceView
+    └── PaymentCancelView
+
+Total: 4 files, 12 view classes
+
+⚙️  SERVICES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/payments/services/
+├── __init__.py                    # Exports
+├── nepal_gateway.py               # Service operations
+│   └── NepalGatewayService
+│       ├── __init__()
+│       ├── esewa_client()
+│       ├── khalti_client()
+│       ├── convert_amount_for_gateway()
+│       ├── convert_amount_from_gateway()
+│       ├── initiate_esewa_payment()
+│       ├── verify_esewa_payment()
+│       ├── initiate_khalti_payment()
+│       └── verify_khalti_payment()
+├── payment_calculation.py         # Service operations
+│   └── PaymentCalculationService
+│       ├── calculate_payment_options()
+│       ├── calculate_package_payment_options()
+│       ├── _get_user_points()
+│       ├── _get_wallet_balance()
+│       └── _calculate_payment_breakdown()
+├── payment_intent.py              # Service operations
+│   └── PaymentIntentService
+│       ├── create_topup_intent()
+│       ├── _initiate_gateway_payment()
+│       ├── verify_topup_payment()
+│       ├── _verify_with_gateway()
+│       ├── get_payment_status()
+│       └── cancel_payment_intent()
+├── refund.py                      # Service operations
+│   └── RefundService
+│       ├── request_refund()
+│       ├── get_user_refunds()
+│       ├── approve_refund()
+│       ├── get_pending_refunds()
+│       └── reject_refund()
+├── rental_payment.py              # Service operations
+│   └── RentalPaymentService
+│       ├── process_rental_payment()
+│       └── pay_rental_due()
+├── transaction.py                 # Service operations
+│   └── TransactionService
+│       ├── get_user_transactions()
+│       └── get_user_transactions_queryset()
+└── wallet.py                      # Service operations
+    └── WalletService
+        ├── get_or_create_wallet()
+        ├── add_balance()
+        ├── deduct_balance()
+        ├── get_wallet_balance()
+        └── get_wallet_balance()
+
+Total: 7 files, 7 service classes, 34 methods
+
+📋 SERIALIZERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/payments/serializers.py          # Single file (408 lines)
+├── User Serializers
+│   └── UserTransactionHistorySerializer
+├── Payment Serializers
+│   ├── PaymentMethodListSerializer
+│   ├── PaymentMethodSerializer
+│   ├── WalletSerializer
+│   ├── TransactionListSerializer
+│   ├── TransactionSerializer
+│   ├── TransactionDetailSerializer
+│   ├── WalletTransactionSerializer
+│   ├── PaymentIntentListSerializer
+│   ├── PaymentIntentSerializer
+│   ├── CalculatePaymentOptionsSerializer
+│   ├── PaymentOptionsResponseSerializer
+│   ├── RefundSerializer
+│   ├── RefundRequestSerializer
+│   ├── PaymentStatusSerializer
+│   ├── RefundActionSerializer
+│   └── RefundRejectSerializer
+├── Rental Serializers
+│   └── RentalPackageSerializer
+└── Other Serializers
+    ├── TopupIntentCreateSerializer
+    ├── PayDueSerializer
+    └── VerifyTopupSerializer
+
+Total: 1 file, 21 serializers (4 categories)

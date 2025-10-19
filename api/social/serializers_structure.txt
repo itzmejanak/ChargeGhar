@@ -1,0 +1,29 @@
+api/social/serializers.py          # Single file (484 lines)
+├── User Serializers
+│   ├── UserAchievementSerializer
+│   ├── UserLeaderboardSerializer
+│   └── UserAchievementsResponseSerializer
+├── Utility Serializers
+│   ├── AchievementListSerializer
+│   ├── AchievementDetailSerializer
+│   ├── LeaderboardEntryListSerializer
+│   ├── LeaderboardEntryDetailSerializer
+│   ├── LeaderboardFilterSerializer
+│   ├── AchievementAnalyticsSerializer
+│   ├── ClaimAchievementResponseSerializer
+│   ├── BulkClaimResponseSerializer
+│   ├── LeaderboardResponseSerializer
+│   ├── SocialStatsResponseSerializer
+│   ├── AchievementCreateResponseSerializer
+│   └── AchievementAnalyticsResponseSerializer
+└── Other Serializers
+    ├── AchievementCreateSerializer
+    ├── AchievementUpdateSerializer
+    ├── SocialStatsSerializer
+    ├── BulkClaimSerializer
+    ├── FailedClaimSerializer
+    ├── AchievementClaimDataSerializer
+    ├── BulkClaimDataSerializer
+    └── LeaderboardDataSerializer
+
+Total: 1 file, 23 serializers (3 categories)

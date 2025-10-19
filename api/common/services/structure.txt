@@ -1,0 +1,21 @@
+api/common/services/
+├── __init__.py                    # Exports
+└── base.py                        # Service operations
+    ├── ServiceException
+    ├── BaseService
+    │   ├── __init__()
+    │   ├── log_info()
+    │   ├── log_error()
+    │   ├── log_warning()
+    │   ├── execute_with_transaction()
+    │   ├── validate_required_fields()
+    │   └── handle_service_error()
+    └── CRUDService
+        ├── __init__()
+        ├── get_by_id()
+        ├── get_queryset()
+        ├── create()
+        ├── update()
+        └── delete()
+
+Total: 1 files, 3 service classes, 13 methods

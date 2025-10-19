@@ -1,0 +1,53 @@
+══════════════════════════════════════════════════════════════════════
+📦 APP: media
+══════════════════════════════════════════════════════════════════════
+
+📄 VIEWS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/media/views/
+└── views.py                    # Single file (3 classes)
+    └── MediaUploadView
+    └── UserMediaUploadsView
+    └── MediaUploadDetailView
+
+Total: 1 files, 3 view classes
+
+⚙️  SERVICES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/media/services/
+├── __init__.py                    # Exports
+├── cloud_storage.py               # Service operations
+│   ├── CloudStorageService
+│   │   ├── upload_file()
+│   │   ├── delete_file()
+│   │   └── get_file_info()
+│   ├── CloudinaryService
+│   │   ├── __init__()
+│   │   ├── upload_file()
+│   │   ├── delete_file()
+│   │   └── get_file_info()
+│   └── S3Service
+│       ├── __init__()
+│       ├── upload_file()
+│       ├── delete_file()
+│       └── get_file_info()
+└── media_upload.py                # Service operations
+    └── MediaUploadService
+        ├── upload_file()
+        ├── _upload_to_cloud_storage()
+        ├── get_user_uploads()
+        ├── delete_upload()
+        └── _delete_from_cloud_storage()
+
+Total: 2 files, 4 service classes, 16 methods
+
+📋 SERIALIZERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/media/serializers.py          # Single file (52 lines)
+├── Utility Serializers
+│   └── MediaUploadResponseSerializer
+└── Other Serializers
+    ├── MediaUploadSerializer
+    └── MediaUploadCreateSerializer
+
+Total: 1 file, 3 serializers (2 categories)

@@ -1,0 +1,9 @@
+api/common/serializers.py          # Single file (56 lines)
+├── Utility Serializers
+│   ├── BaseResponseSerializer
+│   └── PaginatedResponseSerializer
+└── Other Serializers
+    ├── HealthCheckSerializer
+    └── AppVersionSerializer
+
+Total: 1 file, 4 serializers (2 categories)

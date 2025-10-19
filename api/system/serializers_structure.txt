@@ -1,0 +1,17 @@
+api/system/serializers.py          # Single file (209 lines)
+├── Utility Serializers
+│   ├── CountryListSerializer
+│   ├── AppConfigListSerializer
+│   ├── AppVersionCheckResponseSerializer
+│   └── AppUpdateListSerializer
+└── Other Serializers
+    ├── CountrySerializer
+    ├── AppConfigSerializer
+    ├── AppConfigPublicSerializer
+    ├── AppVersionSerializer
+    ├── AppVersionCheckSerializer
+    ├── AppUpdateSerializer
+    ├── AppHealthSerializer
+    └── AppInitDataSerializer
+
+Total: 1 file, 12 serializers (2 categories)

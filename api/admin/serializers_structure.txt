@@ -1,0 +1,28 @@
+api/admin/serializers.py          # Single file (226 lines)
+├── Authentication Serializers
+│   └── AdminLoginSerializer
+├── Profile Serializers
+│   ├── AdminProfileSerializer
+│   └── AdminProfileCreateSerializer
+├── User Serializers
+│   ├── AdminUserListSerializer
+│   ├── UpdateUserStatusSerializer
+│   └── AddUserBalanceSerializer
+├── Payment Serializers
+│   ├── RefundFiltersSerializer
+│   └── ProcessRefundSerializer
+├── Station Serializers
+│   └── StationFiltersSerializer
+├── Admin Serializers
+│   └── AdminActionLogSerializer
+├── Utility Serializers
+│   ├── DashboardAnalyticsSerializer
+│   └── SystemLogFiltersSerializer
+└── Other Serializers
+    ├── SystemLogSerializer
+    ├── ToggleMaintenanceSerializer
+    ├── RemoteCommandSerializer
+    ├── BroadcastMessageSerializer
+    └── SystemHealthSerializer
+
+Total: 1 file, 17 serializers (8 categories)

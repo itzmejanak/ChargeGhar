@@ -1,0 +1,20 @@
+api/users/serializers.py          # Single file (344 lines)
+├── Authentication Serializers
+│   ├── UserLoginSerializer
+│   ├── OTPRequestSerializer
+│   └── OTPVerificationSerializer
+├── Profile Serializers
+│   ├── UserProfileSerializer
+│   ├── UserKYCSerializer
+│   └── UserDeviceSerializer
+└── User Serializers
+    ├── UserRegistrationSerializer
+    ├── UserListSerializer
+    ├── UserSerializer
+    ├── UserDetailSerializer
+    ├── UserBasicSerializer
+    ├── UserAnalyticsSerializer
+    ├── UserWalletResponseSerializer
+    └── UserFilterSerializer
+
+Total: 1 file, 14 serializers (3 categories)

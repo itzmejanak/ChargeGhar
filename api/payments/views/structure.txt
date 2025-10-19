@@ -1,18 +1,20 @@
 api/payments/views/
-├── __init__.py                 # Main router that merges all sub-routers
-├── core_views.py              # Core payment functionality (4 classes)
+├── __init__.py                # Router merge
+├── admin_views.py             # Admin refund management - approve and reject refunds (3 classes)
+│   ├── AdminRefundRequestsView
+│   ├── AdminApproveRefundView
+│   └── AdminRejectRefundView
+├── core_views.py              # Core payment functionality - transactions, packages, and methods (4 classes)
 │   ├── TransactionListView
 │   ├── RentalPackageListView
 │   ├── PaymentMethodListView
 │   └── CalculatePaymentOptionsView
-├── wallet_views.py            # Wallet operations (4 classes)
-│   ├── TopupIntentCreateView
-│   ├── PaymentVerifyView
-│   ├── WalletBalanceView
-│   └── PaymentCancelView
-├── refund_views.py            # User refund operations (1 class)
+├── refund_views.py            # User refund operations - list and request refunds (1 classes)
 │   └── RefundListView
-└── admin_views.py             # Admin refund management (3 classes)
-    ├── AdminRefundRequestsView
-    ├── AdminApproveRefundView
-    └── AdminRejectRefundView
+└── wallet_views.py            # Wallet operations - topup, balance, verify, and cancel (4 classes)
+    ├── TopupIntentCreateView
+    ├── PaymentVerifyView
+    ├── WalletBalanceView
+    └── PaymentCancelView
+
+Total: 4 files, 12 view classes

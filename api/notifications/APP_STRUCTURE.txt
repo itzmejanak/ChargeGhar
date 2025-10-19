@@ -1,0 +1,124 @@
+══════════════════════════════════════════════════════════════════════
+📦 APP: notifications
+══════════════════════════════════════════════════════════════════════
+
+📄 VIEWS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/notifications/views/
+├── __init__.py                # Router merge
+├── action_views.py            # Bulk notification actions - mark all read (1 classes)
+│   └── NotificationMarkAllReadView
+├── core_views.py              # Core notification operations - list and statistics (2 classes)
+│   ├── NotificationListView
+│   └── NotificationStatsView
+└── detail_views.py            # Individual notification operations - detail, mark read, delete (1 classes)
+    └── NotificationDetailView
+
+Total: 3 files, 4 view classes
+
+⚙️  SERVICES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/notifications/services/
+├── __init__.py                    # Exports
+├── analytics.py                   # Service operations
+│   └── NotificationAnalyticsService
+│       ├── get_notification_analytics()
+│       ├── get_user_engagement_analytics()
+│       └── get_delivery_performance()
+├── email.py                       # Service operations
+│   └── EmailService
+│       ├── __init__()
+│       └── send_email()
+├── fcm.py                         # Service operations
+│   └── FCMService
+│       ├── __init__()
+│       ├── _initialize_firebase()
+│       ├── send_push_notification()
+│       └── _send_fcm_message()
+├── notification.py                # 🔄 Legacy NotificationService - Backward Compatibility
+====================================================
+
+This service provides the legacy API that views and other services expect.
+It bridges the gap between old API and new clean notify system.
+│   └── NotificationService
+│       ├── __init__()
+│       ├── create_notification()
+│       ├── get_user_notifications()
+│       ├── get_notification_stats()
+│       ├── get_by_id()
+│       ├── mark_as_read()
+│       ├── mark_all_as_read()
+│       ├── delete_notification()
+│       └── _send_via_channels()
+├── notify.py                      # 🚀 NotifyService - Modern, Clean Notification System
+====================================================
+
+Simple, powerful notification system with:
+- Template-based notifications
+- Auto channel distribution based on rules
+- Django template engine support
+- Clean, one-line API
+
+Example Usage:
+    from api.notifications.services import notify
+    
+    # Simple one-liner
+    notify(user, 'rental_started', powerbank_id='PB123', station_name='Mall Road')
+    
+    # That's it! The system handles:
+    # - Template lookup
+    # - Variable substitution
+    # - Channel distribution (in-app, push, SMS, email)
+    # - Rule-based delivery
+│   └── NotifyService
+│       ├── __init__()
+│       ├── email_service()
+│       ├── fcm_service()
+│       ├── sms_service()
+│       ├── send()
+│       ├── send_bulk()
+│       ├── send_otp()
+│       ├── send_custom()
+│       ├── _get_template()
+│       ├── _render_template()
+│       ├── _distribute_channels()
+│       ├── _send_push()
+│       ├── _send_sms()
+│       └── _send_email()
+└── sms.py                         # Service operations
+    └── SMSService
+        ├── send_sms()
+        ├── _format_phone_number()
+        └── _send_sms_message()
+
+Total: 6 files, 6 service classes, 35 methods
+
+📋 SERIALIZERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/notifications/serializers.py          # Single file (392 lines)
+├── Authentication Serializers
+│   └── FCMTokenSerializer
+├── Notification Serializers
+│   ├── NotificationListSerializer
+│   ├── NotificationDetailSerializer
+│   ├── NotificationUpdateSerializer
+│   ├── NotificationCreateSerializer
+│   ├── NotificationTemplateSerializer
+│   ├── NotificationRuleSerializer
+│   ├── NotificationStatsSerializer
+│   ├── BulkNotificationSerializer
+│   ├── NotificationPreferencesSerializer
+│   ├── NotificationFilterSerializer
+│   ├── NotificationAnalyticsSerializer
+│   ├── NotificationListResponseSerializer
+│   ├── NotificationDetailResponseSerializer
+│   ├── NotificationStatsResponseSerializer
+│   ├── NotificationMarkAllReadResponseSerializer
+│   ├── NotificationTemplateResponseSerializer
+│   ├── NotificationAnalyticsResponseSerializer
+│   └── NotificationListDataSerializer
+└── Other Serializers
+    ├── SMS_FCMLogSerializer
+    └── MarkAllReadDataSerializer
+
+Total: 1 file, 21 serializers (3 categories)

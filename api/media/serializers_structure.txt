@@ -1,0 +1,8 @@
+api/media/serializers.py          # Single file (52 lines)
+├── Utility Serializers
+│   └── MediaUploadResponseSerializer
+└── Other Serializers
+    ├── MediaUploadSerializer
+    └── MediaUploadCreateSerializer
+
+Total: 1 file, 3 serializers (2 categories)

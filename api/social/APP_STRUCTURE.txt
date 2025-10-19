@@ -1,0 +1,119 @@
+══════════════════════════════════════════════════════════════════════
+📦 APP: social
+══════════════════════════════════════════════════════════════════════
+
+📄 VIEWS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/social/views/
+├── __init__.py                # Router merge
+├── achievement_views.py       # Achievement operations - user achievements, unlock, and bulk operations (3 classes)
+│   ├── UserAchievementsView
+│   ├── UnlockAchievementView
+│   └── BulkUnlockAchievementView
+├── admin_views.py             # Admin management - achievement creation and analytics (2 classes)
+│   ├── AdminAchievementsView
+│   └── AdminSocialAnalyticsView
+└── social_views.py            # Social features - leaderboard and user statistics (2 classes)
+    ├── LeaderboardView
+    └── SocialStatsView
+
+Total: 3 files, 7 view classes
+
+⚙️  SERVICES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/social/services/
+├── __init__.py                    # Exports
+├── achievement_claim_service.py   # AchievementClaimService - Achievement Claiming Operations
+==========================================================
+
+Handles claiming of unlocked achievements.
+Awards points and updates leaderboard on successful claim.
+
+Created: 2025-01-16
+Part of: Social App Real-Time Achievement Update
+│   └── AchievementClaimService
+│       ├── claim_achievement()
+│       └── claim_multiple_achievements()
+├── achievement_realtime_service.py # AchievementRealtimeService - Real-time Achievement Calculation
+================================================================
+
+Handles real-time calculation of achievement progress for users.
+Optimized for performance with bulk queries and aggregations.
+
+Created: 2025-01-16
+Part of: Social App Real-Time Achievement Update
+│   └── AchievementRealtimeService
+│       ├── calculate_user_progress()
+│       ├── update_all_progress_realtime()
+│       ├── get_unlocked_unclaimed_count()
+│       └── get_unlocked_unclaimed_achievements()
+├── achievement_service.py         # AchievementService - Individual Service File
+============================================================
+
+Service for achievement operations (existing functionality preserved)
+
+Created: 2025-01-16
+Part of: Social App Real-Time Achievement Update
+│   └── AchievementService
+│       ├── get_user_achievements()
+│       ├── get_unlocked_achievements()
+│       ├── update_user_progress()
+│       └── create_achievement()
+├── leaderboard_service.py         # LeaderboardService - Individual Service File
+============================================================
+
+Service for leaderboard operations
+
+Created: 2025-01-16
+Part of: Social App Real-Time Achievement Update
+│   └── LeaderboardService
+│       ├── get_leaderboard()
+│       ├── update_user_leaderboard()
+│       ├── update_after_achievement_claim()
+│       └── recalculate_ranks()
+└── social_analytics_service.py    # SocialAnalyticsService - Individual Service File
+============================================================
+
+Service for social analytics
+
+Created: 2025-01-16
+Part of: Social App Real-Time Achievement Update
+    └── SocialAnalyticsService
+        ├── get_social_stats()
+        ├── _get_top_performers()
+        ├── _get_recent_achievements()
+        └── get_achievement_analytics()
+
+Total: 5 files, 5 service classes, 18 methods
+
+📋 SERIALIZERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/social/serializers.py          # Single file (484 lines)
+├── User Serializers
+│   ├── UserAchievementSerializer
+│   ├── UserLeaderboardSerializer
+│   └── UserAchievementsResponseSerializer
+├── Utility Serializers
+│   ├── AchievementListSerializer
+│   ├── AchievementDetailSerializer
+│   ├── LeaderboardEntryListSerializer
+│   ├── LeaderboardEntryDetailSerializer
+│   ├── LeaderboardFilterSerializer
+│   ├── AchievementAnalyticsSerializer
+│   ├── ClaimAchievementResponseSerializer
+│   ├── BulkClaimResponseSerializer
+│   ├── LeaderboardResponseSerializer
+│   ├── SocialStatsResponseSerializer
+│   ├── AchievementCreateResponseSerializer
+│   └── AchievementAnalyticsResponseSerializer
+└── Other Serializers
+    ├── AchievementCreateSerializer
+    ├── AchievementUpdateSerializer
+    ├── SocialStatsSerializer
+    ├── BulkClaimSerializer
+    ├── FailedClaimSerializer
+    ├── AchievementClaimDataSerializer
+    ├── BulkClaimDataSerializer
+    └── LeaderboardDataSerializer
+
+Total: 1 file, 23 serializers (3 categories)

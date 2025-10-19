@@ -1,0 +1,26 @@
+api/media/services/
+├── __init__.py                    # Exports
+├── cloud_storage.py               # Service operations
+│   ├── CloudStorageService
+│   │   ├── upload_file()
+│   │   ├── delete_file()
+│   │   └── get_file_info()
+│   ├── CloudinaryService
+│   │   ├── __init__()
+│   │   ├── upload_file()
+│   │   ├── delete_file()
+│   │   └── get_file_info()
+│   └── S3Service
+│       ├── __init__()
+│       ├── upload_file()
+│       ├── delete_file()
+│       └── get_file_info()
+└── media_upload.py                # Service operations
+    └── MediaUploadService
+        ├── upload_file()
+        ├── _upload_to_cloud_storage()
+        ├── get_user_uploads()
+        ├── delete_upload()
+        └── _delete_from_cloud_storage()
+
+Total: 2 files, 4 service classes, 16 methods

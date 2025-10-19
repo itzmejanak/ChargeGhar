@@ -1,3 +1,29 @@
+══════════════════════════════════════════════════════════════════════
+📦 APP: system
+══════════════════════════════════════════════════════════════════════
+
+📄 VIEWS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/system/views/
+├── __init__.py                # Router merge
+├── app_info_views.py          # App information and health (3 classes)
+│   ├── AppInitDataView
+│   ├── AppVersionCheckView
+│   └── AppHealthView
+├── app_updates_views.py       # App updates and version history (2 classes)
+│   ├── AppUpdatesView
+│   └── AppUpdatesSinceView
+├── config_views.py            # Configuration management (2 classes)
+│   ├── PublicConfigView
+│   └── AdminConfigView
+└── country_views.py           # Country operations and search (2 classes)
+    ├── CountryListView
+    └── CountrySearchView
+
+Total: 4 files, 9 view classes
+
+⚙️  SERVICES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 api/system/services/
 ├── __init__.py                    # Exports
 ├── app_config_service.py          # Service for AppConfig operations
@@ -73,3 +99,23 @@ Date: 2025-10-18 23:47:47
         └── get_country_by_code()
 
 Total: 6 files, 6 service classes, 23 methods
+
+📋 SERIALIZERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/system/serializers.py          # Single file (209 lines)
+├── Utility Serializers
+│   ├── CountryListSerializer
+│   ├── AppConfigListSerializer
+│   ├── AppVersionCheckResponseSerializer
+│   └── AppUpdateListSerializer
+└── Other Serializers
+    ├── CountrySerializer
+    ├── AppConfigSerializer
+    ├── AppConfigPublicSerializer
+    ├── AppVersionSerializer
+    ├── AppVersionCheckSerializer
+    ├── AppUpdateSerializer
+    ├── AppHealthSerializer
+    └── AppInitDataSerializer
+
+Total: 1 file, 12 serializers (2 categories)

@@ -1,16 +1,18 @@
 api/points/views/
-├── __init__.py                 # Main router that merges all sub-routers
-├── points_views.py            # Core points functionality (3 classes)
+├── __init__.py                # Router merge
+├── admin_analytics_views.py   # Admin analytics and reporting for referrals (1 classes)
+│   └── AdminReferralAnalyticsView
+├── admin_points_views.py      # Admin points management - adjustments and bulk operations (2 classes)
+│   ├── AdminPointsAdjustmentView
+│   └── AdminBulkPointsAwardView
+├── points_views.py            # Core points functionality - history, summary, and leaderboard (3 classes)
 │   ├── PointsHistoryView
 │   ├── PointsSummaryView
 │   └── PointsLeaderboardView
-├── referrals_views.py         # Referral system (4 classes)
-│   ├── UserReferralCodeView
-│   ├── ReferralValidationView
-│   ├── ReferralClaimView
-│   └── UserReferralsView
-├── admin_points_views.py      # Admin points management (2 classes)
-│   ├── AdminPointsAdjustmentView
-│   └── AdminBulkPointsAwardView
-└── admin_analytics_views.py   # Admin analytics (1 class)
-    └── AdminReferralAnalyticsView
+└── referrals_views.py         # Referral system - codes, validation, claims, and user referrals (4 classes)
+    ├── UserReferralCodeView
+    ├── ReferralValidationView
+    ├── ReferralClaimView
+    └── UserReferralsView
+
+Total: 4 files, 10 view classes

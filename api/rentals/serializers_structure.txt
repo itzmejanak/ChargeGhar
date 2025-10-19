@@ -1,0 +1,18 @@
+api/rentals/serializers.py          # Single file (600 lines)
+└── Rental Serializers
+    ├── RentalPackageListSerializer
+    ├── RentalListSerializer
+    ├── RentalDetailSerializer
+    ├── RentalExtensionSerializer
+    ├── RentalIssueSerializer
+    ├── RentalLocationSerializer
+    ├── RentalStartSerializer
+    ├── RentalCancelSerializer
+    ├── RentalExtensionCreateSerializer
+    ├── RentalPayDueSerializer
+    ├── RentalIssueCreateSerializer
+    ├── RentalLocationUpdateSerializer
+    ├── RentalHistoryFilterSerializer
+    └── RentalStatsSerializer
+
+Total: 1 file, 14 serializers (1 categories)
