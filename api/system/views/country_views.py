@@ -20,7 +20,6 @@ from api.system.serializers import CountryListSerializer
 from api.common.services.base import ServiceException
 
 country_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @country_router.register(r"app/countries", name="countries")
@@ -40,8 +39,6 @@ class CountryListView(ListAPIView):
     def get_queryset(self):
         service = CountryService()
         return service.get_active_countries()
-
-
 
 @country_router.register(r"app/countries/search", name="countries-search")
 class CountrySearchView(GenericAPIView, BaseAPIView):

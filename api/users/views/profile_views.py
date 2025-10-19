@@ -18,7 +18,6 @@ from api.users import serializers
 from api.users.services import UserKYCService, UserProfileService
 
 profile_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @profile_router.register(r"users/profile", name="user-profile")
@@ -99,8 +98,6 @@ class UserProfileView(GenericAPIView, BaseAPIView):
             error_message="Failed to update profile"
         )
 
-
-
 @profile_router.register(r"users/kyc", name="user-kyc")
 @extend_schema(
     tags=["Authentication"],
@@ -155,8 +152,6 @@ class UserKYCView(GenericAPIView, BaseAPIView):
             error_message="Failed to update KYC documents"
         )
 
-
-
 @profile_router.register(r"users/kyc/status", name="user-kyc-status")
 @extend_schema(
     tags=["Authentication"],
@@ -194,8 +189,6 @@ class UserKYCStatusView(GenericAPIView, BaseAPIView):
             success_message="KYC status retrieved successfully",
             error_message="Failed to retrieve KYC status"
         )
-
-
 
 @profile_router.register(r"users/wallet", name="user-wallet")
 @extend_schema(
@@ -258,8 +251,6 @@ class UserWalletView(GenericAPIView, BaseAPIView):
             success_message="Wallet information retrieved successfully",
             error_message="Failed to retrieve wallet information"
         )
-
-
 
 @profile_router.register(r"users/analytics/usage-stats", name="user-analytics")
 @extend_schema(

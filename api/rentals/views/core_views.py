@@ -18,7 +18,6 @@ from api.rentals.services import RentalService
 from rest_framework.request import Request
 
 core_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @core_router.register(r"rentals/start", name="rental-start")

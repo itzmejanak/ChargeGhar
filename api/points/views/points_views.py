@@ -18,7 +18,6 @@ from api.points.services.points_service import PointsService
 from api.points.services.points_leaderboard_service import PointsLeaderboardService
 
 points_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @points_router.register(r"points/history", name="points-history")

@@ -18,7 +18,6 @@ from api.stations import serializers
 from api.stations.services import StationFavoriteService, StationIssueService
 
 interaction_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @interaction_router.register("stations/<str:serial_number>/favorite", name="station-favorite")
@@ -52,11 +51,9 @@ class StationFavoriteView(GenericAPIView, BaseAPIView):
             error_message="Failed to update favorite status"
         )
 
-
 # ===============================
 # STATION ISSUE REPORTING ENDPOINTS
 # ===============================
-
 
 @interaction_router.register("stations/<str:serial_number>/report-issue", name="station-report-issue")
 @extend_schema(

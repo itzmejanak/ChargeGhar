@@ -1,17 +1,13 @@
 """
 Achievement operations - user achievements, unlock, and bulk operations
 """
-
-
 import logging
-
 
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
-
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
@@ -22,11 +18,7 @@ from api.social.services import (
     AchievementClaimService,
 )
 
-
-
-
 achievement_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @achievement_router.register(r"social/achievements", name="social-achievements")

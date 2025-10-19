@@ -1,17 +1,12 @@
 """
 Bulk notification actions - mark all read
 """
-
-
 import logging
-
-
 from drf_spectacular.utils import extend_schema
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
-
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
@@ -19,11 +14,7 @@ from api.common.decorators import log_api_call
 from api.notifications import serializers
 from api.notifications.services.notification import NotificationService
 
-
-
-
 action_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @action_router.register(r"notifications/mark-all-read", name="notifications-mark-all-read")

@@ -20,7 +20,6 @@ from api.rentals.models import Rental
 from api.rentals.services import RentalIssueService, RentalLocationService
 
 support_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @support_router.register(r"rentals/<str:rental_id>/pay-due", name="rental-pay-due")
@@ -147,8 +146,6 @@ class RentalIssueView(GenericAPIView, BaseAPIView):
             error_message="Failed to report issue",
             success_status=status.HTTP_201_CREATED
         )
-
-
 
 @support_router.register(r"rentals/<str:rental_id>/location", name="rental-location")
 @extend_schema(

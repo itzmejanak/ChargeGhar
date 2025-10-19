@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     pass
 
 admin_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @admin_router.register(r"users", name="users")

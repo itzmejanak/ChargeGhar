@@ -2,7 +2,6 @@
 Configuration management
 """
 from __future__ import annotations
-
 import logging
 
 from drf_spectacular.utils import extend_schema
@@ -28,7 +27,6 @@ from api.system.permissions import (
 )
 
 config_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @config_router.register(r"app/config/public", name="public-config")
@@ -61,9 +59,7 @@ class PublicConfigView(GenericAPIView, BaseAPIView):
             error_message="Failed to retrieve public configurations"
         )
 
-
 # Admin endpoints for config management
-
 @config_router.register(r"admin/config", name="admin-config")
 @extend_schema(
     tags=["Admin"],

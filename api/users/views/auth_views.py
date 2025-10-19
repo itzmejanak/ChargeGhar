@@ -24,7 +24,6 @@ from api.users.models import User
 from api.users.services import AuthService, UserDeviceService
 
 auth_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @auth_router.register(r"auth/otp/request", name="auth-otp-request")
@@ -57,8 +56,6 @@ class OTPRequestView(GenericAPIView, BaseAPIView):
             error_message="Failed to send OTP"
         )
 
-
-
 @auth_router.register(r"auth/otp/verify", name="auth-otp-verify")
 @extend_schema(
     tags=["Authentication"],
@@ -89,8 +86,6 @@ class OTPVerifyView(GenericAPIView, BaseAPIView):
             success_message="OTP verified successfully",
             error_message="Failed to verify OTP"
         )
-
-
 
 @auth_router.register(r"auth/register", name="auth-register")
 @method_decorator(csrf_exempt, name='dispatch')
@@ -123,8 +118,6 @@ class RegisterView(GenericAPIView, BaseAPIView):
             success_status=status.HTTP_201_CREATED
         )
 
-
-
 @auth_router.register(r"auth/login", name="auth-login")
 @extend_schema(
     tags=["Authentication"],
@@ -154,8 +147,6 @@ class LoginView(GenericAPIView, BaseAPIView):
             success_message="Login successful",
             error_message="Login failed"
         )
-
-
 
 @auth_router.register(r"auth/logout", name="auth-logout")
 @extend_schema(
@@ -192,8 +183,6 @@ class LogoutView(GenericAPIView, BaseAPIView):
             error_message="Failed to logout"
         )
 
-
-
 @auth_router.register(r"auth/refresh", name="auth-refresh")
 @extend_schema(
     tags=["Authentication"],
@@ -202,7 +191,6 @@ class LogoutView(GenericAPIView, BaseAPIView):
 )
 class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = TokenRefreshSerializer
-
 
 
 @auth_router.register(r"auth/device", name="auth-device")
@@ -237,8 +225,6 @@ class DeviceView(GenericAPIView, BaseAPIView):
             error_message="Failed to register device"
         )
 
-
-
 @auth_router.register(r"auth/me", name="auth-me")
 @extend_schema(
     tags=["Authentication"],
@@ -264,8 +250,6 @@ class MeView(GenericAPIView, BaseAPIView):
             success_message="User data retrieved successfully",
             error_message="Failed to retrieve user data"
         )
-
-
 
 @auth_router.register(r"auth/account", name="auth-account")
 @extend_schema(

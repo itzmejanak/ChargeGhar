@@ -1,10 +1,7 @@
 """
 Public promotion information - active coupons and general info
 """
-
-
 import logging
-
 
 from drf_spectacular.utils import extend_schema
 from rest_framework.generics import GenericAPIView
@@ -12,18 +9,13 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.request import Request
 
-
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
 from api.common.decorators import log_api_call, cached_response
 from api.promotions import serializers
 from api.promotions.services import CouponService
 
-
-
-
 public_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @public_router.register(r"promotions/coupons/active", name="promotion-coupons-active")

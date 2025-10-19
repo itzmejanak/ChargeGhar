@@ -1,9 +1,6 @@
 """
 Admin coupon management - CRUD operations, analytics, and filtering
 """
-
-
-
 import logging
 
 

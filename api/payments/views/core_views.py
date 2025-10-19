@@ -20,7 +20,6 @@ from api.rentals.models import RentalPackage
 from api.payments.services import TransactionService, PaymentCalculationService
 
 core_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @core_router.register(r"payments/transactions", name="payment-transactions")

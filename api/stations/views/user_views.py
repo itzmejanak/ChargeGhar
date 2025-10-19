@@ -17,7 +17,6 @@ from api.stations import serializers
 from api.stations.services import StationFavoriteService, StationIssueService
 
 user_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @user_router.register("stations/favorites", name="user-favorite-stations")
@@ -64,11 +63,9 @@ class UserFavoriteStationsView(GenericAPIView, BaseAPIView):
             error_message="Failed to retrieve favorite stations"
         )
 
-
 # ===============================
 # USER STATION REPORTS (must be before <str:serial_number> route)
 # ===============================
-
 
 @user_router.register("stations/my-reports", name="user-station-reports")
 @extend_schema(

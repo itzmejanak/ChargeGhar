@@ -15,7 +15,6 @@ from api.users.permissions import IsStaffPermission
 from api.common.services.base import ServiceException
 
 admin_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @admin_router.register("admin/stations", name="admin-stations")

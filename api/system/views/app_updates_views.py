@@ -2,7 +2,6 @@
 App updates and version history
 """
 from __future__ import annotations
-
 import logging
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter

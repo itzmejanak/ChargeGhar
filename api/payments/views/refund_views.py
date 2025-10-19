@@ -19,7 +19,6 @@ from api.payments import serializers
 from api.payments.services import RefundService
 
 refund_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @refund_router.register(r"payments/refunds", name="payment-refunds")

@@ -1,17 +1,13 @@
 """
 Admin management - content pages and analytics
 """
-
-
 import logging
-
 
 from drf_spectacular.utils import extend_schema
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.request import Request
-
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
@@ -22,11 +18,7 @@ from api.content.services import (
     ContentPageService
 )
 
-
-
-
 admin_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @admin_router.register(r"admin/content/pages", name="admin-content-pages")
@@ -69,8 +61,6 @@ class AdminContentPagesView(GenericAPIView, BaseAPIView):
             success_message="Content page updated successfully",
             error_message="Failed to update content page"
         )
-
-
 
 @admin_router.register(r"admin/content/analytics", name="admin-content-analytics")
 @extend_schema(

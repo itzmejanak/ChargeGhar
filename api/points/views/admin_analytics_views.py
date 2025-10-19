@@ -1,10 +1,7 @@
 """
 Admin analytics and reporting for referrals
 """
-
-
 import logging
-
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.generics import GenericAPIView
@@ -12,18 +9,13 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.request import Request
 
-
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
 from api.common.decorators import log_api_call, cached_response
 from api.points import serializers
 from api.points.services.referral_service import ReferralService
 
-
-
-
 admin_analytics_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @admin_analytics_router.register(r"admin/referrals/analytics", name="admin-referrals-analytics")

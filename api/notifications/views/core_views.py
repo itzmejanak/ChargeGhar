@@ -1,10 +1,7 @@
 """
 Core notification operations - list and statistics
 """
-
-
 import logging
-
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
@@ -13,18 +10,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
 
-
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
 from api.common.decorators import log_api_call, cached_response
 from api.notifications import serializers
 from api.notifications.services.notification import NotificationService
 
-
-
-
 core_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @core_router.register(r"notifications", name="notifications-list")
@@ -113,7 +105,6 @@ class NotificationListView(GenericAPIView, BaseAPIView):
             "Notifications retrieved successfully",
             "Failed to retrieve notifications"
         )
-
 
 
 @core_router.register(r"notifications/stats", name="notifications-stats")

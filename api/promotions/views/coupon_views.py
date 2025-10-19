@@ -1,10 +1,7 @@
 """
 User coupon operations - apply, validate, and personal history
 """
-
-
 import logging
-
 
 from drf_spectacular.utils import extend_schema
 from rest_framework.generics import GenericAPIView
@@ -12,18 +9,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
 
-
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
 from api.common.decorators import log_api_call
 from api.promotions import serializers
 from api.promotions.services import CouponService
 
-
-
-
 coupon_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @coupon_router.register(r"promotions/coupons/apply", name="promotion-coupons-apply")
@@ -58,8 +50,6 @@ class CouponApplyView(GenericAPIView, BaseAPIView):
             "Failed to apply coupon"
         )
 
-
-
 @coupon_router.register(r"promotions/coupons/validate", name="promotion-coupons-validate")
 class CouponValidateView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.CouponApplySerializer
@@ -92,8 +82,6 @@ class CouponValidateView(GenericAPIView, BaseAPIView):
             "Failed to validate coupon"
         )
 
-
-
 @coupon_router.register(r"promotions/coupons/my", name="promotion-coupons-my")
 class MyCouponsView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.UserCouponHistorySerializer
@@ -119,7 +107,6 @@ class MyCouponsView(GenericAPIView, BaseAPIView):
                 page=page,
                 page_size=page_size
             )
-            
             # Use MVP list serializer for performance
             serializer = serializers.UserCouponHistorySerializer(result['results'], many=True)
             

@@ -1,10 +1,7 @@
 """
 Admin management - achievement creation and analytics
 """
-
-
 import logging
-
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -12,7 +9,6 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.request import Request
-
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
@@ -23,11 +19,7 @@ from api.social.services import (
     SocialAnalyticsService,
 )
 
-
-
-
 admin_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @admin_router.register(r"admin/social/achievements", name="admin-achievements")

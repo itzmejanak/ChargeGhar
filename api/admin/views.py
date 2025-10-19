@@ -1,6 +1,4 @@
 from __future__ import annotations
-
-
 from rest_framework.generics import GenericAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -12,7 +10,6 @@ from api.common.services.base import ServiceException
 from api.admin import serializers
 
 router = CustomViewRouter()
-
 
 @router.register(r"admin/profiles", name="admin-profiles")
 class AdminProfileView(GenericAPIView, BaseAPIView):

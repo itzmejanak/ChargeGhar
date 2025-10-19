@@ -1,10 +1,7 @@
 """
 Dynamic content - contact info, FAQ, and banners
 """
-
-
 import logging
-
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
@@ -12,8 +9,6 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.request import Request
-
-
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
 from api.common.decorators import log_api_call, cached_response
@@ -23,11 +18,7 @@ from api.content.services import (
     FAQService, ContactInfoService, BannerService
 )
 
-
-
-
 dynamic_content_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @dynamic_content_router.register("content/contact", name="content-contact")
@@ -61,8 +52,6 @@ class ContactView(GenericAPIView, BaseAPIView):
             success_message="Contact information retrieved successfully",
             error_message="Failed to retrieve contact information"
         )
-
-
 
 @dynamic_content_router.register("content/faq", name="content-faq")
 @extend_schema(
@@ -131,8 +120,6 @@ class FAQView(GenericAPIView, BaseAPIView):
             success_message="FAQ content retrieved successfully",
             error_message="Failed to retrieve FAQ content"
         )
-
-
 
 @dynamic_content_router.register("content/banners", name="content-banners")
 @extend_schema(

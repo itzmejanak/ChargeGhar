@@ -19,7 +19,6 @@ from api.rentals.services import RentalService
 
 
 history_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @history_router.register(r"rentals/history", name="rental-history")

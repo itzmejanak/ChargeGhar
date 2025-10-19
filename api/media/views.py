@@ -20,7 +20,6 @@ from api.media.serializers import (
 
 router = CustomViewRouter()
 
-
 @router.register(r"app/media/upload", name="media-upload")
 class MediaUploadView(GenericAPIView, BaseAPIView):
     """Upload media files to cloud storage"""
@@ -56,7 +55,6 @@ class MediaUploadView(GenericAPIView, BaseAPIView):
             status_code=status.HTTP_201_CREATED
         )
 
-
 @router.register(r"app/media/uploads", name="user-media-uploads")
 class UserMediaUploadsView(ListAPIView):
     """Get user's uploaded media files"""
@@ -84,7 +82,6 @@ class UserMediaUploadsView(ListAPIView):
         file_type = self.request.query_params.get('type')
         service = MediaUploadService()
         return service.get_user_uploads(self.request.user, file_type)
-
 
 @router.register(r"app/media/uploads/<str:upload_id>", name="media-upload-detail")
 class MediaUploadDetailView(GenericAPIView, BaseAPIView):

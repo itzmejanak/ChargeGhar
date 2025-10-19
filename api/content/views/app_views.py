@@ -1,10 +1,7 @@
 """
 App-related functionality - version check and content search
 """
-
-
 import logging
-
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
@@ -12,7 +9,6 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.request import Request
-
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
@@ -23,11 +19,7 @@ from api.content.services import (
     AppInfoService, ContentSearchService
 )
 
-
-
-
 app_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @app_router.register("app/version", name="app-version")
@@ -131,6 +123,3 @@ class ContentSearchView(GenericAPIView, BaseAPIView):
             success_message="Search results retrieved successfully",
             error_message="Failed to search content"
         )
-
-
-# Admin endpoints

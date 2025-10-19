@@ -17,7 +17,6 @@ from api.common.serializers import BaseResponseSerializer
 from api.common.services.base import ServiceException
 
 social_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @social_router.register(r"auth/google/login", name="auth-google-login")
@@ -51,8 +50,6 @@ class GoogleLoginView(GenericAPIView, BaseAPIView):
             error_message="Failed to get Google OAuth URL"
         )
 
-
-
 @social_router.register(r"auth/apple/login", name="auth-apple-login")
 @extend_schema(
     tags=["Authentication"],
@@ -83,8 +80,6 @@ class AppleLoginView(GenericAPIView, BaseAPIView):
             success_message="Apple OAuth URL retrieved",
             error_message="Failed to get Apple OAuth URL"
         )
-
-
 
 @social_router.register(r"auth/social/success", name="auth-social-success")
 @extend_schema(
@@ -139,8 +134,6 @@ class SocialAuthSuccessView(GenericAPIView, BaseAPIView):
             error_message="Failed to complete social authentication"
         )
 
-
-
 @social_router.register(r"auth/social/error", name="auth-social-error")
 @extend_schema(
     tags=["Authentication"],
@@ -170,8 +163,6 @@ class SocialAuthErrorView(GenericAPIView, BaseAPIView):
             error_message="Failed to get error details",
             success_status=status.HTTP_400_BAD_REQUEST
         )
-
-
 
 @social_router.register(r"auth/debug/headers", name="auth-debug-headers")
 @extend_schema(

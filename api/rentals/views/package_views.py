@@ -17,7 +17,6 @@ from api.rentals import serializers
 from api.rentals.models import RentalPackage
 
 package_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @package_router.register(r"rentals/packages", name="rental-packages")

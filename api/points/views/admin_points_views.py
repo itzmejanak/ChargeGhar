@@ -1,10 +1,7 @@
 """
 Admin points management - adjustments and bulk operations
 """
-
-
 import logging
-
 
 from drf_spectacular.utils import extend_schema
 from rest_framework.generics import GenericAPIView
@@ -12,18 +9,13 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.request import Request
 
-
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
 from api.common.decorators import log_api_call
 from api.points import serializers
 from api.points.services.points_service import PointsService
 
-
-
-
 admin_points_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @admin_points_router.register(r"admin/points/adjust", name="admin-points-adjust")

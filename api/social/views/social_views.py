@@ -2,16 +2,13 @@
 Social features - leaderboard and user statistics
 """
 
-
 import logging
-
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiParameter
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
-
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
@@ -23,11 +20,7 @@ from api.social.services import (
     SocialAnalyticsService,
 )
 
-
-
-
 social_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @social_router.register(r"social/leaderboard", name="social-leaderboard")
@@ -117,8 +110,6 @@ class LeaderboardView(GenericAPIView, BaseAPIView):
             "Leaderboard retrieved successfully",
             "Failed to retrieve leaderboard",
         )
-
-
 
 @social_router.register(r"social/stats", name="social-stats")
 class SocialStatsView(GenericAPIView, BaseAPIView):

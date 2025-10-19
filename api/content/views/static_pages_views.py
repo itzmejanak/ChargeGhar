@@ -1,17 +1,13 @@
 """
 Static content pages - terms, privacy policy, and about
 """
-
-
 import logging
-
 
 from drf_spectacular.utils import extend_schema
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.request import Request
-
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
@@ -22,11 +18,7 @@ from api.content.services import (
     ContentPageService
 )
 
-
-
-
 static_pages_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @static_pages_router.register("content/terms-of-service", name="content-terms")
@@ -57,8 +49,6 @@ class TermsOfServiceView(GenericAPIView, BaseAPIView):
             error_message="Failed to retrieve terms of service"
         )
 
-
-
 @static_pages_router.register("content/privacy-policy", name="content-privacy")
 @extend_schema(
     tags=["Content"],
@@ -86,8 +76,6 @@ class PrivacyPolicyView(GenericAPIView, BaseAPIView):
             success_message="Privacy policy retrieved successfully",
             error_message="Failed to retrieve privacy policy"
         )
-
-
 
 @static_pages_router.register("content/about", name="content-about")
 @extend_schema(

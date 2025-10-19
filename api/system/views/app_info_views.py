@@ -28,7 +28,6 @@ from api.system.serializers import (
 )
 
 app_info_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @app_info_router.register(r"app/init-data", name="app-init-data")

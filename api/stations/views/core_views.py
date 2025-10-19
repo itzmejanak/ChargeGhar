@@ -19,7 +19,6 @@ from api.stations.services import StationService
 from api.common.services.base import ServiceException
 
 core_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @core_router.register("stations", name="stations-list")
@@ -89,8 +88,6 @@ class StationListView(GenericAPIView, BaseAPIView):
             error_message="Failed to retrieve stations"
         )
 
-
-
 @core_router.register("stations/nearby", name="stations-nearby")
 @extend_schema(
     tags=["Stations"],
@@ -148,8 +145,6 @@ class NearbyStationsView(GenericAPIView, BaseAPIView):
             success_message="Nearby stations retrieved successfully",
             error_message="Failed to retrieve nearby stations"
         )
-
-
 
 @core_router.register("stations/<str:serial_number>", name="station-detail")
 @extend_schema(

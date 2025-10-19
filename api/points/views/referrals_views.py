@@ -1,7 +1,6 @@
 """
 Referral system - codes, validation, claims, and user referrals
 """
-
 import logging
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -17,7 +16,6 @@ from api.points import serializers
 from api.points.services.referral_service import ReferralService
 
 referrals_router = CustomViewRouter()
-
 logger = logging.getLogger(__name__)
 
 @referrals_router.register(r"referrals/my-code", name="referrals-my-code")
