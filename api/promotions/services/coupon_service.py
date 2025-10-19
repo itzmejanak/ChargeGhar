@@ -9,7 +9,6 @@ Date: 2025-10-18 23:21:06
 """
 from __future__ import annotations
 
-from __future__ import annotations
 import random
 import string
 from typing import Dict, Any, List
@@ -19,8 +18,6 @@ from django.db.models import Q
 from api.common.services.base import CRUDService, ServiceException
 from api.common.utils.helpers import paginate_queryset
 from api.promotions.models import Coupon, CouponUsage
-
-# Additional imports for this module
 
 class CouponService(CRUDService):
     """Service for coupon operations"""

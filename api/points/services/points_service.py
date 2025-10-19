@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Dict, Any, List, TYPE_CHECKING
 from django.db import transaction
 from django.db.models import Sum
+from django.contrib.auth import get_user_model
 from api.common.services.base import CRUDService, ServiceException
 from api.common.utils.helpers import convert_points_to_amount, paginate_queryset
 from api.points.models import PointsTransaction, Referral
@@ -19,6 +20,8 @@ from api.users.models import UserPoints
 
 if TYPE_CHECKING:
     from api.users.models import User
+
+User = get_user_model()
 
 class PointsService(CRUDService):
     """Service for points operations"""

@@ -9,7 +9,6 @@ Date: 2025-10-18 23:47:47
 """
 from __future__ import annotations
 
-from __future__ import annotations
 from typing import Optional
 from django.db import models
 from django.db.models import Q

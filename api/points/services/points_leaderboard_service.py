@@ -12,12 +12,15 @@ from __future__ import annotations
 from typing import Dict, Any, List, Optional, TYPE_CHECKING
 from django.utils import timezone
 from django.db.models import Sum, Count
+from django.contrib.auth import get_user_model
 from api.common.services.base import BaseService
 from api.points.models import PointsTransaction, Referral
 from api.users.models import UserPoints
 
 if TYPE_CHECKING:
     from api.users.models import User
+
+User = get_user_model()
 
 class PointsLeaderboardService(BaseService):
     """Service for points leaderboard"""

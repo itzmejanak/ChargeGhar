@@ -9,7 +9,6 @@ Date: 2025-10-18 23:21:06
 """
 from __future__ import annotations
 
-from __future__ import annotations
 from typing import Dict, Any
 from django.utils import timezone
 from django.db.models import Count, Sum

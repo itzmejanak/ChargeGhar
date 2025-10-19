@@ -9,7 +9,6 @@ Date: 2025-10-18 23:01:23
 """
 from __future__ import annotations
 
-from __future__ import annotations
 from api.common.services.base import BaseService
 
 class PowerBankService(BaseService):

@@ -1,8 +1,6 @@
 """
 Wallet operations - topup, balance, verify, and cancel
 """
-from typing import TYPE_CHECKING
-
 import logging
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter

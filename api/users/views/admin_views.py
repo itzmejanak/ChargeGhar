@@ -4,7 +4,6 @@ Admin user management views
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
@@ -18,9 +17,6 @@ from api.common.serializers import BaseResponseSerializer, PaginatedResponseSeri
 from api.users import serializers
 from api.users.models import User
 from api.users.permissions import IsStaffPermission
-
-if TYPE_CHECKING:
-    pass
 
 admin_router = CustomViewRouter()
 logger = logging.getLogger(__name__)
