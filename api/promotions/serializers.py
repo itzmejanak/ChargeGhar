@@ -30,10 +30,14 @@ class CouponListSerializer(serializers.ModelSerializer):
 
 
 class CouponDetailSerializer(serializers.ModelSerializer):
-    """Detailed serializer for coupons - Full data"""
+    """Detailed coupon serializer with validation info"""
     is_currently_valid = serializers.SerializerMethodField()
     days_remaining = serializers.SerializerMethodField()
     total_uses = serializers.SerializerMethodField()
+    status = serializers.ChoiceField(
+        choices=Coupon.StatusChoices.choices,
+        help_text="Coupon status"
+    )
     
     class Meta:
         model = Coupon
@@ -42,7 +46,7 @@ class CouponDetailSerializer(serializers.ModelSerializer):
             'valid_from', 'valid_until', 'status', 'created_at',
             'is_currently_valid', 'days_remaining', 'total_uses'
         ]
-        read_only_fields = ['id', 'created_at']
+        read_only_fields = ['id', 'created_at', 'status']
     
     @extend_schema_field(serializers.BooleanField)
     def get_is_currently_valid(self, obj) -> bool:

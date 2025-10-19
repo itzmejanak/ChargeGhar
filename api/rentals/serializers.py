@@ -263,10 +263,18 @@ class RentalExtensionSerializer(serializers.ModelSerializer):
 
 class RentalIssueSerializer(serializers.ModelSerializer):
     """
-    Serializer for rental issue details.
-    Used in: Issue report response
+    Serializer for rental issues.
+    Used in: Issue list response
     """
     rental_code = serializers.CharField(source='rental.rental_code', read_only=True)
+    issue_type = serializers.ChoiceField(
+        choices=RentalIssue.ISSUE_TYPE_CHOICES,
+        help_text="Type of rental issue"
+    )
+    status = serializers.ChoiceField(
+        choices=RentalIssue.STATUS_CHOICES,
+        help_text="Issue status"
+    )
     
     class Meta:
         model = RentalIssue
@@ -280,7 +288,7 @@ class RentalIssueSerializer(serializers.ModelSerializer):
             'resolved_at', 
             'rental_code'
         ]
-        read_only_fields = ['id', 'reported_at', 'resolved_at']
+        read_only_fields = ['id', 'reported_at', 'resolved_at', 'rental_code']
 
 
 class RentalLocationSerializer(serializers.ModelSerializer):
@@ -427,6 +435,10 @@ class RentalIssueCreateSerializer(serializers.ModelSerializer):
     Request serializer for reporting rental issues.
     Used in: POST /api/rentals/{id}/issue
     """
+    issue_type = serializers.ChoiceField(
+        choices=RentalIssue.ISSUE_TYPE_CHOICES,
+        help_text="Type of rental issue to report"
+    )
     
     class Meta:
         model = RentalIssue

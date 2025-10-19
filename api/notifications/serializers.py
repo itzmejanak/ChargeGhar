@@ -171,6 +171,10 @@ class SMS_FCMLogSerializer(serializers.ModelSerializer):
     """Serializer for SMS/FCM logs"""
     user_username = serializers.CharField(source='user.username', read_only=True)
     formatted_recipient = serializers.SerializerMethodField()
+    status = serializers.ChoiceField(
+        choices=SMS_FCMLog.StatusChoices.choices,
+        help_text="Notification delivery status"
+    )
     
     class Meta:
         model = SMS_FCMLog
@@ -179,7 +183,7 @@ class SMS_FCMLogSerializer(serializers.ModelSerializer):
             'status', 'response', 'sent_at', 'created_at',
             'user_username', 'formatted_recipient'
         ]
-        read_only_fields = ['id', 'created_at', 'sent_at']
+        read_only_fields = ['id', 'created_at', 'sent_at', 'status']
     
     def get_formatted_recipient(self, obj):
         """Format recipient for display (mask sensitive data)"""

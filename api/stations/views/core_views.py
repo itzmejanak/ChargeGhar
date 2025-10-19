@@ -147,21 +147,22 @@ class NearbyStationsView(GenericAPIView, BaseAPIView):
         )
 
 @core_router.register("stations/<str:serial_number>", name="station-detail")
-@extend_schema(
-    tags=["Stations"],
-    summary="Station Detail",
-    description="Get detailed station information including slots, amenities, and real-time status",
-    parameters=[
-        OpenApiParameter("serial_number", OpenApiTypes.STR, OpenApiParameter.PATH, description="Station serial number", required=True),
-        OpenApiParameter("lat", OpenApiTypes.FLOAT, description="User latitude for distance calculation"),
-        OpenApiParameter("lng", OpenApiTypes.FLOAT, description="User longitude for distance calculation"),
-    ],
-    responses={200: serializers.StationDetailResponseSerializer}
-)
 class StationDetailView(GenericAPIView, BaseAPIView):
     serializer_class = serializers.StationDetailSerializer
     permission_classes = [AllowAny]
     
+    @extend_schema(
+        operation_id="stations_detail_retrieve",
+        tags=["Stations"],
+        summary="Get Station Detail",
+        description="Get detailed station information including slots, amenities, and real-time status",
+        parameters=[
+            OpenApiParameter("serial_number", OpenApiTypes.STR, OpenApiParameter.PATH, description="Station serial number", required=True),
+            OpenApiParameter("lat", OpenApiTypes.FLOAT, description="User latitude for distance calculation"),
+            OpenApiParameter("lng", OpenApiTypes.FLOAT, description="User longitude for distance calculation"),
+        ],
+        responses={200: serializers.StationDetailResponseSerializer}
+    )
     @log_api_call()
     def get(self, request: Request, serial_number: str) -> Response:
         """Get detailed station information"""

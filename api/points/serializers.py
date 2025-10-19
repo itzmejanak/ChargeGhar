@@ -90,19 +90,18 @@ class UserPointsSerializer(serializers.ModelSerializer):
 class ReferralListSerializer(serializers.ModelSerializer):
     """Minimal serializer for referral lists - MVP optimized"""
     invitee_username = serializers.CharField(source='invitee.username', read_only=True)
-    is_expired = serializers.SerializerMethodField()
+    status = serializers.ChoiceField(
+        choices=Referral.STATUS_CHOICES,
+        help_text="Referral status"
+    )
     
     class Meta:
         model = Referral
         fields = [
             'id', 'status', 'invitee_username', 'inviter_points_awarded',
-            'created_at', 'is_expired'
+            'invitee_points_awarded', 'created_at'
         ]
-        read_only_fields = ['id', 'created_at']
-    
-    @extend_schema_field(serializers.BooleanField)
-    def get_is_expired(self, obj) -> bool:
-        return timezone.now() > obj.expires_at
+        read_only_fields = ['id', 'created_at', 'status']
 
 
 class ReferralDetailSerializer(serializers.ModelSerializer):
@@ -111,6 +110,10 @@ class ReferralDetailSerializer(serializers.ModelSerializer):
     invitee_username = serializers.CharField(source='invitee.username', read_only=True)
     is_expired = serializers.SerializerMethodField()
     days_until_expiry = serializers.SerializerMethodField()
+    status = serializers.ChoiceField(
+        choices=Referral.STATUS_CHOICES,
+        help_text="Referral status"
+    )
     
     class Meta:
         model = Referral
@@ -120,7 +123,7 @@ class ReferralDetailSerializer(serializers.ModelSerializer):
             'expires_at', 'created_at', 'inviter_username', 'invitee_username',
             'is_expired', 'days_until_expiry'
         ]
-        read_only_fields = ['id', 'created_at', 'completed_at']
+        read_only_fields = ['id', 'created_at', 'completed_at', 'status']
     
     @extend_schema_field(serializers.BooleanField)
     def get_is_expired(self, obj) -> bool:

@@ -56,16 +56,17 @@ class AdminUserListView(GenericAPIView, BaseAPIView):
         )
 
 @user_management_router.register(r"admin/users/<str:user_id>", name="admin-user-detail")
-@extend_schema(
-    tags=["Admin"],
-    summary="User Detail",
-    description="Get detailed user information (Staff only)",
-    responses={200: BaseResponseSerializer}
-)
 class AdminUserDetailView(GenericAPIView, BaseAPIView):
     """User detail view"""
     permission_classes = [IsStaffPermission]
 
+    @extend_schema(
+        operation_id="admin_user_detail_retrieve",
+        tags=["Admin"],
+        summary="Get User Detail",
+        description="Get detailed user information (Staff only)",
+        responses={200: BaseResponseSerializer}
+    )
     @log_api_call()
     def get(self, request: Request, user_id: str) -> Response:
         """Get user detail"""

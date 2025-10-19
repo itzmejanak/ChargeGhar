@@ -64,6 +64,10 @@ class StationAmenitySerializer(serializers.ModelSerializer):
 
 class StationSlotSerializer(serializers.ModelSerializer):
     """Serializer for station slots"""
+    status = serializers.ChoiceField(
+        choices=StationSlot.SLOT_STATUS_CHOICES,
+        help_text="Slot status"
+    )
     
     class Meta:
         model = StationSlot
@@ -99,41 +103,54 @@ class StationAmenityMappingSerializer(serializers.ModelSerializer):
         fields = ['amenity', 'is_available', 'notes']
 
 
-class StationListSerializer(StationLocationMixin, serializers.ModelSerializer):
-    """Serializer for station list views with essential fields"""
-    available_slots = serializers.SerializerMethodField()
-    total_slots = serializers.IntegerField(read_only=True)
+class StationListSerializer(serializers.ModelSerializer, StationLocationMixin):
+    """Serializer for station list view"""
     distance = serializers.SerializerMethodField()
+    available_slots = serializers.SerializerMethodField()
     is_favorite = serializers.SerializerMethodField()
+    status = serializers.ChoiceField(
+        choices=Station.STATION_STATUS_CHOICES,
+        help_text="Station operational status"
+    )
     
     class Meta:
         model = Station
         fields = [
             'id', 'serial_number', 'station_name', 'latitude', 'longitude', 
-            'address', 'status', 'total_slots', 'available_slots', 
+            'address', 'status', 'total_slots', 'available_slots',
             'distance', 'is_favorite'
         ]
-        read_only_fields = fields
+        read_only_fields = ['id']
 
-class StationDetailSerializer(StationLocationMixin, serializers.ModelSerializer):
-    """Serializer for station detail view"""
+
+class StationDetailSerializer(serializers.ModelSerializer, StationLocationMixin):
+    """Serializer for detailed station view"""
     slots = StationSlotSerializer(many=True, read_only=True)
-    amenities = StationAmenityMappingSerializer(source='amenity_mappings', many=True, read_only=True)
+    amenities = serializers.SerializerMethodField()
     media = StationMediaSerializer(many=True, read_only=True)
-    available_slots = serializers.SerializerMethodField()
-    occupied_slots = serializers.SerializerMethodField()
-    maintenance_slots = serializers.SerializerMethodField()
-    is_favorite = serializers.SerializerMethodField()
     distance = serializers.SerializerMethodField()
+    available_slots = serializers.SerializerMethodField()
+    is_favorite = serializers.SerializerMethodField()
+    status = serializers.ChoiceField(
+        choices=Station.STATION_STATUS_CHOICES,
+        help_text="Station operational status"
+    )
     
     class Meta:
         model = Station
         fields = [
             'id', 'station_name', 'serial_number', 'latitude', 'longitude',
             'address', 'landmark', 'total_slots', 'status', 'is_maintenance',
-            'last_heartbeat', 'slots', 'amenities', 'media', 'available_slots', 
-            'occupied_slots', 'maintenance_slots', 'is_favorite', 'distance'
+            'slots', 'amenities', 'media', 'distance', 'available_slots',
+            'is_favorite', 'hardware_info'
         ]
+        read_only_fields = ['id']
+    
+    @extend_schema_field(serializers.ListField)
+    def get_amenities(self, obj):
+        """Get available amenities"""
+        mappings = obj.amenity_mappings.filter(is_available=True).select_related('amenity')
+        return StationAmenitySerializer([m.amenity for m in mappings], many=True).data
     
     @extend_schema_field(serializers.IntegerField)
     def get_occupied_slots(self, obj) -> int:
@@ -146,17 +163,24 @@ class StationDetailSerializer(StationLocationMixin, serializers.ModelSerializer)
 
 class StationIssueSerializer(serializers.ModelSerializer):
     """Serializer for station issues"""
-    reported_by_name = serializers.CharField(source='reported_by.username', read_only=True)
-    assigned_to_name = serializers.CharField(source='assigned_to.username', read_only=True)
+    station_name = serializers.CharField(source='station.station_name', read_only=True)
+    reporter_name = serializers.CharField(source='reported_by.username', read_only=True)
+    issue_type = serializers.ChoiceField(
+        choices=StationIssue.ISSUE_TYPE_CHOICES,
+        help_text="Type of station issue"
+    )
+    status = serializers.ChoiceField(
+        choices=StationIssue.STATUS_CHOICES,
+        help_text="Issue resolution status"
+    )
     
     class Meta:
         model = StationIssue
         fields = [
-            'id', 'station', 'issue_type', 'description', 'images',
-            'priority', 'status', 'reported_at', 'resolved_at',
-            'reported_by_name', 'assigned_to_name'
+            'id', 'station', 'station_name', 'issue_type', 'description', 'images',
+            'priority', 'status', 'reported_at', 'resolved_at', 'reporter_name'
         ]
-        read_only_fields = ['id', 'reported_at', 'resolved_at']
+        read_only_fields = ['id', 'reported_at', 'resolved_at', 'station_name', 'reporter_name']
     
     def validate_description(self, value):
         if len(value.strip()) < 10:
@@ -166,6 +190,10 @@ class StationIssueSerializer(serializers.ModelSerializer):
 
 class StationIssueCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating station issues"""
+    issue_type = serializers.ChoiceField(
+        choices=StationIssue.ISSUE_TYPE_CHOICES,
+        help_text="Type of station issue to report"
+    )
     images = serializers.ListField(
         child=serializers.URLField(),
         required=False,

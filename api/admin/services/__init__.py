@@ -16,11 +16,13 @@ from .admin_analytics_service import AdminAnalyticsService
 from .admin_refund_service import AdminRefundService
 from .admin_notification_service import AdminNotificationService
 from .admin_system_service import AdminSystemService
+from .admin_content_service import AdminContentService
 
 
 # Backward compatibility - all services available at package level
 __all__ = [
     "AdminAnalyticsService",
+    "AdminContentService",
     "AdminNotificationService",
     "AdminRefundService",
     "AdminStationService",

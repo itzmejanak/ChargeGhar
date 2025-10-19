@@ -12,10 +12,11 @@ from .user_management_views import user_management_router
 from .payment_views import payment_router
 from .station_views import station_router
 from .notification_views import notification_router
+from .content_admin_views import content_admin_router
 
 # Merge all sub-routers
 router = CustomViewRouter()
 
-for sub_router in [auth_router, monitoring_router, user_management_router, payment_router, station_router, notification_router]:
+for sub_router in [auth_router, monitoring_router, user_management_router, payment_router, station_router, notification_router, content_admin_router]:
     router._paths.extend(sub_router._paths)
     router._drf_router.registry.extend(sub_router._drf_router.registry)

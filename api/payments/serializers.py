@@ -81,8 +81,12 @@ class WalletSerializer(serializers.ModelSerializer):
 
 # Transaction Serializers (MVP Pattern)
 class TransactionListSerializer(serializers.ModelSerializer):
-    """Minimal serializer for transaction listing - MVP focused"""
-    formatted_amount = serializers.SerializerMethodField()
+    """Serializer for transaction list view"""
+    formatted_amount = serializers.CharField(source='get_formatted_amount', read_only=True)
+    status = serializers.ChoiceField(
+        choices=Transaction.STATUS_CHOICES,
+        help_text="Transaction status"
+    )
     
     class Meta:
         model = Transaction
@@ -90,32 +94,25 @@ class TransactionListSerializer(serializers.ModelSerializer):
             'id', 'transaction_id', 'transaction_type', 'amount', 
             'status', 'created_at', 'formatted_amount'
         ]
-    
-    @extend_schema_field(serializers.CharField)
-    def get_formatted_amount(self, obj) -> str:
-        return f"{obj.currency} {obj.amount:,.2f}"
+        read_only_fields = ['id', 'transaction_id', 'created_at', 'status']
 
 class TransactionSerializer(serializers.ModelSerializer):
-    """Standard serializer for transactions"""
-    formatted_amount = serializers.SerializerMethodField()
-    payment_method_name = serializers.SerializerMethodField()
+    """Detailed transaction serializer"""
+    formatted_amount = serializers.CharField(source='get_formatted_amount', read_only=True)
+    payment_method_name = serializers.CharField(source='payment_method.name', read_only=True, allow_null=True)
+    status = serializers.ChoiceField(
+        choices=Transaction.STATUS_CHOICES,
+        help_text="Transaction status"
+    )
     
     class Meta:
         model = Transaction
         fields = [
             'id', 'transaction_id', 'transaction_type', 'amount', 'currency',
             'status', 'payment_method_type', 'gateway_reference', 'created_at',
-            'formatted_amount', 'payment_method_name'
+            'formatted_amount', 'payment_method_name', 'description'
         ]
-        read_only_fields = ['id', 'transaction_id', 'created_at']
-    
-    @extend_schema_field(serializers.CharField)
-    def get_formatted_amount(self, obj) -> str:
-        return f"{obj.currency} {obj.amount:,.2f}"
-    
-    @extend_schema_field(serializers.CharField)
-    def get_payment_method_name(self, obj) -> str:
-        return obj.payment_method.name if obj.payment_method else "N/A"
+        read_only_fields = ['id', 'transaction_id', 'created_at', 'status']
 
 class TransactionDetailSerializer(TransactionSerializer):
     """Detailed serializer for single transaction view"""
@@ -159,41 +156,38 @@ class WalletTransactionSerializer(serializers.ModelSerializer):
 
 # Payment Intent Serializers (MVP Pattern)
 class PaymentIntentListSerializer(serializers.ModelSerializer):
-    """Minimal serializer for payment intent listing"""
-    formatted_amount = serializers.SerializerMethodField()
+    """Serializer for payment intent list view"""
+    formatted_amount = serializers.CharField(source='get_formatted_amount', read_only=True)
+    status = serializers.ChoiceField(
+        choices=PaymentIntent.STATUS_CHOICES,
+        help_text="Payment intent status"
+    )
     
     class Meta:
         model = PaymentIntent
         fields = [
             'id', 'intent_id', 'status', 'amount', 'formatted_amount', 'created_at'
         ]
-    
-    @extend_schema_field(serializers.CharField)
-    def get_formatted_amount(self, obj) -> str:
-        return f"{obj.currency} {obj.amount:,.2f}"
+        read_only_fields = ['id', 'intent_id', 'created_at', 'status']
 
 class PaymentIntentSerializer(serializers.ModelSerializer):
-    """Standard serializer for payment intents"""
-    payment_method_name = serializers.CharField(source='payment_method.name', read_only=True)
-    formatted_amount = serializers.SerializerMethodField()
-    is_expired = serializers.SerializerMethodField()
+    """Detailed payment intent serializer"""
+    formatted_amount = serializers.CharField(source='get_formatted_amount', read_only=True)
+    payment_method_name = serializers.CharField(source='payment_method.name', read_only=True, allow_null=True)
+    status = serializers.ChoiceField(
+        choices=PaymentIntent.STATUS_CHOICES,
+        help_text="Payment intent status"
+    )
     
     class Meta:
         model = PaymentIntent
         fields = [
             'id', 'intent_id', 'intent_type', 'amount', 'currency', 'status',
-            'gateway_url', 'expires_at', 'completed_at', 'created_at',
-            'payment_method_name', 'formatted_amount', 'is_expired'
+            'payment_method_type', 'gateway_reference', 'callback_url',
+            'created_at', 'updated_at', 'expires_at',
+            'formatted_amount', 'payment_method_name', 'metadata'
         ]
-        read_only_fields = ['id', 'intent_id', 'gateway_url', 'completed_at', 'created_at']
-    
-    @extend_schema_field(serializers.CharField)
-    def get_formatted_amount(self, obj) -> str:
-        return f"{obj.currency} {obj.amount:,.2f}"
-    
-    @extend_schema_field(serializers.BooleanField)
-    def get_is_expired(self, obj) -> bool:
-        return timezone.now() > obj.expires_at
+        read_only_fields = ['id', 'intent_id', 'created_at', 'updated_at', 'status']
 
 
 class TopupIntentCreateSerializer(serializers.Serializer):
@@ -254,24 +248,23 @@ class PayDueSerializer(serializers.Serializer):
 
 
 class RefundSerializer(serializers.ModelSerializer):
-    """Serializer for refunds"""
-    # Avoid accessing transaction directly to prevent problematic joins
-    requested_by_name = serializers.CharField(source='requested_by.username', read_only=True)
-    approved_by_name = serializers.CharField(source='approved_by.username', read_only=True)
-    formatted_amount = serializers.SerializerMethodField()
+    """Serializer for refund details"""
+    transaction_id = serializers.CharField(source='transaction.transaction_id', read_only=True)
+    user_name = serializers.CharField(source='user.username', read_only=True)
+    formatted_amount = serializers.CharField(source='get_formatted_amount', read_only=True)
+    status = serializers.ChoiceField(
+        choices=Refund.STATUS_CHOICES,
+        help_text="Refund status"
+    )
     
     class Meta:
         model = Refund
         fields = [
             'id', 'amount', 'reason', 'status', 'gateway_reference',
-            'requested_at', 'processed_at', 'requested_by_name',
-            'approved_by_name', 'formatted_amount'
+            'admin_notes', 'requested_at', 'processed_at',
+            'transaction_id', 'user_name', 'formatted_amount'
         ]
-        read_only_fields = ['id', 'requested_at', 'processed_at']
-    
-    @extend_schema_field(serializers.CharField)
-    def get_formatted_amount(self, obj) -> str:
-        return f"NPR {obj.amount:,.2f}"
+        read_only_fields = ['id', 'requested_at', 'processed_at', 'status']
 
 
 class RefundRequestSerializer(serializers.Serializer):
