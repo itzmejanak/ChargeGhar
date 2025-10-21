@@ -7,7 +7,7 @@ from drf_spectacular.utils import extend_schema_field
 
 from api.payments.models import (
     Transaction, Wallet, WalletTransaction, PaymentIntent, 
-    Refund, PaymentMethod
+    Refund, PaymentMethod, WithdrawalRequest
 )
 from api.rentals.models import RentalPackage
 from api.common.utils.helpers import convert_points_to_amount
@@ -391,5 +391,172 @@ class UserTransactionHistorySerializer(serializers.Serializer):
             raise serializers.ValidationError("start_date cannot be after end_date")
         
         return attrs
+
+
+# ============================================================================
+# WITHDRAWAL SERIALIZERS
+# ============================================================================
+
+class WithdrawalRequestSerializer(serializers.Serializer):
+    """Serializer for creating withdrawal request"""
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('1'))
+    withdrawal_method = serializers.ChoiceField(choices=[
+        ('esewa', 'eSewa'),
+        ('khalti', 'Khalti'),
+        ('bank', 'Bank Transfer')
+    ])
+    
+    # For eSewa/Khalti
+    phone_number = serializers.CharField(max_length=15, required=False, allow_blank=True)
+    
+    # For Bank Transfer
+    bank_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    account_number = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    account_holder_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    
+    def validate_amount(self, value):
+        if value > Decimal('100000'):  # Max NPR 100,000
+            raise serializers.ValidationError("Amount cannot exceed NPR 100,000")
+        return value
+    
+    def validate_phone_number(self, value):
+        if value and value.strip():
+            phone = value.strip()
+            # Basic Nepali phone number validation
+            if not phone.startswith('98') or len(phone) != 10 or not phone.isdigit():
+                raise serializers.ValidationError("Please provide a valid Nepali phone number (98XXXXXXXX)")
+        return value.strip() if value else ''
+    
+    def validate(self, attrs):
+        withdrawal_method = attrs.get('withdrawal_method')
+        
+        if withdrawal_method in ['esewa', 'khalti']:
+            # Phone number is required for digital wallets
+            if not attrs.get('phone_number'):
+                raise serializers.ValidationError({
+                    'phone_number': f'Phone number is required for {withdrawal_method.title()} withdrawal'
+                })
+        
+        elif withdrawal_method == 'bank':
+            # Bank details are required for bank transfer
+            required_fields = ['bank_name', 'account_number', 'account_holder_name']
+            missing_fields = []
+            
+            for field in required_fields:
+                if not attrs.get(field) or not attrs.get(field).strip():
+                    missing_fields.append(field.replace('_', ' ').title())
+            
+            if missing_fields:
+                raise serializers.ValidationError({
+                    'bank_details': f'The following bank details are required: {", ".join(missing_fields)}'
+                })
+        
+        return attrs
+    
+    def get_account_details(self):
+        """Build account_details dict from validated data"""
+        withdrawal_method = self.validated_data['withdrawal_method']
+        
+        if withdrawal_method in ['esewa', 'khalti']:
+            return {
+                'method': withdrawal_method,
+                'phone_number': self.validated_data['phone_number']
+            }
+        elif withdrawal_method == 'bank':
+            return {
+                'method': 'bank',
+                'bank_name': self.validated_data['bank_name'].strip(),
+                'account_number': self.validated_data['account_number'].strip(),
+                'account_holder_name': self.validated_data['account_holder_name'].strip()
+            }
+        
+        return {}
+
+
+class WithdrawalListSerializer(serializers.ModelSerializer):
+    """Serializer for withdrawal list view"""
+    payment_method_name = serializers.CharField(source='payment_method.name', read_only=True)
+    formatted_amount = serializers.SerializerMethodField()
+    formatted_processing_fee = serializers.SerializerMethodField()
+    formatted_net_amount = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    
+    class Meta:
+        model = WithdrawalRequest
+        fields = [
+            'id', 'internal_reference', 'amount', 'processing_fee', 'net_amount',
+            'status', 'status_display', 'payment_method_name', 'requested_at',
+            'formatted_amount', 'formatted_processing_fee', 'formatted_net_amount'
+        ]
+        read_only_fields = ['id', 'internal_reference', 'requested_at', 'status']
+    
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_amount(self, obj) -> str:
+        return f"NPR {obj.amount:,.2f}"
+    
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_processing_fee(self, obj) -> str:
+        return f"NPR {obj.processing_fee:,.2f}"
+    
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_net_amount(self, obj) -> str:
+        return f"NPR {obj.net_amount:,.2f}"
+
+
+class WithdrawalSerializer(serializers.ModelSerializer):
+    """Detailed withdrawal serializer"""
+    payment_method_name = serializers.CharField(source='payment_method.name', read_only=True)
+    payment_method_gateway = serializers.CharField(source='payment_method.gateway', read_only=True)
+    user_username = serializers.CharField(source='user.username', read_only=True)
+    processed_by_username = serializers.CharField(source='processed_by.username', read_only=True, allow_null=True)
+    formatted_amount = serializers.SerializerMethodField()
+    formatted_processing_fee = serializers.SerializerMethodField()
+    formatted_net_amount = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    
+    class Meta:
+        model = WithdrawalRequest
+        fields = [
+            'id', 'internal_reference', 'amount', 'processing_fee', 'net_amount',
+            'status', 'status_display', 'account_details', 'admin_notes',
+            'gateway_reference', 'requested_at', 'processed_at',
+            'payment_method_name', 'payment_method_gateway', 'user_username',
+            'processed_by_username', 'formatted_amount', 'formatted_processing_fee',
+            'formatted_net_amount'
+        ]
+        read_only_fields = [
+            'id', 'internal_reference', 'requested_at', 'processed_at', 'status',
+            'gateway_reference'
+        ]
+    
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_amount(self, obj) -> str:
+        return f"NPR {obj.amount:,.2f}"
+    
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_processing_fee(self, obj) -> str:
+        return f"NPR {obj.processing_fee:,.2f}"
+    
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_net_amount(self, obj) -> str:
+        return f"NPR {obj.net_amount:,.2f}"
+
+
+class WithdrawalCancelSerializer(serializers.Serializer):
+    """Serializer for withdrawal cancellation"""
+    reason = serializers.CharField(max_length=255, required=False, allow_blank=True)
+
+
+class WithdrawalStatusSerializer(serializers.Serializer):
+    """Serializer for withdrawal status response"""
+    withdrawal_id = serializers.UUIDField()
+    internal_reference = serializers.CharField()
+    status = serializers.CharField()
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    processing_fee = serializers.DecimalField(max_digits=10, decimal_places=2)
+    net_amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    requested_at = serializers.DateTimeField()
+    processed_at = serializers.DateTimeField(allow_null=True)
+    admin_notes = serializers.CharField(allow_null=True)
 
 

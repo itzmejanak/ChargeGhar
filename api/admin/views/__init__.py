@@ -17,6 +17,8 @@ from .content_admin_views import content_admin_router
 # Merge all sub-routers
 router = CustomViewRouter()
 
-for sub_router in [auth_router, monitoring_router, user_management_router, payment_router, station_router, notification_router, content_admin_router]:
+from .withdrawal_views import withdrawal_admin_router
+
+for sub_router in [auth_router, monitoring_router, user_management_router, payment_router, station_router, notification_router, content_admin_router, withdrawal_admin_router]:
     router._paths.extend(sub_router._paths)
     router._drf_router.registry.extend(sub_router._drf_router.registry)

@@ -17,6 +17,7 @@ from .admin_refund_service import AdminRefundService
 from .admin_notification_service import AdminNotificationService
 from .admin_system_service import AdminSystemService
 from .admin_content_service import AdminContentService
+from .admin_withdrawal_service import AdminWithdrawalService
 
 
 # Backward compatibility - all services available at package level
@@ -28,4 +29,5 @@ __all__ = [
     "AdminStationService",
     "AdminSystemService",
     "AdminUserService",
+    "AdminWithdrawalService",
 ]

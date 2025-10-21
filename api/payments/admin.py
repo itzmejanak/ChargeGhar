@@ -5,7 +5,7 @@ from django.contrib.admin import ModelAdmin
 
 from api.payments.models import (
     Transaction, Wallet, WalletTransaction, PaymentIntent, 
-    Refund, PaymentMethod
+    Refund, PaymentMethod, WithdrawalRequest, WithdrawalLimit
 )
 
 
@@ -53,4 +53,19 @@ class PaymentMethodAdmin(ModelAdmin):
     list_display = ['name', 'gateway', 'is_active', 'min_amount', 'max_amount']
     list_filter = ['is_active', 'gateway']
     search_fields = ['name', 'gateway']
+
+
+@admin.register(WithdrawalRequest)
+class WithdrawalRequestAdmin(ModelAdmin):
+    list_display = ['internal_reference', 'user', 'amount', 'status', 'payment_method', 'requested_at']
+    list_filter = ['status', 'payment_method', 'requested_at']
+    search_fields = ['internal_reference', 'user__username', 'user__email']
+    readonly_fields = ['internal_reference', 'requested_at', 'processed_at']
+
+
+@admin.register(WithdrawalLimit)
+class WithdrawalLimitAdmin(ModelAdmin):
+    list_display = ['user', 'daily_withdrawn', 'monthly_withdrawn', 'last_daily_reset', 'last_monthly_reset']
+    search_fields = ['user__username', 'user__email']
+    readonly_fields = ['last_daily_reset', 'last_monthly_reset']
     readonly_fields = ['created_at', 'updated_at']

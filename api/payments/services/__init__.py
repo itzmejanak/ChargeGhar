@@ -11,6 +11,7 @@ from .rental_payment import RentalPaymentService
 from .refund import RefundService
 from .transaction import TransactionService
 from .nepal_gateway import NepalGatewayService
+from .withdrawal import WithdrawalService
 
 __all__ = [
     'WalletService',
@@ -20,4 +21,5 @@ __all__ = [
     'RefundService',
     'TransactionService',
     'NepalGatewayService',
+    'WithdrawalService',
 ]

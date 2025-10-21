@@ -544,5 +544,75 @@
       "created_at": "2025-10-18T10:00:00Z",
       "updated_at": "2025-10-18T10:00:00Z"
     }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 40,
+    "fields": {
+      "name": "Withdrawal Requested",
+      "slug": "withdrawal_requested",
+      "notification_type": "payment",
+      "title_template": "💸 Withdrawal Request Submitted",
+      "message_template": "Your withdrawal request for Rs. {{amount}} has been submitted successfully. Reference: {{withdrawal_reference}}. Processing fee: Rs. {{processing_fee}}. Net amount: Rs. {{net_amount}}. We'll process your request within 24-48 hours.",
+      "is_active": true,
+      "created_at": "2025-10-22T02:00:00Z",
+      "updated_at": "2025-10-22T02:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 41,
+    "fields": {
+      "name": "Withdrawal Approved",
+      "slug": "withdrawal_approved",
+      "notification_type": "payment",
+      "title_template": "✅ Withdrawal Approved",
+      "message_template": "Great news! Your withdrawal request for Rs. {{amount}} has been approved. Reference: {{withdrawal_reference}}. Net amount Rs. {{net_amount}} will be transferred to your account shortly. {{admin_notes}}",
+      "is_active": true,
+      "created_at": "2025-10-22T02:00:00Z",
+      "updated_at": "2025-10-22T02:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 42,
+    "fields": {
+      "name": "Withdrawal Rejected",
+      "slug": "withdrawal_rejected",
+      "notification_type": "payment",
+      "title_template": "❌ Withdrawal Request Rejected",
+      "message_template": "Your withdrawal request for Rs. {{amount}} has been rejected. Reference: {{withdrawal_reference}}. The amount has been refunded to your wallet. Reason: {{rejection_reason}}",
+      "is_active": true,
+      "created_at": "2025-10-22T02:00:00Z",
+      "updated_at": "2025-10-22T02:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 43,
+    "fields": {
+      "name": "Withdrawal Completed",
+      "slug": "withdrawal_completed",
+      "notification_type": "payment",
+      "title_template": "🎉 Withdrawal Completed",
+      "message_template": "Your withdrawal of Rs. {{net_amount}} has been successfully processed! Reference: {{withdrawal_reference}}. The amount should reflect in your account within 2-3 business days.",
+      "is_active": true,
+      "created_at": "2025-10-22T02:00:00Z",
+      "updated_at": "2025-10-22T02:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 44,
+    "fields": {
+      "name": "Withdrawal Cancelled",
+      "slug": "withdrawal_cancelled",
+      "notification_type": "payment",
+      "title_template": "🔄 Withdrawal Cancelled",
+      "message_template": "Your withdrawal request for Rs. {{amount}} has been cancelled. Reference: {{withdrawal_reference}}. The amount has been refunded to your wallet.",
+      "is_active": true,
+      "created_at": "2025-10-22T02:00:00Z",
+      "updated_at": "2025-10-22T02:00:00Z"
+    }
   }
 ]

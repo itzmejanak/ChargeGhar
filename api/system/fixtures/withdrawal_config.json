@@ -1,0 +1,68 @@
+[
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "WITHDRAWAL_MIN_AMOUNT",
+      "value": "100",
+      "description": "Minimum withdrawal amount in NPR",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "WITHDRAWAL_MAX_DAILY_LIMIT",
+      "value": "10000",
+      "description": "Maximum daily withdrawal limit in NPR",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "WITHDRAWAL_MAX_MONTHLY_LIMIT",
+      "value": "50000",
+      "description": "Maximum monthly withdrawal limit in NPR",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "WITHDRAWAL_PROCESSING_FEE_PERCENTAGE",
+      "value": "2.0",
+      "description": "Withdrawal processing fee percentage",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "WITHDRAWAL_PROCESSING_FEE_FIXED",
+      "value": "10",
+      "description": "Fixed withdrawal processing fee in NPR",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "WITHDRAWAL_ENABLED",
+      "value": "true",
+      "description": "Enable/disable withdrawal functionality",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

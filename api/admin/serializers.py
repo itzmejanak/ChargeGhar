@@ -223,4 +223,31 @@ class SystemLogFiltersSerializer(serializers.Serializer):
     page_size = serializers.IntegerField(default=50, min_value=1, max_value=200)
 
 
+# ============================================================
+# Withdrawal Management Serializers
+# ============================================================
+
+class WithdrawalFiltersSerializer(serializers.Serializer):
+    """Serializer for withdrawal filters"""
+    start_date = serializers.DateTimeField(required=False)
+    end_date = serializers.DateTimeField(required=False)
+    search = serializers.CharField(required=False)
+    status = serializers.CharField(required=False)
+    payment_method = serializers.CharField(required=False)
+    page = serializers.IntegerField(default=1, min_value=1)
+    page_size = serializers.IntegerField(default=20, min_value=1, max_value=100)
+
+
+class ProcessWithdrawalSerializer(serializers.Serializer):
+    """Serializer for processing withdrawal"""
+    action = serializers.ChoiceField(choices=['APPROVE', 'REJECT'])
+    admin_notes = serializers.CharField(max_length=1000, required=False, allow_blank=True)
+    
+    def validate_admin_notes(self, value):
+        action = self.initial_data.get('action')
+        if action == 'REJECT' and (not value or len(value.strip()) < 5):
+            raise serializers.ValidationError("Admin notes are required for rejection (minimum 5 characters)")
+        return value.strip() if value else ''
+
+
 
