@@ -1,7 +1,5 @@
 api/stations/views/
 ├── __init__.py                # Router merge
-├── admin_views.py             # Admin management - station CRUD operations (1 classes)
-│   └── AdminStationViewSet
 ├── core_views.py              # Core station operations - list, nearby, and detail views (3 classes)
 │   ├── StationListView
 │   ├── NearbyStationsView
@@ -13,4 +11,4 @@ api/stations/views/
     ├── UserFavoriteStationsView
     └── UserStationReportsView
 
-Total: 4 files, 8 view classes
+Total: 3 files, 7 view classes

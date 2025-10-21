@@ -1,7 +1,5 @@
 api/users/views/
 ├── __init__.py                # Router merge
-├── admin_views.py             # Admin user management views (1 classes)
-│   └── UserViewSet
 ├── auth_views.py              # Authentication and OTP views (9 classes)
 │   ├── OTPRequestView
 │   ├── OTPVerifyView
@@ -25,4 +23,4 @@ api/users/views/
     ├── SocialAuthErrorView
     └── DebugHeadersView
 
-Total: 4 files, 20 view classes
+Total: 3 files, 19 view classes

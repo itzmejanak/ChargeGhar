@@ -1,29 +1,21 @@
-api/promotions/serializers.py          # Single file (331 lines)
+api/promotions/serializers.py          # Single file (224 lines)
 ├── User Serializers
 │   └── UserCouponHistorySerializer
-├── Admin Serializers
-│   ├── AdminCouponsResponseSerializer
-│   └── AdminCouponsDataSerializer
 ├── Utility Serializers
 │   ├── CouponListSerializer
 │   ├── CouponDetailSerializer
 │   ├── CouponUsageListSerializer
 │   ├── CouponUsageDetailSerializer
-│   ├── CouponAnalyticsSerializer
 │   ├── CouponFilterSerializer
 │   ├── ActiveCouponsResponseSerializer
 │   ├── CouponApplyResponseSerializer
 │   ├── CouponValidationResponseSerializer
-│   ├── MyCouponsResponseSerializer
-│   └── CouponAnalyticsResponseSerializer
+│   └── MyCouponsResponseSerializer
 └── Other Serializers
     ├── CouponPublicSerializer
-    ├── CouponCreateSerializer
-    ├── CouponUpdateSerializer
     ├── CouponApplySerializer
     ├── CouponValidationSerializer
-    ├── BulkCouponCreateSerializer
     ├── CouponApplyDataSerializer
     └── MyCouponsDataSerializer
 
-Total: 1 file, 22 serializers (4 categories)
+Total: 1 file, 15 serializers (3 categories)

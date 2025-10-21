@@ -7,11 +7,10 @@ api/system/views/
 ├── app_updates_views.py       # App updates and version history (2 classes)
 │   ├── AppUpdatesView
 │   └── AppUpdatesSinceView
-├── config_views.py            # Configuration management (2 classes)
-│   ├── PublicConfigView
-│   └── AdminConfigView
+├── config_views.py            # Configuration management (1 classes)
+│   └── PublicConfigView
 └── country_views.py           # Country operations and search (2 classes)
     ├── CountryListView
     └── CountrySearchView
 
-Total: 4 files, 9 view classes
+Total: 4 files, 8 view classes

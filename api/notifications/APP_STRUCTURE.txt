@@ -95,7 +95,7 @@ Total: 6 files, 6 service classes, 35 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/notifications/serializers.py          # Single file (392 lines)
+api/notifications/serializers.py          # Single file (396 lines)
 ├── Authentication Serializers
 │   └── FCMTokenSerializer
 ├── Notification Serializers

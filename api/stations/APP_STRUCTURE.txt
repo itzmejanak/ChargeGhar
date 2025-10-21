@@ -6,8 +6,6 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 api/stations/views/
 ├── __init__.py                # Router merge
-├── admin_views.py             # Admin management - station CRUD operations (1 classes)
-│   └── AdminStationViewSet
 ├── core_views.py              # Core station operations - list, nearby, and detail views (3 classes)
 │   ├── StationListView
 │   ├── NearbyStationsView
@@ -19,7 +17,7 @@ api/stations/views/
     ├── UserFavoriteStationsView
     └── UserStationReportsView
 
-Total: 4 files, 8 view classes
+Total: 3 files, 7 view classes
 
 ⚙️  SERVICES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -74,7 +72,7 @@ Total: 4 files, 4 service classes, 12 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/stations/serializers.py          # Single file (312 lines)
+api/stations/serializers.py          # Single file (276 lines)
 ├── User Serializers
 │   ├── UserFavoriteStationsResponseSerializer
 │   └── UserStationReportsResponseSerializer
@@ -87,12 +85,10 @@ api/stations/serializers.py          # Single file (312 lines)
     ├── StationDetailSerializer
     ├── StationIssueSerializer
     ├── StationIssueCreateSerializer
-    ├── StationCreateSerializer
-    ├── StationUpdateSerializer
     ├── NearbyStationsSerializer
     ├── StationListResponseSerializer
     ├── StationDetailResponseSerializer
     ├── StationFavoriteResponseSerializer
     └── StationIssueResponseSerializer
 
-Total: 1 file, 17 serializers (2 categories)
+Total: 1 file, 15 serializers (2 categories)

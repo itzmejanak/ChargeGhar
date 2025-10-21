@@ -1,0 +1,39 @@
+api/admin/views/
+├── __init__.py                # Router merge
+├── auth_views.py              # Admin authentication and profile management - handles admin login and profile CRUD operations (2 classes)
+│   ├── AdminLoginView
+│   └── AdminProfileView
+├── content_admin_views.py     # Content administration - manage pages, FAQs, contact info, and banners
+========================================================================
+
+Migrated from api/content/views/admin_views.py
+Renamed to content_admin_views.py for clarity and consistency (8 classes)
+│   ├── AdminContentPagesView
+│   ├── AdminContentAnalyticsView
+│   ├── AdminFAQView
+│   ├── AdminFAQDetailView
+│   ├── AdminContactInfoView
+│   ├── AdminContactInfoDetailView
+│   ├── AdminBannerView
+│   └── AdminBannerDetailView
+├── monitoring_views.py        # System monitoring, logs, analytics and health checks - centralized observability for platform health (4 classes)
+│   ├── AdminActionLogView
+│   ├── SystemLogView
+│   ├── AdminDashboardView
+│   └── SystemHealthView
+├── notification_views.py      # Notification and broadcast management - send system-wide and targeted notifications (1 classes)
+│   └── BroadcastMessageView
+├── payment_views.py           # Payment and refund administration - handle refund requests and payment operations (2 classes)
+│   ├── AdminRefundsView
+│   └── ProcessRefundView
+├── station_views.py           # Station operations and management - control station maintenance, commands and configurations (3 classes)
+│   ├── AdminStationsView
+│   ├── ToggleMaintenanceView
+│   └── SendRemoteCommandView
+└── user_management_views.py   # User administration operations - manage user accounts, status, and wallet operations (4 classes)
+    ├── AdminUserListView
+    ├── AdminUserDetailView
+    ├── UpdateUserStatusView
+    └── AddUserBalanceView
+
+Total: 7 files, 24 view classes

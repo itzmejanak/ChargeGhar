@@ -1,9 +1,5 @@
 api/payments/views/
 ├── __init__.py                # Router merge
-├── admin_views.py             # Admin refund management - approve and reject refunds (3 classes)
-│   ├── AdminRefundRequestsView
-│   ├── AdminApproveRefundView
-│   └── AdminRejectRefundView
 ├── core_views.py              # Core payment functionality - transactions, packages, and methods (4 classes)
 │   ├── TransactionListView
 │   ├── RentalPackageListView
@@ -17,4 +13,4 @@ api/payments/views/
     ├── WalletBalanceView
     └── PaymentCancelView
 
-Total: 4 files, 12 view classes
+Total: 3 files, 9 view classes

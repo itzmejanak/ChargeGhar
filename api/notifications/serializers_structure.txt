@@ -1,4 +1,4 @@
-api/notifications/serializers.py          # Single file (392 lines)
+api/notifications/serializers.py          # Single file (396 lines)
 ├── Authentication Serializers
 │   └── FCMTokenSerializer
 ├── Notification Serializers

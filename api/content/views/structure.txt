@@ -1,14 +1,5 @@
 api/content/views/
 ├── __init__.py                # Router merge
-├── admin_views.py             # Admin management - content pages and analytics (8 classes)
-│   ├── AdminContentPagesView
-│   ├── AdminContentAnalyticsView
-│   ├── AdminFAQView
-│   ├── AdminFAQDetailView
-│   ├── AdminContactInfoView
-│   ├── AdminContactInfoDetailView
-│   ├── AdminBannerView
-│   └── AdminBannerDetailView
 ├── app_views.py               # App-related functionality - version check and content search (1 classes)
 │   └── ContentSearchView
 ├── dynamic_content_views.py   # Dynamic content - contact info, FAQ, and banners (3 classes)
@@ -20,4 +11,4 @@ api/content/views/
     ├── PrivacyPolicyView
     └── AboutView
 
-Total: 4 files, 15 view classes
+Total: 3 files, 7 view classes

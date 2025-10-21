@@ -1,4 +1,4 @@
-api/points/serializers.py          # Single file (415 lines)
+api/points/serializers.py          # Single file (339 lines)
 ├── User Serializers
 │   ├── UserPointsSerializer
 │   ├── UserReferralCodeResponseSerializer
@@ -14,25 +14,17 @@ api/points/serializers.py          # Single file (415 lines)
 │   ├── ReferralClaimSerializer
 │   ├── PointsHistoryFilterSerializer
 │   ├── PointsSummarySerializer
-│   ├── PointsAdjustmentSerializer
-│   ├── ReferralAnalyticsSerializer
 │   ├── PointsLeaderboardListSerializer
 │   ├── PointsLeaderboardDetailSerializer
-│   ├── BulkPointsAwardSerializer
 │   ├── PointsHistoryResponseSerializer
 │   ├── PointsSummaryResponseSerializer
 │   ├── ReferralValidationResponseSerializer
 │   ├── ReferralClaimResponseSerializer
 │   ├── PointsLeaderboardResponseSerializer
-│   ├── PointsAdjustmentResponseSerializer
-│   ├── BulkPointsAwardResponseSerializer
-│   ├── ReferralAnalyticsResponseSerializer
 │   ├── PointsHistoryDataSerializer
 │   └── ReferralCodeDataSerializer
 └── Other Serializers
     ├── ValidationDataSerializer
-    ├── ClaimDataSerializer
-    ├── AdjustmentDataSerializer
-    └── BulkAwardDataSerializer
+    └── ClaimDataSerializer
 
-Total: 1 file, 31 serializers (4 categories)
+Total: 1 file, 23 serializers (4 categories)

@@ -104,7 +104,7 @@ Total: 4 files, 4 service classes, 22 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/rentals/serializers.py          # Single file (600 lines)
+api/rentals/serializers.py          # Single file (612 lines)
 └── Rental Serializers
     ├── RentalPackageListSerializer
     ├── RentalListSerializer

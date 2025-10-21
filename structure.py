@@ -6,7 +6,7 @@ Generates detailed structure documentation for views, services, and serializers
 Usage:
     python structure.py --list                     # List all apps
     python structure.py --app users                # Show users app structure
-    python structure.py --app users --dir views    # Show only views
+    python structure.py --app users --dir views / services    # Show only views / services
     python structure.py --app users --save         # Save to files
     python structure.py --all                      # Generate for all apps
 """

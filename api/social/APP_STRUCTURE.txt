@@ -10,14 +10,11 @@ api/social/views/
 │   ├── UserAchievementsView
 │   ├── UnlockAchievementView
 │   └── BulkUnlockAchievementView
-├── admin_views.py             # Admin management - achievement creation and analytics (2 classes)
-│   ├── AdminAchievementsView
-│   └── AdminSocialAnalyticsView
 └── social_views.py            # Social features - leaderboard and user statistics (2 classes)
     ├── LeaderboardView
     └── SocialStatsView
 
-Total: 3 files, 7 view classes
+Total: 2 files, 5 view classes
 
 ⚙️  SERVICES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -88,7 +85,7 @@ Total: 5 files, 5 service classes, 18 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/social/serializers.py          # Single file (484 lines)
+api/social/serializers.py          # Single file (373 lines)
 ├── User Serializers
 │   ├── UserAchievementSerializer
 │   ├── UserLeaderboardSerializer
@@ -99,16 +96,11 @@ api/social/serializers.py          # Single file (484 lines)
 │   ├── LeaderboardEntryListSerializer
 │   ├── LeaderboardEntryDetailSerializer
 │   ├── LeaderboardFilterSerializer
-│   ├── AchievementAnalyticsSerializer
 │   ├── ClaimAchievementResponseSerializer
 │   ├── BulkClaimResponseSerializer
 │   ├── LeaderboardResponseSerializer
-│   ├── SocialStatsResponseSerializer
-│   ├── AchievementCreateResponseSerializer
-│   └── AchievementAnalyticsResponseSerializer
+│   └── SocialStatsResponseSerializer
 └── Other Serializers
-    ├── AchievementCreateSerializer
-    ├── AchievementUpdateSerializer
     ├── SocialStatsSerializer
     ├── BulkClaimSerializer
     ├── FailedClaimSerializer
@@ -116,4 +108,4 @@ api/social/serializers.py          # Single file (484 lines)
     ├── BulkClaimDataSerializer
     └── LeaderboardDataSerializer
 
-Total: 1 file, 23 serializers (3 categories)
+Total: 1 file, 18 serializers (3 categories)

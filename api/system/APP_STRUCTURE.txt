@@ -13,14 +13,13 @@ api/system/views/
 ├── app_updates_views.py       # App updates and version history (2 classes)
 │   ├── AppUpdatesView
 │   └── AppUpdatesSinceView
-├── config_views.py            # Configuration management (2 classes)
-│   ├── PublicConfigView
-│   └── AdminConfigView
+├── config_views.py            # Configuration management (1 classes)
+│   └── PublicConfigView
 └── country_views.py           # Country operations and search (2 classes)
     ├── CountryListView
     └── CountrySearchView
 
-Total: 4 files, 9 view classes
+Total: 4 files, 8 view classes
 
 ⚙️  SERVICES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -102,15 +101,13 @@ Total: 6 files, 6 service classes, 23 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/system/serializers.py          # Single file (209 lines)
+api/system/serializers.py          # Single file (176 lines)
 ├── Utility Serializers
 │   ├── CountryListSerializer
-│   ├── AppConfigListSerializer
 │   ├── AppVersionCheckResponseSerializer
 │   └── AppUpdateListSerializer
 └── Other Serializers
     ├── CountrySerializer
-    ├── AppConfigSerializer
     ├── AppConfigPublicSerializer
     ├── AppVersionSerializer
     ├── AppVersionCheckSerializer
@@ -118,4 +115,4 @@ api/system/serializers.py          # Single file (209 lines)
     ├── AppHealthSerializer
     └── AppInitDataSerializer
 
-Total: 1 file, 12 serializers (2 categories)
+Total: 1 file, 10 serializers (2 categories)

@@ -32,7 +32,10 @@ api/payments/services/
 │       ├── get_user_refunds()
 │       ├── approve_refund()
 │       ├── get_pending_refunds()
-│       └── reject_refund()
+│       ├── reject_refund()
+│       ├── _process_refund_payment()
+│       ├── get_refund_by_id()
+│       └── get_refunds_by_status()
 ├── rental_payment.py              # Service operations
 │   └── RentalPaymentService
 │       ├── process_rental_payment()
@@ -49,4 +52,4 @@ api/payments/services/
         ├── get_wallet_balance()
         └── get_wallet_balance()
 
-Total: 7 files, 7 service classes, 34 methods
+Total: 7 files, 7 service classes, 37 methods

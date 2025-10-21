@@ -6,8 +6,6 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 api/users/views/
 ├── __init__.py                # Router merge
-├── admin_views.py             # Admin user management views (1 classes)
-│   └── UserViewSet
 ├── auth_views.py              # Authentication and OTP views (9 classes)
 │   ├── OTPRequestView
 │   ├── OTPVerifyView
@@ -31,7 +29,7 @@ api/users/views/
     ├── SocialAuthErrorView
     └── DebugHeadersView
 
-Total: 4 files, 20 view classes
+Total: 3 files, 19 view classes
 
 ⚙️  SERVICES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -92,7 +90,7 @@ Total: 4 files, 4 service classes, 18 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/users/serializers.py          # Single file (344 lines)
+api/users/serializers.py          # Single file (258 lines)
 ├── Authentication Serializers
 │   ├── UserLoginSerializer
 │   ├── OTPRequestSerializer
@@ -103,12 +101,10 @@ api/users/serializers.py          # Single file (344 lines)
 │   └── UserDeviceSerializer
 └── User Serializers
     ├── UserRegistrationSerializer
-    ├── UserListSerializer
     ├── UserSerializer
-    ├── UserDetailSerializer
     ├── UserBasicSerializer
     ├── UserAnalyticsSerializer
     ├── UserWalletResponseSerializer
     └── UserFilterSerializer
 
-Total: 1 file, 14 serializers (3 categories)
+Total: 1 file, 12 serializers (3 categories)

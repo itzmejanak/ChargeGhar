@@ -6,10 +6,6 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 api/payments/views/
 ├── __init__.py                # Router merge
-├── admin_views.py             # Admin refund management - approve and reject refunds (3 classes)
-│   ├── AdminRefundRequestsView
-│   ├── AdminApproveRefundView
-│   └── AdminRejectRefundView
 ├── core_views.py              # Core payment functionality - transactions, packages, and methods (4 classes)
 │   ├── TransactionListView
 │   ├── RentalPackageListView
@@ -23,7 +19,7 @@ api/payments/views/
     ├── WalletBalanceView
     └── PaymentCancelView
 
-Total: 4 files, 12 view classes
+Total: 3 files, 9 view classes
 
 ⚙️  SERVICES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -61,7 +57,10 @@ api/payments/services/
 │       ├── get_user_refunds()
 │       ├── approve_refund()
 │       ├── get_pending_refunds()
-│       └── reject_refund()
+│       ├── reject_refund()
+│       ├── _process_refund_payment()
+│       ├── get_refund_by_id()
+│       └── get_refunds_by_status()
 ├── rental_payment.py              # Service operations
 │   └── RentalPaymentService
 │       ├── process_rental_payment()
@@ -78,11 +77,11 @@ api/payments/services/
         ├── get_wallet_balance()
         └── get_wallet_balance()
 
-Total: 7 files, 7 service classes, 34 methods
+Total: 7 files, 7 service classes, 37 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/payments/serializers.py          # Single file (408 lines)
+api/payments/serializers.py          # Single file (395 lines)
 ├── User Serializers
 │   └── UserTransactionHistorySerializer
 ├── Payment Serializers
@@ -99,9 +98,7 @@ api/payments/serializers.py          # Single file (408 lines)
 │   ├── PaymentOptionsResponseSerializer
 │   ├── RefundSerializer
 │   ├── RefundRequestSerializer
-│   ├── PaymentStatusSerializer
-│   ├── RefundActionSerializer
-│   └── RefundRejectSerializer
+│   └── PaymentStatusSerializer
 ├── Rental Serializers
 │   └── RentalPackageSerializer
 └── Other Serializers
@@ -109,4 +106,4 @@ api/payments/serializers.py          # Single file (408 lines)
     ├── PayDueSerializer
     └── VerifyTopupSerializer
 
-Total: 1 file, 21 serializers (4 categories)
+Total: 1 file, 19 serializers (4 categories)

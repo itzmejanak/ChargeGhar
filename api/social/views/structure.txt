@@ -4,11 +4,8 @@ api/social/views/
 │   ├── UserAchievementsView
 │   ├── UnlockAchievementView
 │   └── BulkUnlockAchievementView
-├── admin_views.py             # Admin management - achievement creation and analytics (2 classes)
-│   ├── AdminAchievementsView
-│   └── AdminSocialAnalyticsView
 └── social_views.py            # Social features - leaderboard and user statistics (2 classes)
     ├── LeaderboardView
     └── SocialStatsView
 
-Total: 3 files, 7 view classes
+Total: 2 files, 5 view classes

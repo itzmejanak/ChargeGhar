@@ -1,4 +1,4 @@
-api/payments/serializers.py          # Single file (408 lines)
+api/payments/serializers.py          # Single file (395 lines)
 ├── User Serializers
 │   └── UserTransactionHistorySerializer
 ├── Payment Serializers
@@ -15,9 +15,7 @@ api/payments/serializers.py          # Single file (408 lines)
 │   ├── PaymentOptionsResponseSerializer
 │   ├── RefundSerializer
 │   ├── RefundRequestSerializer
-│   ├── PaymentStatusSerializer
-│   ├── RefundActionSerializer
-│   └── RefundRejectSerializer
+│   └── PaymentStatusSerializer
 ├── Rental Serializers
 │   └── RentalPackageSerializer
 └── Other Serializers
@@ -25,4 +23,4 @@ api/payments/serializers.py          # Single file (408 lines)
     ├── PayDueSerializer
     └── VerifyTopupSerializer
 
-Total: 1 file, 21 serializers (4 categories)
+Total: 1 file, 19 serializers (4 categories)
