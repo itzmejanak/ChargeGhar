@@ -148,3 +148,21 @@ EMAIL_USE_TLS = getenv('EMAIL_USE_TLS', 'TRUE').lower() == 'true'
 EMAIL_HOST_USER = getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = getenv('DEFAULT_FROM_EMAIL')
+
+# ========================================
+# IoT System Integration Settings
+# ========================================
+
+# Shared secret for request signature validation (MUST match Java config)
+IOT_SYSTEM_SIGNATURE_SECRET = getenv(
+    'IOT_SYSTEM_SIGNATURE_SECRET',
+    'ChargeGhar-SystemSecret-TrustKey2025!'
+)
+
+# IP whitelist for IoT system (optional but recommended)
+IOT_SYSTEM_ALLOWED_IPS = [
+    ip.strip() for ip in getenv('IOT_SYSTEM_ALLOWED_IPS', '127.0.0.1,213.210.21.113').split(',')
+]
+
+# IoT system timeout settings
+IOT_SYSTEM_SIGNATURE_TIMEOUT = int(getenv('IOT_SYSTEM_SIGNATURE_TIMEOUT', 300))  # 5 minutes

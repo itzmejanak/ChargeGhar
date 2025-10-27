@@ -34,7 +34,7 @@ services:
 
   db:
     <<: *common
-    image: postgres:latest
+    image: postgres:16
     restart: unless-stopped
     environment:
       POSTGRES_INITDB_ARGS: --auth=md5

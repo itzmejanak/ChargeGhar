@@ -14,6 +14,7 @@ from .station_service import StationService
 from .station_favorite_service import StationFavoriteService
 from .station_issue_service import StationIssueService
 from .power_bank_service import PowerBankService
+from .station_sync_service import StationSyncService
 
 
 # Backward compatibility - all services available at package level
@@ -22,4 +23,5 @@ __all__ = [
     "StationFavoriteService",
     "StationIssueService",
     "StationService",
+    "StationSyncService",
 ]

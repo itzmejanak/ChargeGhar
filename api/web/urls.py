@@ -67,6 +67,7 @@ urlpatterns = [
     # API app includes
     path("api/", include("api.users.urls")),
     path("api/", include("api.stations.urls")),
+    path("api/", include("api.stations.internal_urls")),  # Internal IoT endpoints
     path("api/", include("api.notifications.urls")),
     path("api/", include("api.payments.urls")),
     path("api/", include("api.points.urls")),
