@@ -175,7 +175,17 @@ class StationSyncService(CRUDService):
                 
                 # Update signal strength and wifi info if available
                 if device_data.get('signal_strength'):
-                    station.hardware_info['signal_strength'] = int(device_data['signal_strength'])
+                    signal_str = str(device_data['signal_strength'])
+                    try:
+                        # Handle various formats: "CSQ:28", "RSSI:-65", "28", etc.
+                        if ':' in signal_str:
+                            signal_value = int(signal_str.split(':')[1].strip())
+                        else:
+                            signal_value = int(signal_str)
+                        station.hardware_info['signal_strength'] = signal_value
+                    except (ValueError, IndexError) as e:
+                        self.log_warning(f"Invalid signal_strength format: '{signal_str}', error: {e}")
+                        station.hardware_info['signal_strength'] = 0
                 
                 if device_data.get('wifi_ssid'):
                     station.hardware_info['wifi_ssid'] = device_data['wifi_ssid']
