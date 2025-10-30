@@ -15,67 +15,30 @@ from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
 from api.common.decorators import log_api_call
 from api.common.serializers import BaseResponseSerializer
-from api.system.services import (
-    AppDataService,
-    AppVersionService,
-    AppHealthService
-)
+from api.system.services import AppHealthService, AppVersionService
 from api.system.serializers import (
-    AppInitDataSerializer,
+    AppHealthSerializer,
+    AppVersionSerializer,
     AppVersionCheckSerializer,
-    AppVersionCheckResponseSerializer,
-    AppHealthSerializer
+    AppVersionCheckResponseSerializer
 )
 
 app_info_router = CustomViewRouter()
 logger = logging.getLogger(__name__)
 
-@app_info_router.register(r"app/init-data", name="app-init-data")
-class AppInitDataView(GenericAPIView, BaseAPIView):
-    """Get app initialization data"""
-    serializer_class = AppInitDataSerializer
-    permission_classes = [AllowAny]
-    
-    @extend_schema(
-        tags=["App"],
-        summary="Get App Initialization Data",
-        description="Returns initial data needed when app starts (config, features, etc.)",
-        operation_id="api_app_init_data_retrieve",
-    )
-    @log_api_call()
-    def get(self, request: Request) -> Response:
-        """Get app initialization data"""
-        def operation():
-            service = AppDataService()
-            init_data = service.get_app_initialization_data()
-            return init_data
-        
-        return self.handle_service_operation(
-            operation,
-            "App initialization data retrieved successfully",
-            "Failed to retrieve app initialization data"
-        )
-
-
 # ============================================================================
 # App Version Views
 # ============================================================================
-@app_info_router.register(r"app/versionCheck", name="app-version-check")
+@app_info_router.register(r"app/version/check", name="app-version-check")
 @extend_schema(
     tags=["App"],
     summary="Check App Version",
-    description="Returns the latest app version with real-time update check.",
-    examples=[
-        OpenApiExample(
-            "Version Check Request",
-            value={"platform": "android", "current_version": "1.0.0"},
-            request_only=True
-        )
-    ],
-    responses={200: BaseResponseSerializer}
+    description="Check if app update is available for user's current version",
+    request=AppVersionCheckSerializer,
+    responses={200: AppVersionCheckResponseSerializer}
 )
 class AppVersionCheckView(GenericAPIView, BaseAPIView):
-    """Check for app updates with real-time data"""
+    """Check for app updates"""
     serializer_class = AppVersionCheckSerializer
     permission_classes = [AllowAny]
     
@@ -92,7 +55,6 @@ class AppVersionCheckView(GenericAPIView, BaseAPIView):
             service = AppVersionService()
             update_info = service.check_version_update(platform, current_version)
             
-            # Use response serializer for consistent format
             response_serializer = AppVersionCheckResponseSerializer(update_info)
             return response_serializer.data
         

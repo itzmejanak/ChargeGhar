@@ -9,11 +9,10 @@ from api.common.routers import CustomViewRouter
 from .country_views import country_router
 from .app_info_views import app_info_router
 from .app_updates_views import app_updates_router
-from .config_views import config_router
 
 # Merge all sub-routers
 router = CustomViewRouter()
 
-for sub_router in [country_router, app_info_router, app_updates_router, config_router]:
+for sub_router in [country_router, app_info_router, app_updates_router]:
     router._paths.extend(sub_router._paths)
     router._drf_router.registry.extend(sub_router._drf_router.registry)

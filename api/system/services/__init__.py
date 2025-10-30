@@ -15,13 +15,10 @@ from .app_config_service import AppConfigService
 from .app_version_service import AppVersionService
 from .app_update_service import AppUpdateService
 from .app_health_service import AppHealthService
-from .app_data_service import AppDataService
-
 
 # Backward compatibility - all services available at package level
 __all__ = [
     "AppConfigService",
-    "AppDataService",
     "AppHealthService",
     "AppUpdateService",
     "AppVersionService",

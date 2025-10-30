@@ -72,3 +72,157 @@ class AppConfigService(CRUDService):
                 public_configs[config.key] = config.value
         
         return public_configs
+    
+    # Admin methods
+    def get_all_configs(self) -> Dict[str, Any]:
+        """Get all configurations (admin can see sensitive ones too)"""
+        try:
+            configs = self.model.objects.filter(is_active=True).order_by('key')
+            return {
+                config.key: {
+                    'value': config.value,
+                    'description': config.description,
+                    'is_public': not any(keyword in config.key.lower() 
+                                       for keyword in ['secret', 'password', 'key', 'token', 'url']),
+                    'created_at': config.created_at,
+                    'updated_at': config.updated_at
+                }
+                for config in configs
+            }
+        except Exception as e:
+            self.handle_service_error(e, "Failed to get all configs")
+    
+    def create_config(self, key: str, value: str, description: str = None, 
+                     is_public: bool = False, admin_user=None) -> AppConfig:
+        """Create new configuration (Admin)"""
+        try:
+            config = self.model.objects.create(
+                key=key,
+                value=str(value),
+                description=description,
+                is_active=True
+            )
+            
+            # Clear cache
+            cache.delete(f"app_config_{key}")
+            
+            # Log admin action
+            if admin_user:
+                from api.admin.models import AdminActionLog
+                AdminActionLog.objects.create(
+                    admin_user=admin_user,
+                    action_type='CREATE_CONFIG',
+                    target_model='AppConfig',
+                    target_id=str(config.id),
+                    changes={
+                        'key': key,
+                        'value': value,
+                        'description': description
+                    },
+                    description=f"Created config: {key}",
+                    ip_address="127.0.0.1",
+                    user_agent="Admin Panel"
+                )
+            
+            self.log_info(f"Configuration created: {key}")
+            return config
+            
+        except Exception as e:
+            self.handle_service_error(e, f"Failed to create config {key}")
+    
+    def update_config(self, config_id: str = None, key: str = None, value: str = None, 
+                     description: str = None, is_public: bool = None, admin_user=None) -> AppConfig:
+        """Update configuration (Admin)"""
+        try:
+            if config_id:
+                config = self.model.objects.get(id=config_id)
+            elif key:
+                config = self.model.objects.get(key=key)
+            else:
+                raise ValueError("Either config_id or key is required")
+            
+            old_values = {
+                'value': config.value,
+                'description': config.description
+            }
+            
+            if value is not None:
+                config.value = str(value)
+            if description is not None:
+                config.description = description
+            
+            config.save()
+            
+            # Clear cache
+            cache.delete(f"app_config_{config.key}")
+            
+            # Log admin action
+            if admin_user:
+                from api.admin.models import AdminActionLog
+                AdminActionLog.objects.create(
+                    admin_user=admin_user,
+                    action_type='UPDATE_CONFIG',
+                    target_model='AppConfig',
+                    target_id=str(config.id),
+                    changes={
+                        'key': config.key,
+                        'old_value': old_values['value'],
+                        'new_value': config.value,
+                        'old_description': old_values['description'],
+                        'new_description': config.description
+                    },
+                    description=f"Updated config: {config.key}",
+                    ip_address="127.0.0.1",
+                    user_agent="Admin Panel"
+                )
+            
+            self.log_info(f"Configuration updated: {config.key}")
+            return config
+            
+        except self.model.DoesNotExist:
+            raise ValueError("Configuration not found")
+        except Exception as e:
+            self.handle_service_error(e, "Failed to update config")
+    
+    def delete_config(self, config_id: str = None, key: str = None, admin_user=None) -> str:
+        """Delete configuration (Admin)"""
+        try:
+            if config_id:
+                config = self.model.objects.get(id=config_id)
+            elif key:
+                config = self.model.objects.get(key=key)
+            else:
+                raise ValueError("Either config_id or key is required")
+            
+            config_key = config.key
+            
+            # Log admin action before deletion
+            if admin_user:
+                from api.admin.models import AdminActionLog
+                AdminActionLog.objects.create(
+                    admin_user=admin_user,
+                    action_type='DELETE_CONFIG',
+                    target_model='AppConfig',
+                    target_id=str(config.id),
+                    changes={
+                        'key': config.key,
+                        'value': config.value,
+                        'description': config.description
+                    },
+                    description=f"Deleted config: {config.key}",
+                    ip_address="127.0.0.1",
+                    user_agent="Admin Panel"
+                )
+            
+            # Clear cache
+            cache.delete(f"app_config_{config.key}")
+            
+            config.delete()
+            
+            self.log_info(f"Configuration deleted: {config_key}")
+            return config_key
+            
+        except self.model.DoesNotExist:
+            raise ValueError("Configuration not found")
+        except Exception as e:
+            self.handle_service_error(e, "Failed to delete config")

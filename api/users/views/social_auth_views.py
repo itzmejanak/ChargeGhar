@@ -164,36 +164,5 @@ class SocialAuthErrorView(GenericAPIView, BaseAPIView):
             success_status=status.HTTP_400_BAD_REQUEST
         )
 
-@social_router.register(r"auth/debug/headers", name="auth-debug-headers")
-@extend_schema(
-    tags=["App"],
-    summary="Debug Headers",
-    description="Show request headers for debugging",
-    responses={200: BaseResponseSerializer}
-)
-class DebugHeadersView(GenericAPIView, BaseAPIView):
-    permission_classes = [AllowAny]
-    
-    @log_api_call()
-    def get(self, request: Request) -> Response:
-        """Show request headers for debugging"""
-        def operation():
-            headers = dict(request.META)
-            filtered_headers = {k: v for k, v in headers.items() if k.startswith('HTTP_')}
-            
-            return {
-                'success': True,
-                'data': {
-                    'headers': filtered_headers,
-                    'is_secure': request.is_secure(),
-                    'scheme': request.scheme,
-                    'host': request.get_host(),
-                }
-            }
-        
-        return self.handle_service_operation(
-            operation,
-            "Headers retrieved successfully",
-            "Failed to retrieve headers"
-        )
+
 

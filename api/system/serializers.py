@@ -32,27 +32,22 @@ class CountryListSerializer(serializers.ModelSerializer):
 # ============================================================================
 # App Config Serializers
 # ============================================================================
-class AppConfigPublicSerializer(serializers.ModelSerializer):
-    """Public serializer for app configs (only non-sensitive data)"""
+class AppConfigSerializer(serializers.ModelSerializer):
+    """Serializer for app configs with sensitive data filtering"""
     
     class Meta:
         model = AppConfig
-        fields = ['key', 'value', 'description']
+        fields = ['id', 'key', 'value', 'description', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class AppConfigAdminSerializer(serializers.ModelSerializer):
+    """Admin serializer for app configs (shows sensitive data to admins)"""
     
-    def to_representation(self, instance):
-        """Filter out sensitive configuration keys"""
-        data = super().to_representation(instance)
-        
-        # List of sensitive config keys that shouldn't be exposed
-        sensitive_keys = [
-            'secret_key', 'api_key', 'password', 'token',
-            'database_url', 'redis_url', 'private_key'
-        ]
-        
-        if any(sensitive in instance.key.lower() for sensitive in sensitive_keys):
-            data['value'] = '[HIDDEN]'
-        
-        return data
+    class Meta:
+        model = AppConfig
+        fields = ['id', 'key', 'value', 'description', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
 
 
 # ============================================================================
@@ -90,14 +85,13 @@ class AppVersionSerializer(serializers.ModelSerializer):
 
 class AppVersionCheckSerializer(serializers.Serializer):
     """Serializer for app version check requests"""
-    
     platform = serializers.ChoiceField(choices=AppVersion.PLATFORM_CHOICES)
     current_version = serializers.CharField(max_length=255)
     
     def validate_current_version(self, value):
         """Validate current version format"""
         import re
-        version_pattern = r'^\d+\.\d+\.\d+$'
+        version_pattern = r'^\d+\.\d+\.\d+$'  # e.g., 1.0.0
         if not re.match(version_pattern, value):
             raise serializers.ValidationError(
                 "Version must be in format X.Y.Z (e.g., 1.0.0)"
@@ -106,8 +100,7 @@ class AppVersionCheckSerializer(serializers.Serializer):
 
 
 class AppVersionCheckResponseSerializer(serializers.Serializer):
-    """MVP serializer for app version check responses"""
-    
+    """Response serializer for version check"""
     update_available = serializers.BooleanField()
     is_mandatory = serializers.BooleanField()
     latest_version = serializers.CharField()
@@ -119,7 +112,6 @@ class AppVersionCheckResponseSerializer(serializers.Serializer):
 # ============================================================================
 # App Update Serializers
 # ============================================================================
-
 class AppUpdateSerializer(serializers.ModelSerializer):
     """Serializer for AppUpdate model"""
     
@@ -153,7 +145,7 @@ class AppUpdateListSerializer(serializers.ModelSerializer):
 
 
 # ============================================================================
-# App Health & Initialization Serializers
+# App Health Serializers
 # ============================================================================
 class AppHealthSerializer(serializers.Serializer):
     """MVP serializer for app health check responses"""
@@ -165,12 +157,3 @@ class AppHealthSerializer(serializers.Serializer):
     cache = serializers.CharField()
     celery = serializers.CharField()
     uptime_seconds = serializers.IntegerField()
-
-
-class AppInitDataSerializer(serializers.Serializer):
-    """Serializer for app initialization data"""
-    configs = serializers.DictField()
-    countries = serializers.ListField()
-    constants = serializers.DictField()
-    app_version = serializers.CharField()
-    api_version = serializers.CharField()

@@ -140,22 +140,7 @@ class ReferralDetailSerializer(serializers.ModelSerializer):
 ReferralSerializer = ReferralDetailSerializer
 
 
-class ReferralCodeValidationSerializer(serializers.Serializer):
-    """Serializer for referral code validation"""
-    referral_code = serializers.CharField(max_length=10)
-    
-    def validate_referral_code(self, value):
-        try:
-            user = User.objects.get(referral_code=value)
-            
-            # Check if user is trying to refer themselves
-            request = self.context.get('request')
-            if request and request.user.is_authenticated and request.user == user:
-                raise serializers.ValidationError("You cannot refer yourself")
-            
-            return value
-        except User.DoesNotExist:
-            raise serializers.ValidationError("Invalid referral code")
+
 
 
 class ReferralClaimSerializer(serializers.Serializer):
@@ -302,14 +287,7 @@ class UserReferralCodeResponseSerializer(BaseResponseSerializer):
     data = ReferralCodeDataSerializer()
 
 
-class ReferralValidationResponseSerializer(BaseResponseSerializer):
-    """Response serializer for referral validation endpoint"""
-    class ValidationDataSerializer(serializers.Serializer):
-        valid = serializers.BooleanField()
-        referrer = serializers.CharField()
-        message = serializers.CharField()
-    
-    data = ValidationDataSerializer()
+
 
 
 class ReferralClaimResponseSerializer(BaseResponseSerializer):

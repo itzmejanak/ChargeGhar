@@ -15,7 +15,7 @@ from .faq_service import FAQService
 from .contact_info_service import ContactInfoService
 from .banner_service import BannerService
 
-from .content_search_service import ContentSearchService
+
 from .content_analytics_service import ContentAnalyticsService
 
 
@@ -26,6 +26,6 @@ __all__ = [
     "ContactInfoService",
     "ContentAnalyticsService",
     "ContentPageService",
-    "ContentSearchService",
+
     "FAQService",
 ]

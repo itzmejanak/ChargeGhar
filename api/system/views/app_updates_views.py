@@ -66,37 +66,3 @@ class AppUpdatesView(GenericAPIView, BaseAPIView):
             error_message="Failed to retrieve app updates"
         )
 
-@app_updates_router.register(r"app/updates/since/{version}", name="app-updates-since")
-@extend_schema(
-    tags=["App"],
-    summary="Updates Since Version",
-    description="Get all app updates released since the specified version",
-    parameters=[
-        OpenApiParameter("version", OpenApiTypes.STR, OpenApiParameter.PATH, description="Version string (e.g., '1.0.0')", required=True)
-    ],
-    responses={200: BaseResponseSerializer}
-)
-class AppUpdatesSinceView(GenericAPIView, BaseAPIView):
-    """Get app updates since a specific version"""
-    serializer_class = AppUpdateListSerializer
-    permission_classes = [AllowAny]
-    
-    @log_api_call()
-    def get(self, request: Request, version: str) -> Response:
-        """Get updates since specified version"""
-        def operation():
-            service = AppUpdateService()
-            updates = service.get_updates_since_version(version)
-            
-            serializer = self.get_serializer(updates, many=True)
-            return {
-                'updates': serializer.data,
-                'count': len(serializer.data),
-                'since_version': version
-            }
-        
-        return self.handle_service_operation(
-            operation,
-            success_message="Updates retrieved successfully",
-            error_message="Failed to retrieve updates since version"
-        )

@@ -47,86 +47,64 @@ class UserReferralCodeView(GenericAPIView, BaseAPIView):
 
 
 
-@referrals_router.register(r"referrals/validate", name="referrals-validate")
-class ReferralValidationView(GenericAPIView, BaseAPIView):
-    """Referral code validation endpoint"""
-    serializer_class = serializers.ReferralCodeValidationSerializer
 
-    @extend_schema(
-        tags=["Points"],
-        summary="Validate referral code",
-        description="Validate a referral code and return referrer information",
-        parameters=[
-            OpenApiParameter("code", str, description="Referral code to validate", required=True),
-        ],
-        responses={200: serializers.ReferralValidationResponseSerializer}
-    )
-    @log_api_call()
-    def get(self, request: Request) -> Response:
-        """Validate referral code"""
-        def operation():
-            referral_code = request.query_params.get('code')
-            if not referral_code:
-                raise ValueError("Referral code is required")
-
-            # Validate the code
-            serializer = serializers.ReferralCodeValidationSerializer(
-                data={'referral_code': referral_code},
-                context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-
-            # Get referrer information
-            service = ReferralService()
-            validation_result = service.validate_referral_code(
-                referral_code, 
-                request.user if request.user.is_authenticated else None
-            )
-
-            return {
-                'valid': validation_result['valid'],
-                'referrer': validation_result['inviter_username'],
-                'message': validation_result['message']
-            }
-
-        return self.handle_service_operation(
-            operation,
-            "Referral code validated successfully",
-            "Failed to validate referral code"
-        )
 
 
 
 @referrals_router.register(r"referrals/claim", name="referrals-claim")
 class ReferralClaimView(GenericAPIView, BaseAPIView):
-    """Referral claim endpoint"""
+    """Referral claim endpoint with built-in validation"""
     serializer_class = serializers.ReferralClaimSerializer
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
         tags=["Points"],
         summary="Claim referral rewards",
-        description="Claim referral rewards after completing first rental",
+        description="Validate and claim referral rewards after completing first rental. Includes validation logic.",
         request=serializers.ReferralClaimSerializer,
         responses={200: serializers.ReferralClaimResponseSerializer}
     )
     @log_api_call()
     def post(self, request: Request) -> Response:
-        """Claim referral rewards"""
+        """Claim referral rewards with validation"""
         def operation():
             serializer = self.get_serializer(data=request.data, context={'request': request})
             serializer.is_valid(raise_exception=True)
 
-            referral_id = serializer.validated_data['referral_id']
+            service = ReferralService()
+            
+            # If referral_code is provided instead of referral_id, validate and find the referral
+            if 'referral_code' in serializer.validated_data:
+                referral_code = serializer.validated_data['referral_code']
+                
+                # Validate the referral code first
+                validation_result = service.validate_referral_code(referral_code, request.user)
+                
+                if not validation_result['valid']:
+                    raise ValueError(validation_result['message'])
+                
+                # Find the referral record
+                from api.points.models import Referral
+                try:
+                    referral = Referral.objects.get(
+                        referral_code=referral_code,
+                        invitee=request.user,
+                        status='PENDING'
+                    )
+                    referral_id = str(referral.id)
+                except Referral.DoesNotExist:
+                    raise ValueError("No pending referral found for this code")
+            else:
+                referral_id = serializer.validated_data['referral_id']
 
             # Complete the referral
-            service = ReferralService()
             completion_result = service.complete_referral(str(referral_id))
 
             return {
                 'points_awarded': completion_result['invitee_points'],
                 'referral_id': completion_result['referral_id'],
-                'completed_at': completion_result['completed_at']
+                'completed_at': completion_result['completed_at'],
+                'validation_passed': True
             }
 
         return self.handle_service_operation(

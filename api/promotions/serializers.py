@@ -207,9 +207,7 @@ class CouponApplyResponseSerializer(BaseResponseSerializer):
     data = CouponApplyDataSerializer()
 
 
-class CouponValidationResponseSerializer(BaseResponseSerializer):
-    """Response serializer for coupon validation endpoint"""
-    data = CouponValidationSerializer()
+
 
 
 class MyCouponsResponseSerializer(BaseResponseSerializer):

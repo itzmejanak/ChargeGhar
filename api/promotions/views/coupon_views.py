@@ -26,22 +26,41 @@ class CouponApplyView(GenericAPIView, BaseAPIView):
     @extend_schema(
         tags=["Promotions"],
         summary="Apply Coupon Code",
-        description="Apply coupon code and receive points",
+        description="Validate and apply coupon code to receive points. Includes built-in validation.",
         operation_id="apply_coupon_code",
         responses={200: serializers.CouponApplyResponseSerializer}
     )
     @log_api_call()
     def post(self, request: Request) -> Response:
-        """Apply coupon code - REAL-TIME (no caching for financial operations)"""
+        """Apply coupon code with validation - REAL-TIME (no caching for financial operations)"""
         def operation():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
             coupon_service = CouponService()
+            
+            # First validate the coupon
+            validation_result = coupon_service.validate_coupon(
+                coupon_code=serializer.validated_data['coupon_code'],
+                user=request.user
+            )
+            
+            # If validation fails, return validation details
+            if not validation_result['can_use']:
+                return {
+                    'success': False,
+                    'validation': validation_result,
+                    'message': validation_result['message']
+                }
+            
+            # Apply the coupon
             result = coupon_service.apply_coupon(
                 coupon_code=serializer.validated_data['coupon_code'],
                 user=request.user
             )
+            
+            # Include validation details in response
+            result['validation'] = validation_result
             return result
         
         return self.handle_service_operation(
@@ -50,37 +69,7 @@ class CouponApplyView(GenericAPIView, BaseAPIView):
             "Failed to apply coupon"
         )
 
-@coupon_router.register(r"promotions/coupons/validate", name="promotion-coupons-validate")
-class CouponValidateView(GenericAPIView, BaseAPIView):
-    serializer_class = serializers.CouponApplySerializer
-    permission_classes = [IsAuthenticated]
-    
-    @extend_schema(
-        tags=["Promotions"],
-        summary="Validate Coupon Code",
-        description="Check if coupon code is valid and can be used",
-        operation_id="validate_coupon_code",
-        responses={200: serializers.CouponValidationResponseSerializer}
-    )
-    @log_api_call()
-    def post(self, request: Request) -> Response:
-        """Validate coupon code - REAL-TIME (always check current status)"""
-        def operation():
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            
-            coupon_service = CouponService()
-            result = coupon_service.validate_coupon(
-                coupon_code=serializer.validated_data['coupon_code'],
-                user=request.user
-            )
-            return result
-        
-        return self.handle_service_operation(
-            operation,
-            "Coupon validation completed",
-            "Failed to validate coupon"
-        )
+
 
 @coupon_router.register(r"promotions/coupons/my", name="promotion-coupons-my")
 class MyCouponsView(GenericAPIView, BaseAPIView):

@@ -174,32 +174,7 @@ class AppHealthSerializer(serializers.Serializer):
     services = serializers.DictField(required=False)
 
 
-class ContentSearchSerializer(serializers.Serializer):
-    """Serializer for content search"""
-    query = serializers.CharField(max_length=255)
-    content_type = serializers.ChoiceField(
-        choices=[
-            ('all', 'All Content'),
-            ('pages', 'Pages'),
-            ('faqs', 'FAQs'),
-            ('contact', 'Contact Info')
-        ],
-        default='all'
-    )
-    
-    def validate_query(self, value):
-        if len(value.strip()) < 3:
-            raise serializers.ValidationError("Search query must be at least 3 characters")
-        return value.strip()
 
-
-class ContentSearchResultSerializer(serializers.Serializer):
-    """Serializer for content search results"""
-    content_type = serializers.CharField()
-    title = serializers.CharField()
-    excerpt = serializers.CharField()
-    url = serializers.CharField(allow_null=True)
-    relevance_score = serializers.FloatField()
 
 
 class ContentAnalyticsSerializer(serializers.Serializer):

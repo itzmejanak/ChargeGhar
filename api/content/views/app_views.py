@@ -1,84 +1,11 @@
 """
-App-related functionality - version check and content search
+App-related functionality
 """
 import logging
 
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from drf_spectacular.types import OpenApiTypes
-from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework.request import Request
-
 from api.common.routers import CustomViewRouter
-from api.common.mixins import BaseAPIView
-from api.common.decorators import rate_limit, log_api_call
-from api.common.serializers import BaseResponseSerializer, PaginatedResponseSerializer
-from api.content import serializers
-from api.content.services import ContentSearchService
 
 app_router = CustomViewRouter()
 logger = logging.getLogger(__name__)
 
 
-@app_router.register("content/search", name="content-search")
-@extend_schema(
-    tags=["Content"],
-    summary="Content Search",
-    description="Search across all content types with rate limiting and pagination",
-    parameters=[
-        OpenApiParameter("query", OpenApiTypes.STR, description="Search query", required=True),
-        OpenApiParameter("content_type", OpenApiTypes.STR, description="Content type to search (all, pages, faqs, contact)"),
-        OpenApiParameter("page", OpenApiTypes.INT, description="Page number"),
-        OpenApiParameter("page_size", OpenApiTypes.INT, description="Items per page"),
-    ],
-    responses={200: PaginatedResponseSerializer}
-)
-class ContentSearchView(GenericAPIView, BaseAPIView):
-    """Content search endpoint with rate limiting"""
-    serializer_class = serializers.ContentSearchSerializer
-    permission_classes = [AllowAny]
-
-    @rate_limit(max_requests=10, window_seconds=60)  # Rate limit search
-    @log_api_call(include_request_data=True)  # Log search queries
-    def get(self, request: Request) -> Response:
-        """Search content with rate limiting and pagination"""
-        def operation():
-            # Validate search parameters
-            search_serializer = self.get_serializer(data=request.query_params)
-            search_serializer.is_valid(raise_exception=True)
-            
-            validated_data = search_serializer.validated_data
-            
-            service = ContentSearchService()
-            results = service.search_content(
-                query=validated_data['query'],
-                content_type=validated_data['content_type']
-            )
-
-            # Convert to queryset-like for pagination
-            from collections import namedtuple
-            
-            # Create mock queryset for pagination
-            Result = namedtuple('Result', ['content_type', 'title', 'excerpt', 'url', 'relevance_score'])
-            mock_results = [Result(**result) for result in results]
-            
-            # Use pagination mixin
-            paginated_data = self.paginate_response(
-                mock_results, 
-                request, 
-                serializer_class=serializers.ContentSearchResultSerializer
-            )
-            
-            return {
-                'query': validated_data['query'],
-                'content_type': validated_data['content_type'],
-                'results': paginated_data['results'],
-                'pagination': paginated_data['pagination']
-            }
-
-        return self.handle_service_operation(
-            operation,
-            success_message="Search results retrieved successfully",
-            error_message="Failed to search content"
-        )
