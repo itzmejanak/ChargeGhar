@@ -89,8 +89,28 @@ class ServiceHandlerMixin:
             
             # Handle different exception types
             from api.common.services.base import ServiceException
+            from rest_framework.exceptions import ValidationError
             
-            if isinstance(e, ServiceException):
+            if isinstance(e, ValidationError):
+                # Handle DRF validation errors (like missing required fields)
+                error_code = 'validation_error'
+                status_code = status.HTTP_400_BAD_REQUEST
+                
+                # Extract user-friendly error message
+                if hasattr(e, 'detail') and isinstance(e.detail, dict):
+                    # Get the first error message from the validation errors
+                    first_field = next(iter(e.detail.keys()))
+                    first_error = e.detail[first_field]
+                    if isinstance(first_error, list) and len(first_error) > 0:
+                        user_message = f"{first_field.replace('_', ' ').title()}: {first_error[0]}"
+                    else:
+                        user_message = str(first_error)
+                else:
+                    user_message = str(e)
+                
+                error_context = {'validation_errors': e.detail} if hasattr(e, 'detail') else None
+                
+            elif isinstance(e, ServiceException):
                 # NEW: Handle enhanced ServiceException with context
                 if hasattr(e, 'get_context_data'):
                     context_data = e.get_context_data()

@@ -3,6 +3,7 @@ Authentication and OTP views
 """
 import logging
 
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
@@ -12,13 +13,13 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
+
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
 from api.common.decorators import rate_limit, log_api_call
 from api.common.serializers import BaseResponseSerializer
+from api.common.services.base import ServiceException
 from api.users import serializers
 from api.users.models import User
 from api.users.services import AuthService, UserDeviceService
@@ -29,8 +30,8 @@ logger = logging.getLogger(__name__)
 @auth_router.register(r"auth/otp/request", name="auth-otp-request")
 @extend_schema(
     tags=["Authentication"],
-    summary="Request OTP",
-    description="Sends OTP via SMS or Email for registration or login",
+    summary="Request OTP (Auto-detects Login/Register)",
+    description="Automatically determines if user needs to login or register and sends appropriate OTP",
     responses={200: BaseResponseSerializer}
 )
 class OTPRequestView(GenericAPIView, BaseAPIView):
@@ -38,7 +39,6 @@ class OTPRequestView(GenericAPIView, BaseAPIView):
     permission_classes = [AllowAny]
     
     @log_api_call(include_request_data=True)
-    @log_api_call()
     def post(self, request: Request) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -46,21 +46,21 @@ class OTPRequestView(GenericAPIView, BaseAPIView):
         def operation():
             auth_service = AuthService()
             return auth_service.generate_otp(
-                identifier=serializer.validated_data['identifier'],
-                purpose=serializer.validated_data['purpose']
+                identifier=serializer.validated_data['identifier']
             )
         
         return self.handle_service_operation(
             operation,
             success_message="OTP sent successfully",
-            error_message="Failed to send OTP"
+            error_message="Failed to send OTP",
+            operation_context="OTP request"
         )
 
 @auth_router.register(r"auth/otp/verify", name="auth-otp-verify")
 @extend_schema(
     tags=["Authentication"],
     summary="Verify OTP",
-    description="Validates OTP and returns verification token for registration or login",
+    description="Verifies OTP and returns verification token for completing authentication",
     responses={200: BaseResponseSerializer}
 )
 class OTPVerifyView(GenericAPIView, BaseAPIView):
@@ -77,120 +77,125 @@ class OTPVerifyView(GenericAPIView, BaseAPIView):
             auth_service = AuthService()
             return auth_service.verify_otp(
                 identifier=serializer.validated_data['identifier'],
-                otp=serializer.validated_data['otp'],
-                purpose=serializer.validated_data['purpose']
+                otp=serializer.validated_data['otp']
             )
         
         return self.handle_service_operation(
             operation,
             success_message="OTP verified successfully",
-            error_message="Failed to verify OTP"
+            error_message="Failed to verify OTP",
+            operation_context="OTP verification"
         )
 
-@auth_router.register(r"auth/register", name="auth-register")
-@method_decorator(csrf_exempt, name='dispatch')
+@auth_router.register(r"auth/complete", name="auth-complete")
 @extend_schema(
     tags=["Authentication"],
-    summary="User Registration",
-    description="Creates new user account after OTP verification (no password required)",
-    responses={201: BaseResponseSerializer}
-)
-class RegisterView(GenericAPIView, BaseAPIView):
-    serializer_class = serializers.UserRegistrationSerializer
-    permission_classes = [AllowAny]
-    
-    @log_api_call(include_request_data=True)
-    def post(self, request: Request) -> Response:
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        def operation():
-            auth_service = AuthService()
-            return auth_service.register_user(
-                validated_data=serializer.validated_data,
-                request=request
-            )
-        
-        return self.handle_service_operation(
-            operation,
-            success_message="Registration successful",
-            error_message="Registration failed",
-            success_status=status.HTTP_201_CREATED
-        )
-
-@auth_router.register(r"auth/login", name="auth-login")
-@extend_schema(
-    tags=["Authentication"],
-    summary="User Login",
-    description="Completes login after OTP verification (no password required)",
+    summary="Complete Authentication",
+    description="Completes authentication - automatically handles login or registration based on verification token",
     responses={200: BaseResponseSerializer}
 )
-class LoginView(GenericAPIView, BaseAPIView):
-    serializer_class = serializers.UserLoginSerializer
+class AuthCompleteView(GenericAPIView, BaseAPIView):
+    """Authentication completion - handles both login and registration"""
+    serializer_class = serializers.AuthCompleteSerializer
     permission_classes = [AllowAny]
     
     @rate_limit(max_requests=5, window_seconds=300)  # 5 attempts per 5 minutes
     @log_api_call(include_request_data=True)
     def post(self, request: Request) -> Response:
+        """Complete authentication - login or register"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         def operation():
             auth_service = AuthService()
-            return auth_service.login_user(
-                validated_data=serializer.validated_data,
+            return auth_service.complete_auth(
+                identifier=serializer.validated_data['identifier'],
+                verification_token=str(serializer.validated_data['verification_token']),
+                username=serializer.validated_data.get('username'),
                 request=request
             )
         
         return self.handle_service_operation(
             operation,
-            success_message="Login successful",
-            error_message="Login failed"
+            success_message="Authentication completed successfully",
+            error_message="Authentication failed",
+            operation_context="Unified authentication completion"
         )
+
 
 @auth_router.register(r"auth/logout", name="auth-logout")
 @extend_schema(
     tags=["Authentication"],
     summary="User Logout",
-    description="Invalidates JWT and clears session",
+    description="Invalidates JWT refresh token and logs out user with enhanced error handling",
     responses={200: BaseResponseSerializer}
 )
 class LogoutView(GenericAPIView, BaseAPIView):
+    """Enhanced logout view with proper token blacklisting"""
     permission_classes = [IsAuthenticated]
-    serializer_class = serializers.UserLoginSerializer
+    serializer_class = serializers.LogoutSerializer
     
-    @log_api_call()
+    @log_api_call(include_request_data=True)
     def post(self, request: Request) -> Response:
         """Logout user and invalidate tokens"""
         def operation():
-            refresh_token = request.data.get('refresh_token')
-            if not refresh_token:
-                from api.common.services.base import ServiceException
-                raise ServiceException(
-                    detail='Refresh token is required',
-                    code='refresh_token_required'
-                )
+            # Validate request data
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
             
+            refresh_token = serializer.validated_data['refresh_token']
+            
+            # Use the service layer for logout logic (following project architecture)
             auth_service = AuthService()
             return auth_service.logout_user(
                 refresh_token=refresh_token,
+                user=request.user,
                 request=request
             )
         
         return self.handle_service_operation(
             operation,
             success_message="Logout successful",
-            error_message="Failed to logout"
+            error_message="Failed to logout",
+            operation_context="User logout"
         )
 
 @auth_router.register(r"auth/refresh", name="auth-refresh")
 @extend_schema(
     tags=["Authentication"],
-    summary="Refresh Token",
-    description="Refreshes JWT access token"
+    summary="Refresh JWT Access Token",
+    description="Refreshes JWT access token using a valid refresh token with enhanced error handling",
+    responses={200: BaseResponseSerializer}
 )
-class CustomTokenRefreshView(TokenRefreshView):
+class CustomTokenRefreshView(GenericAPIView, BaseAPIView):
+    """Enhanced token refresh view with proper error handling and logging"""
     serializer_class = TokenRefreshSerializer
+    permission_classes = [AllowAny]
+    
+    @rate_limit(max_requests=10, window_seconds=300)  # 10 refresh attempts per 5 minutes
+    @log_api_call(include_request_data=True)
+    def post(self, request: Request) -> Response:
+        """Refresh JWT access token"""
+        def operation():
+            # Validate refresh token
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            refresh_token = serializer.validated_data.get('refresh')
+            
+            # Use the service layer for token refresh logic (following project architecture)
+            auth_service = AuthService()
+            return auth_service.refresh_token(
+                refresh_token=refresh_token,
+                request=request
+            )
+        
+        return self.handle_service_operation(
+            operation,
+            success_message="Token refreshed successfully",
+            error_message="Failed to refresh token",
+            operation_context="Token refresh"
+        )
 
 
 @auth_router.register(r"auth/device", name="auth-device")

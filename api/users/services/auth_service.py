@@ -9,6 +9,7 @@ Date: 2025-10-18 22:53:34
 """
 from __future__ import annotations
 import uuid
+import logging
 from typing import Dict, Any
 from django.db import transaction
 from django.utils import timezone
@@ -24,6 +25,8 @@ from api.users.models import User, UserProfile, UserPoints, UserAuditLog
 from api.payments.models import Wallet
 from api.notifications.services import notify
 
+logger = logging.getLogger(__name__)
+
 class AuthService(BaseService):
     """Service for authentication operations"""
     
@@ -32,45 +35,33 @@ class AuthService(BaseService):
         self.otp_expiry_minutes = 5
         self.max_otp_attempts = 3
     
-    def _validate_otp_purpose(self, identifier: str, purpose: str) -> None:
-        """Validate OTP request based on purpose and user existence"""
-        # Check if user exists
-        user_exists = False
+    def _check_user_exists(self, identifier: str) -> bool:
+        """Check if user exists by identifier"""
         if '@' in identifier:
-            user_exists = User.objects.filter(email=identifier).exists()
+            return User.objects.filter(email=identifier).exists()
         else:
-            user_exists = User.objects.filter(phone_number=identifier).exists()
-        
-        # Validate based on purpose
-        if purpose == 'REGISTER':
-            if user_exists:
-                raise ServiceException(
-                    detail="User already exists. Use login instead.",
-                    code="user_already_exists"
-                )
-        elif purpose == 'LOGIN':
-            if not user_exists:
-                raise ServiceException(
-                    detail="User not found. Please register first.",
-                    code="user_not_found"
-                )
-        else:
-            raise ServiceException(
-                detail="Invalid purpose. Use 'REGISTER' or 'LOGIN'.",
-                code="invalid_purpose"
-            )
+            return User.objects.filter(phone_number=identifier).exists()
     
-    def generate_otp(self, identifier: str, purpose: str) -> Dict[str, Any]:
-        """Generate and send OTP"""
+
+    
+    def generate_otp(self, identifier: str) -> Dict[str, Any]:
+        """Generate and send OTP - automatically detects login vs register"""
         try:
-            # Validate purpose-based user existence
-            self._validate_otp_purpose(identifier, purpose)
+            # Auto-detect purpose based on user existence
+            user_exists = self._check_user_exists(identifier)
+            purpose = 'LOGIN' if user_exists else 'REGISTER'
             
             # Generate 6-digit OTP
             otp = generate_random_code(6, include_letters=False, include_numbers=True)
             
-            # Create cache key
-            cache_key = f"otp:{purpose}:{identifier}"
+            # Create unified cache key
+            cache_key = f"unified_otp:{identifier}"
+            otp_data = {
+                'otp': otp,
+                'purpose': purpose,
+                'identifier': identifier
+            }
+            
             attempts_key = f"otp_attempts:{identifier}"
             
             # Check rate limiting
@@ -78,26 +69,13 @@ class AuthService(BaseService):
             if attempts >= self.max_otp_attempts:
                 raise ServiceException(
                     detail="Too many OTP requests. Please try again later.",
-                    code="rate_limit_exceeded"
+                    code="rate_limit_exceeded",
+                    user_message="You've made too many OTP requests. Please wait before trying again."
                 )
             
             # Store OTP in cache
-            cache.set(cache_key, otp, timeout=self.otp_expiry_minutes * 60)
+            cache.set(cache_key, otp_data, timeout=self.otp_expiry_minutes * 60)
             cache.set(attempts_key, attempts + 1, timeout=3600)  # 1 hour
-            
-            # Determine OTP delivery method and template
-            is_email = '@' in identifier
-            'otp_email' if is_email else 'otp_sms'
-            
-            # Try to find existing user for notification
-            user = None
-            try:
-                if is_email:
-                    user = User.objects.get(email=identifier)
-                else:
-                    user = User.objects.get(phone_number=identifier)
-            except User.DoesNotExist:
-                pass  # User not found, will handle via direct service
             
             # Send OTP via universal OTP sender
             from api.notifications.services import send_otp
@@ -112,32 +90,59 @@ class AuthService(BaseService):
             )
             
             self.log_info(f"OTP generated for {identifier} - Purpose: {purpose}")
+            
             return {
-                'message': 'OTP sent successfully',
-                'expires_in': self.otp_expiry_minutes * 60
+                'message': f'OTP sent successfully for {purpose.lower()}',
+                'purpose': purpose,
+                'expires_in_minutes': self.otp_expiry_minutes,
+                'identifier': identifier
             }
             
+        except ServiceException:
+            raise
         except Exception as e:
-            self.handle_service_error(e, "Failed to generate OTP")
+            raise ServiceException(
+                detail="Failed to send OTP",
+                code="otp_send_failed",
+                context={'identifier': identifier, 'error': str(e)},
+                user_message="Unable to send OTP. Please try again."
+            )
     
-    def verify_otp(self, identifier: str, otp: str, purpose: str) -> Dict[str, Any]:
+    def verify_otp(self, identifier: str, otp: str) -> Dict[str, Any]:
         """Verify OTP and return verification token"""
         try:
-            cache_key = f"otp:{purpose}:{identifier}"
-            stored_otp = cache.get(cache_key)
+            # Check unified cache key
+            cache_key = f"unified_otp:{identifier}"
+            otp_data = cache.get(cache_key)
             
-            if not stored_otp or stored_otp != otp:
+            if not otp_data:
                 raise ServiceException(
-                    detail="Invalid or expired OTP",
-                    code="invalid_otp"
+                    detail="OTP expired or not found",
+                    code="otp_expired",
+                    user_message="OTP has expired. Please request a new one."
                 )
+            
+            # Verify OTP
+            if otp_data['otp'] != otp:
+                raise ServiceException(
+                    detail="Invalid OTP",
+                    code="invalid_otp",
+                    user_message="The OTP you entered is incorrect. Please try again."
+                )
+            
+            purpose = otp_data['purpose']
             
             # Generate verification token
             verification_token = str(uuid.uuid4())
-            token_key = f"verification_token:{purpose}:{identifier}"
             
-            # Store verification token (valid for 10 minutes)
-            cache.set(token_key, verification_token, timeout=600)
+            # Store verification token
+            token_key = f"unified_verification:{verification_token}"
+            token_data = {
+                'identifier': identifier,
+                'purpose': purpose,
+                'verified_at': timezone.now().isoformat()
+            }
+            cache.set(token_key, token_data, timeout=600)  # 10 minutes
             
             # Clear OTP from cache
             cache.delete(cache_key)
@@ -146,150 +151,366 @@ class AuthService(BaseService):
             
             return {
                 'verification_token': verification_token,
-                'message': 'OTP verified successfully'
+                'message': 'OTP verified successfully',
+                'purpose': purpose,
+                'identifier': identifier,
+                'expires_in_minutes': 10
             }
             
+        except ServiceException:
+            raise
         except Exception as e:
-            self.handle_service_error(e, "Failed to verify OTP")
+            raise ServiceException(
+                detail="Failed to verify OTP",
+                code="otp_verification_failed",
+                context={'identifier': identifier, 'error': str(e)},
+                user_message="Unable to verify OTP. Please try again."
+            )
     
-    def validate_verification_token(self, identifier: str, token: str, purpose: str) -> bool:
+    def validate_verification_token(self, identifier: str, token: str) -> bool:
         """Validate verification token"""
-        token_key = f"verification_token:{purpose}:{identifier}"
-        stored_token = cache.get(token_key)
-        return stored_token == token
+        token_key = f"unified_verification:{token}"
+        token_data = cache.get(token_key)
+        return token_data and token_data['identifier'] == identifier
+    
+    def complete_auth(self, identifier: str, verification_token: str, username: str = None, request=None) -> Dict[str, Any]:
+        """NEW: Unified authentication completion - handles both login and registration"""
+        try:
+            # Get verification data from unified token
+            token_key = f"unified_verification:{verification_token}"
+            token_data = cache.get(token_key)
+            
+            if not token_data:
+                raise ServiceException(
+                    detail="Verification token expired or invalid",
+                    code="verification_token_expired",
+                    user_message="Verification session has expired. Please start over."
+                )
+            
+            # Validate identifier matches
+            if token_data['identifier'] != identifier:
+                raise ServiceException(
+                    detail="Identifier mismatch",
+                    code="identifier_mismatch",
+                    user_message="Invalid verification session. Please start over."
+                )
+            
+            purpose = token_data['purpose']
+            
+            if purpose == 'REGISTER':
+                return self._handle_unified_registration(identifier, username, verification_token, request)
+            else:  # LOGIN
+                return self._handle_unified_login(identifier, verification_token, request)
+                
+        except ServiceException:
+            raise
+        except Exception as e:
+            raise ServiceException(
+                detail="Authentication failed",
+                code="auth_failed",
+                context={'identifier': identifier, 'error': str(e)},
+                user_message="Authentication failed. Please try again."
+            )
     
     @transaction.atomic
-    def register_user(self, validated_data: Dict[str, Any], request) -> Dict[str, Any]:
-        """Register new user"""
-        try:
-            identifier = validated_data['identifier']
-            
-            # Validate verification token
-            if not self.validate_verification_token(
-                identifier,
-                validated_data['verification_token'],
-                'REGISTER'
-            ):
-                raise ServiceException(
-                    detail="Invalid verification token",
-                    code="invalid_token"
-                )
-            
-            # Create user with OTP-based authentication (no password)
-            user = User.objects.create_user(
-                email=validated_data.get('email'),
-                phone_number=validated_data.get('phone_number'),
-                username=validated_data.get('username'),
+    def _handle_unified_registration(self, identifier: str, username: str, verification_token: str, request=None) -> Dict[str, Any]:
+        """Handle unified registration"""
+        if not username:
+            raise ServiceException(
+                detail="Username is required for registration",
+                code="username_required",
+                user_message="Please provide a username to complete registration."
             )
-            
-            # Set verification status
-            if validated_data.get('email'):
-                user.email_verified = True
-            if validated_data.get('phone_number'):
-                user.phone_verified = True
-            
-            # Generate referral code
-            user.referral_code = generate_unique_code("REF", 6)
-            user.save()
-            
-            # Create related objects
-            UserProfile.objects.create(user=user)
-            UserPoints.objects.create(user=user)
-            Wallet.objects.create(user=user)
-            
-            # Handle referral
-            if validated_data.get('referral_code'):
-                self._process_referral(user, validated_data['referral_code'])
-            
-            # Award signup points (after transaction commits)
-            from api.points.services import award_points
-            from api.system.services import AppConfigService
-            from django.db import transaction
-            
-            config_service = AppConfigService()
-            signup_points = int(config_service.get_config_cached('POINTS_SIGNUP', 50))
-            
-            # Schedule task after transaction commits to ensure user exists
-            transaction.on_commit(
-                lambda: award_points(user, signup_points, 'SIGNUP', 'New user signup bonus', async_send=True)
+        
+        # Check if user already exists (double-check)
+        if self._check_user_exists(identifier):
+            raise ServiceException(
+                detail="User already exists",
+                code="user_already_exists",
+                user_message="An account with this identifier already exists. Please login instead."
             )
-            
-            # Log audit
+        
+        # Create user data
+        is_email = '@' in identifier
+        user_data = {
+            'username': username,
+        }
+        
+        if is_email:
+            user_data['email'] = identifier
+        else:
+            user_data['phone_number'] = identifier
+        
+        # Create user
+        user = User.objects.create_user(**user_data)
+        
+        # Set verification status
+        if is_email:
+            user.email_verified = True
+        else:
+            user.phone_verified = True
+        
+        # Generate referral code
+        user.referral_code = generate_unique_code("REF", 6)
+        user.save()
+        
+        # Create related objects
+        UserProfile.objects.create(user=user)
+        UserPoints.objects.create(user=user)
+        Wallet.objects.create(user=user)
+        
+        # Award signup points (after transaction commits)
+        from api.points.services import award_points
+        from api.system.services import AppConfigService
+        
+        config_service = AppConfigService()
+        signup_points = int(config_service.get_config_cached('POINTS_SIGNUP', 50))
+        
+        transaction.on_commit(
+            lambda: award_points(user, signup_points, 'SIGNUP', 'New user signup bonus', async_send=True)
+        )
+        
+        # Log audit
+        if request:
             self._log_user_audit(user, 'CREATE', 'USER', str(user.id), request)
-
-            
-            
-            # Generate tokens
-            refresh = RefreshToken.for_user(user)
-            
-            self.log_info(f"User registered successfully: {user.username}")
-            
-            return {
-                'user_id': str(user.id),
-                'access_token': str(refresh.access_token),
-                'refresh_token': str(refresh),
-                'message': 'Registration successful'
+        
+        # Generate tokens
+        refresh = RefreshToken.for_user(user)
+        
+        # Clear verification token
+        token_key = f"unified_verification:{verification_token}"
+        cache.delete(token_key)
+        
+        self.log_info(f"User registered successfully via unified auth: {user.username} ({identifier})")
+        
+        return {
+            'message': 'Registration successful',
+            'user': {
+                'id': str(user.id),
+                'username': user.username,
+                'email': user.email,
+                'phone_number': user.phone_number,
+                'is_active': user.is_active
+            },
+            'tokens': {
+                'access': str(refresh.access_token),
+                'refresh': str(refresh)
             }
-            
-        except Exception as e:
-            self.handle_service_error(e, "Failed to register user")
+        }
     
-    def login_user(self, validated_data: Dict[str, Any], request) -> Dict[str, Any]:
-        """Login user with OTP verification"""
+    def _handle_unified_login(self, identifier: str, verification_token: str, request=None) -> Dict[str, Any]:
+        """Handle unified login"""
+        # Get user
         try:
-            identifier = validated_data['identifier']
+            if '@' in identifier:
+                user = User.objects.get(email=identifier)
+            else:
+                user = User.objects.get(phone_number=identifier)
+        except User.DoesNotExist:
+            raise ServiceException(
+                detail="User not found",
+                code="user_not_found",
+                user_message="No account found with this identifier. Please register first."
+            )
+        
+        # Check if user is active
+        if not user.is_active:
+            raise ServiceException(
+                detail="Account is deactivated",
+                code="account_deactivated",
+                user_message="Your account has been deactivated. Please contact support."
+            )
+        
+        # Update last login
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+        
+        # Generate tokens
+        refresh = RefreshToken.for_user(user)
+        
+        # Log audit
+        if request:
+            self._log_user_audit(user, 'LOGIN', 'USER', str(user.id), request)
+        
+        # Clear verification token
+        token_key = f"unified_verification:{verification_token}"
+        cache.delete(token_key)
+        
+        self.log_info(f"User logged in successfully via unified auth: {user.username} ({identifier})")
+        
+        return {
+            'message': 'Login successful',
+            'user': {
+                'id': str(user.id),
+                'username': user.username,
+                'email': user.email,
+                'phone_number': user.phone_number,
+                'is_active': user.is_active
+            },
+            'tokens': {
+                'access': str(refresh.access_token),
+                'refresh': str(refresh)
+            }
+        }
+    
+
+    
+    def logout_user(self, refresh_token: str, user: User, request=None) -> Dict[str, Any]:
+        """Enhanced logout user with comprehensive validation and error handling"""
+        try:
+            from rest_framework_simplejwt.tokens import RefreshToken
+            from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+            from django.utils import timezone
             
-            # Validate verification token
-            if not self.validate_verification_token(
-                identifier,
-                validated_data['verification_token'],
-                'LOGIN'
-            ):
+            # Validate and parse the refresh token
+            token = RefreshToken(refresh_token)
+            
+            # Verify token belongs to the authenticated user
+            token_user_id = token.payload.get('user_id')
+            if str(token_user_id) != str(user.id):
                 raise ServiceException(
-                    detail="Invalid verification token",
-                    code="invalid_token"
+                    detail="Token does not belong to authenticated user",
+                    code="token_user_mismatch",
+                    user_message="Invalid token for this user session."
                 )
             
-            user = validated_data['user']
-            
-            # Update last login
-            user.last_login = timezone.now()
-            user.save(update_fields=['last_login'])
-            
-            # Generate tokens
-            refresh = RefreshToken.for_user(user)
-            
-            # Log audit
-            self._log_user_audit(user, 'LOGIN', 'USER', str(user.id), request)
-            
-            self.log_info(f"User logged in successfully: {user.get_identifier()}")
-            
-            return {
-                'user_id': str(user.id),
-                'access_token': str(refresh.access_token),
-                'refresh_token': str(refresh),
-                'message': 'Login successful'
-            }
-            
-        except Exception as e:
-            self.handle_service_error(e, "Failed to login user")
-    
-    def logout_user(self, refresh_token: str, request) -> Dict[str, Any]:
-        """Logout user"""
-        try:
-            token = RefreshToken(refresh_token)
+            # Blacklist the refresh token to prevent reuse
             token.blacklist()
             
-            # Log audit
-            if request.user.is_authenticated:
-                self._log_user_audit(request.user, 'LOGOUT', 'USER', str(request.user.id), request)
+            # Log successful logout with audit trail
+            self._log_user_audit(
+                user=user,
+                action='LOGOUT',
+                entity_type='AUTH',
+                entity_id=str(user.id),
+                request=request,
+                additional_data={'token_blacklisted': True, 'method': 'manual_logout'}
+            )
             
-            self.log_info(f"User logged out successfully")
+            logger.info(f"User logged out successfully: {user.username}")
             
-            return {'message': 'Logout successful'}
+            return {
+                'message': 'Logout successful',
+                'user_id': str(user.id),
+                'logged_out_at': timezone.now().isoformat()
+            }
             
+        except TokenError as e:
+            raise ServiceException(
+                detail=f"Token error during logout: {str(e)}",
+                code="invalid_refresh_token",
+                context={'token_error': str(e)},
+                user_message="Invalid refresh token. You may already be logged out."
+            )
+        
+        except InvalidToken as e:
+            raise ServiceException(
+                detail=f"Invalid token format: {str(e)}",
+                code="invalid_refresh_token",
+                context={'invalid_token': str(e)},
+                user_message="Invalid refresh token format. You may already be logged out."
+            )
+        
         except Exception as e:
-            self.handle_service_error(e, "Failed to logout user")
+            # Handle any other unexpected errors
+            logger.error(f"Unexpected error during logout for user {user.id}: {str(e)}")
+            raise ServiceException(
+                detail=f"Unexpected logout error: {str(e)}",
+                code="logout_failed",
+                context={'error': str(e)},
+                user_message="Logout failed due to an unexpected error. Please try again."
+            )
+    
+    def refresh_token(self, refresh_token: str, request=None) -> Dict[str, Any]:
+        """Enhanced token refresh with comprehensive validation and error handling"""
+        try:
+            from rest_framework_simplejwt.tokens import RefreshToken
+            from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+            
+            # Validate and refresh the token
+            refresh = RefreshToken(refresh_token)
+            
+            # Get user from token
+            user_id = refresh.payload.get('user_id')
+            if not user_id:
+                raise ServiceException(
+                    detail="Invalid refresh token - no user ID",
+                    code="invalid_refresh_token",
+                    user_message="Invalid refresh token. Please login again."
+                )
+            
+            # Verify user still exists and is active
+            try:
+                user = User.objects.get(id=user_id, is_active=True)
+            except User.DoesNotExist:
+                raise ServiceException(
+                    detail="User not found or inactive",
+                    code="user_not_found",
+                    user_message="User account not found or deactivated. Please login again."
+                )
+            
+            # Generate new access token
+            new_access_token = str(refresh.access_token)
+            
+            # Log successful token refresh with audit trail
+            self._log_user_audit(
+                user=user,
+                action='TOKEN_REFRESH',
+                entity_type='AUTH',
+                entity_id=str(user.id),
+                request=request,
+                additional_data={'token_refreshed': True, 'method': 'refresh_endpoint'}
+            )
+            
+            logger.info(f"Token refreshed successfully for user: {user.username}")
+            
+            return {
+                'access': new_access_token,
+                'refresh': str(refresh),  # Return the same refresh token
+                'user': {
+                    'id': str(user.id),
+                    'username': user.username,
+                    'email': user.email,
+                    'is_active': user.is_active
+                },
+                'expires_in': 3600,  # 1 hour (adjust based on your JWT settings)
+                'token_type': 'Bearer'
+            }
+            
+        except TokenError as e:
+            # Handle specific token errors including blacklisted tokens
+            error_message = str(e)
+            if "blacklisted" in error_message.lower():
+                user_message = "This session has been logged out. Please login again."
+                detail = f"Token is blacklisted: {error_message}"
+            else:
+                user_message = "Invalid or expired refresh token. Please login again."
+                detail = f"Token error: {error_message}"
+                
+            raise ServiceException(
+                detail=detail,
+                code="invalid_refresh_token",
+                context={'token_error': error_message},
+                user_message=user_message
+            )
+        
+        except InvalidToken as e:
+            raise ServiceException(
+                detail=f"Invalid token: {str(e)}",
+                code="invalid_refresh_token", 
+                context={'invalid_token': str(e)},
+                user_message="Invalid refresh token format. Please login again."
+            )
+        
+        except Exception as e:
+            # Handle any other unexpected errors
+            logger.error(f"Unexpected error during token refresh: {str(e)}")
+            raise ServiceException(
+                detail=f"Unexpected token refresh error: {str(e)}",
+                code="token_refresh_failed",
+                context={'error': str(e)},
+                user_message="Token refresh failed due to an unexpected error. Please try again."
+            )
     
     def _process_referral(self, user: User, referral_code: str) -> None:
         """Process referral code"""

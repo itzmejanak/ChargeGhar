@@ -8,87 +8,9 @@ from drf_spectacular.utils import extend_schema_field
 from api.users.models import User, UserProfile, UserKYC, UserDevice, UserPoints
 from api.common.utils.helpers import validate_phone_number, mask_sensitive_data
 
-
-class UserRegistrationSerializer(serializers.Serializer):
-    """Serializer for OTP-based user registration"""
-    identifier = serializers.CharField(help_text="Email or phone number")
-    username = serializers.CharField(max_length=150, required=False, allow_blank=True)
-    referral_code = serializers.CharField(max_length=10, required=False, allow_blank=True)
-    verification_token = serializers.CharField(write_only=True)
-    
-    def validate(self, attrs):
-        identifier = attrs['identifier']
-        
-        # Validate identifier and split into email/phone
-        if '@' in identifier:
-            attrs['email'] = identifier
-            attrs['phone_number'] = None
-        else:
-            if not validate_phone_number(identifier):
-                raise serializers.ValidationError("Invalid phone number format")
-            attrs['email'] = None
-            attrs['phone_number'] = identifier
-        
-        # Generate username if not provided
-        if not attrs.get('username'):
-            if attrs.get('email'):
-                attrs['username'] = attrs['email'].split('@')[0]
-            else:
-                attrs['username'] = f"user_{identifier[-4:]}"
-        
-        return attrs
-    
-    def validate_identifier(self, value):
-        """Validate that identifier doesn't already exist"""
-        if '@' in value:
-            if User.objects.filter(email=value).exists():
-                raise serializers.ValidationError("Email already registered")
-        else:
-            if User.objects.filter(phone_number=value).exists():
-                raise serializers.ValidationError("Phone number already registered")
-        return value
-    
-    def validate_username(self, value):
-        if value and User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Username already exists")
-        return value
-
-
-class UserLoginSerializer(serializers.Serializer):
-    """Serializer for OTP-based user login"""
-    identifier = serializers.CharField(help_text="Email or phone number")
-    verification_token = serializers.CharField(write_only=True)
-    
-    def validate(self, attrs):
-        identifier = attrs.get('identifier')
-        
-        if not identifier:
-            raise serializers.ValidationError("Identifier is required")
-        
-        # Try to find user by email or phone
-        user = None
-        if '@' in identifier:
-            try:
-                user = User.objects.get(email=identifier)
-            except User.DoesNotExist:
-                raise serializers.ValidationError("User not found")
-        else:
-            try:
-                user = User.objects.get(phone_number=identifier)
-            except User.DoesNotExist:
-                raise serializers.ValidationError("User not found")
-        
-        if user.status != 'ACTIVE':
-            raise serializers.ValidationError("Account is not active")
-        
-        attrs['user'] = user
-        return attrs
-
-
 class OTPRequestSerializer(serializers.Serializer):
-    """Serializer for OTP request"""
+    """Serializer for OTP request - automatically detects login vs register"""
     identifier = serializers.CharField(help_text="Email or phone number")
-    purpose = serializers.ChoiceField(choices=['REGISTER', 'LOGIN'])
     
     def validate_identifier(self, value):
         # Basic validation for email or phone format
@@ -110,7 +32,42 @@ class OTPVerificationSerializer(serializers.Serializer):
     """Serializer for OTP verification"""
     identifier = serializers.CharField(help_text="Email or phone number")
     otp = serializers.CharField(max_length=6, min_length=6)
-    purpose = serializers.ChoiceField(choices=['REGISTER', 'LOGIN'])
+
+
+class AuthCompleteSerializer(serializers.Serializer):
+    """Serializer for authentication completion"""
+    identifier = serializers.CharField(help_text="Email or phone number")
+    verification_token = serializers.UUIDField(help_text="Token from OTP verification")
+    username = serializers.CharField(
+        max_length=150, 
+        required=False,
+        help_text="Required only for new user registration"
+    )
+    
+    def validate_username(self, value):
+        """Validate username format and uniqueness"""
+        if value:
+            # Check format
+            if len(value.strip()) < 3:
+                raise serializers.ValidationError("Username must be at least 3 characters")
+            
+            # Check uniqueness
+            from api.users.models import User
+            if User.objects.filter(username=value.strip()).exists():
+                raise serializers.ValidationError("Username already exists")
+        
+        return value.strip() if value else value
+
+
+class LogoutSerializer(serializers.Serializer):
+    """Serializer for user logout"""
+    refresh_token = serializers.CharField(help_text="JWT refresh token to blacklist")
+    
+    def validate_refresh_token(self, value):
+        """Validate refresh token format"""
+        if not value or not value.strip():
+            raise serializers.ValidationError("Refresh token is required")
+        return value.strip()
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

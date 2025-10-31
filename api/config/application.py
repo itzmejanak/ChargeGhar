@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "axes",
     "silk",
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",  # JWT token blacklisting
     "drf_spectacular",
     # Django Allauth
     "allauth",
