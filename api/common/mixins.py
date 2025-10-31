@@ -38,9 +38,10 @@ class StandardResponseMixin:
         message: str = "Error", 
         errors: Optional[Dict[str, Any]] = None, 
         status_code: int = status.HTTP_400_BAD_REQUEST,
-        error_code: str = "error"
+        error_code: str = "error",
+        context: Optional[Dict[str, Any]] = None  # NEW: Add context parameter
     ) -> Response:
-        """Create standardized error response"""
+        """Enhanced error response with context"""
         response_data = {
             'success': False,
             'error': {
@@ -52,6 +53,10 @@ class StandardResponseMixin:
         if errors:
             response_data['error']['details'] = errors
         
+        # NEW: Add context if provided
+        if context:
+            response_data['error']['context'] = context
+            
         return Response(response_data, status=status_code)
 
 
@@ -63,9 +68,10 @@ class ServiceHandlerMixin:
         operation_func,
         success_message: str = "Operation successful",
         error_message: str = "Operation failed",
-        success_status: int = status.HTTP_200_OK
+        success_status: int = status.HTTP_200_OK,
+        operation_context: str = None  # NEW: Add operation context
     ) -> Response:
-        """Handle service operation with standardized error handling"""
+        """Enhanced service operation handler with context"""
         try:
             result = operation_func()
             
@@ -85,24 +91,34 @@ class ServiceHandlerMixin:
             from api.common.services.base import ServiceException
             
             if isinstance(e, ServiceException):
-                error_code = getattr(e, 'code', 'service_error')
+                # NEW: Handle enhanced ServiceException with context
+                if hasattr(e, 'get_context_data'):
+                    context_data = e.get_context_data()
+                    error_code = context_data.get('error_code', 'service_error')
+                    user_message = context_data.get('user_message', str(e))
+                    error_context = context_data.get('context')
+                else:
+                    error_code = getattr(e, 'default_code', 'service_error')
+                    user_message = str(e)
+                    error_context = None
+                
                 status_code = getattr(e, 'status_code', status.HTTP_400_BAD_REQUEST)
-                # Use the actual exception message instead of generic error_message
-                actual_message = str(e) or error_message
             else:
                 error_code = 'internal_error'
                 status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-                actual_message = error_message
+                user_message = error_message
+                error_context = None
             
             if hasattr(self, 'error_response'):
                 return self.error_response(
-                    message=actual_message,
+                    message=user_message,
                     status_code=status_code,
-                    error_code=error_code
+                    error_code=error_code,
+                    context={'operation': operation_context} if operation_context else error_context
                 )
             else:
                 return Response(
-                    {'error': actual_message},
+                    {'error': user_message},
                     status=status_code
                 )
 

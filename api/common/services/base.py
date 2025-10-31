@@ -12,10 +12,32 @@ logger = logging.getLogger(__name__)
 
 
 class ServiceException(APIException):
-    """Base exception for service layer"""
+    """Enhanced service exception with context and user messages"""
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Service operation failed"
     default_code = "service_error"
+    
+    def __init__(self, detail=None, code=None, status_code=None, 
+                 context=None, user_message=None):
+        # New additions for enhanced error handling
+        self.context = context or {}
+        self.user_message = user_message or detail
+        
+        # Keep existing behavior
+        if status_code:
+            self.status_code = status_code
+        if code:
+            self.default_code = code
+            
+        super().__init__(detail)
+    
+    def get_context_data(self):
+        """Get additional context for error response"""
+        return {
+            'error_code': self.default_code,
+            'context': self.context,
+            'user_message': self.user_message
+        }
 
 
 class BaseService:

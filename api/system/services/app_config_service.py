@@ -94,8 +94,20 @@ class AppConfigService(CRUDService):
     
     def create_config(self, key: str, value: str, description: str = None, 
                      is_public: bool = False, admin_user=None) -> AppConfig:
-        """Create new configuration (Admin)"""
+        """Create new configuration with enhanced error handling"""
         try:
+            # Check for duplicates first with enhanced error
+            if self.model.objects.filter(key=key).exists():
+                from api.common.services.base import ServiceException
+                from rest_framework import status
+                raise ServiceException(
+                    detail=f"Configuration with key '{key}' already exists",
+                    code="config_already_exists",
+                    status_code=status.HTTP_409_CONFLICT,
+                    context={'existing_key': key},
+                    user_message=f"A configuration with the key '{key}' already exists. Please use a different key."
+                )
+            
             config = self.model.objects.create(
                 key=key,
                 value=str(value),
@@ -127,8 +139,24 @@ class AppConfigService(CRUDService):
             self.log_info(f"Configuration created: {key}")
             return config
             
+        except ServiceException:
+            # Re-raise ServiceException as-is (it already has enhanced context)
+            raise
         except Exception as e:
-            self.handle_service_error(e, f"Failed to create config {key}")
+            # Enhanced error handling for unexpected errors
+            from api.common.services.base import ServiceException
+            from rest_framework import status
+            raise ServiceException(
+                detail="Failed to create configuration",
+                code="config_creation_failed",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                context={
+                    'config_key': key,
+                    'admin_user_id': str(admin_user.id) if admin_user else None,
+                    'original_error': str(e)
+                },
+                user_message=f"Unable to create configuration '{key}'. Please try again."
+            )
     
     def update_config(self, config_id: str = None, key: str = None, value: str = None, 
                      description: str = None, is_public: bool = None, admin_user=None) -> AppConfig:

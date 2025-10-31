@@ -49,7 +49,8 @@ class AdminConfigView(GenericAPIView, BaseAPIView):
         return self.handle_service_operation(
             operation,
             success_message="All configurations retrieved successfully",
-            error_message="Failed to retrieve configurations"
+            error_message="Failed to retrieve configurations",
+            operation_context="Admin config retrieval"
         )
     
     @log_api_call()
@@ -84,7 +85,9 @@ class AdminConfigView(GenericAPIView, BaseAPIView):
         return self.handle_service_operation(
             operation,
             success_message="Configuration created successfully",
-            error_message="Failed to create configuration"
+            error_message="Failed to create configuration",
+            success_status=status.HTTP_201_CREATED,
+            operation_context="Admin config creation"
         )
     
     @log_api_call()
@@ -121,7 +124,8 @@ class AdminConfigView(GenericAPIView, BaseAPIView):
         return self.handle_service_operation(
             operation,
             success_message="Configuration updated successfully",
-            error_message="Failed to update configuration"
+            error_message="Failed to update configuration",
+            operation_context="Admin config update"
         )
     
     @log_api_call()
@@ -149,5 +153,6 @@ class AdminConfigView(GenericAPIView, BaseAPIView):
         return self.handle_service_operation(
             operation,
             success_message="Configuration deleted successfully",
-            error_message="Failed to delete configuration"
+            error_message="Failed to delete configuration",
+            operation_context="Admin config deletion"
         )
