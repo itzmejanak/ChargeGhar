@@ -102,7 +102,8 @@ class SocialAuthSuccessView(GenericAPIView, BaseAPIView):
             if not request.user.is_authenticated:
                 raise ServiceException(
                     detail="User not authenticated via social login",
-                    code="not_authenticated"
+                    code="not_authenticated",
+                    user_message="Social authentication failed. Please try again."
                 )
             
             user = request.user
@@ -120,6 +121,7 @@ class SocialAuthSuccessView(GenericAPIView, BaseAPIView):
             from api.users.serializers import UserSerializer
             user_serializer = UserSerializer(user)
             
+            # Always return JSON for API consistency
             return {
                 'user_id': str(user.id),
                 'access_token': access_token,
@@ -128,6 +130,7 @@ class SocialAuthSuccessView(GenericAPIView, BaseAPIView):
                 'message': 'Social authentication successful'
             }
         
+        # Always use service operation handler for consistent JSON responses
         return self.handle_service_operation(
             operation,
             success_message="Social authentication successful",
@@ -151,18 +154,17 @@ class SocialAuthErrorView(GenericAPIView, BaseAPIView):
             error = request.GET.get('error', 'unknown_error')
             error_description = request.GET.get('error_description', 'Social authentication failed')
             
-            return {
-                'error': error,
-                'error_description': error_description,
-                'message': 'Social authentication failed'
-            }
+            # Always return JSON error for consistency
+            raise ServiceException(
+                detail=f"Social authentication failed: {error_description}",
+                code=error,
+                user_message="Social authentication failed. Please try again."
+            )
         
+        # Always use service operation handler for consistent JSON responses
         return self.handle_service_operation(
             operation,
             success_message="Error details retrieved",
             error_message="Failed to get error details",
             success_status=status.HTTP_400_BAD_REQUEST
         )
-
-
-
