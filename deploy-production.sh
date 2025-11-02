@@ -139,6 +139,7 @@ sed -i 's|ENVIRONMENT=local|ENVIRONMENT=production|' .env
 sed -i 's|DJANGO_DEBUG=true|DJANGO_DEBUG=false|' .env
 sed -i 's|CELERY_TASK_ALWAYS_EAGER=true|CELERY_TASK_ALWAYS_EAGER=false|' .env
 sed -i 's|CELERY_TASK_EAGER_PROPAGATES=true|CELERY_TASK_EAGER_PROPAGATES=false|' .env
+sed -i 's|CELERY_TASK_IGNORE_RESULT=true|CELERY_TASK_IGNORE_RESULT=false|' .env
 # Update service names to match production docker-compose
 sed -i 's|POSTGRES_HOST=pgbouncer|POSTGRES_HOST=powerbank_db|' .env
 sed -i 's|POSTGRES_HOST=db|POSTGRES_HOST=powerbank_db|' .env

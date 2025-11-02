@@ -61,7 +61,7 @@ app.conf.beat_schedule = {
     # Critical system tasks (every minute)
     "check-overdue-rentals": {
         "task": "api.rentals.tasks.check_overdue_rentals",
-        "schedule": 60.0,  # Every minute
+        "schedule": 300.0,  # Every 5 minutes (reduced from 1 minute)
     },
     "check-offline-stations": {
         "task": "api.stations.tasks.check_offline_stations",
@@ -162,7 +162,7 @@ app.conf.beat_schedule = {
     },
     "generate-admin-dashboard-report": {
         "task": "api.admin.tasks.generate_admin_dashboard_report",
-        "schedule": 300.0,  # Every 5 minutes
+        "schedule": 1800.0,  # Every 30 minutes (reduced from 5 minutes)
     },
     "generate-revenue-report": {
         "task": "api.admin.tasks.generate_revenue_report",
@@ -199,6 +199,7 @@ app.conf.task_soft_time_limit = 240  # 4 minutes soft limit
 app.conf.worker_prefetch_multiplier = 1
 app.conf.task_acks_late = True
 app.conf.worker_disable_rate_limits = False
+app.conf.worker_max_tasks_per_child = 100  # Restart worker after 100 tasks to prevent memory leaks
 
 # Connection settings for better reliability
 app.conf.broker_connection_retry_on_startup = True
@@ -207,9 +208,15 @@ app.conf.broker_connection_max_retries = 10
 
 # Error handling
 app.conf.task_reject_on_worker_lost = True
-app.conf.task_ignore_result = False
+# task_ignore_result is set in api/config/celery.py via environment variable
 app.conf.result_expires = 3600  # 1 hour
 
-# Monitoring
-app.conf.worker_send_task_events = True
-app.conf.task_send_sent_event = True
+# Monitoring (disabled to reduce memory usage)
+app.conf.worker_send_task_events = False
+app.conf.task_send_sent_event = False
+
+# Memory management
+app.conf.worker_max_memory_per_child = 200000  # 200MB per worker process
+
+# Production settings (simplified)
+app.conf.worker_hijack_root_logger = False  # Don't interfere with Django logging

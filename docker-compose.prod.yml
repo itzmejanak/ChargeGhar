@@ -115,7 +115,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
-    command: python -m celery -A tasks.app worker --loglevel=INFO
+    command: python -m celery -A tasks.app worker --loglevel=INFO --concurrency=2 --max-tasks-per-child=100 --prefetch-multiplier=1
     depends_on:
       powerbank_api:
         condition: service_healthy
@@ -125,6 +125,24 @@ services:
           memory: 512M
         reservations:
           memory: 256M
+
+  powerbank_celery_beat:
+    <<: *common
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    command: python -m celery -A tasks.app beat --loglevel=INFO --schedule=/tmp/celerybeat-schedule
+    depends_on:
+      powerbank_redis:
+        condition: service_healthy
+      powerbank_rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
 
   powerbank_migrations:
     <<: *common
@@ -159,3 +177,4 @@ volumes:
   powerbank_redis_data:
   powerbank_rabbitmq_data:
   static_volume:
+  celery_beat_data:
