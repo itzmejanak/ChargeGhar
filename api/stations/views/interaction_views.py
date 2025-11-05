@@ -21,19 +21,20 @@ interaction_router = CustomViewRouter()
 logger = logging.getLogger(__name__)
 
 @interaction_router.register("stations/<str:serial_number>/favorite", name="station-favorite")
+@extend_schema(
+    tags=["Stations"],
+    summary="Toggle Station Favorite",
+    description="Add or remove station from user's favorites",
+    parameters=[
+        OpenApiParameter("serial_number", OpenApiTypes.STR, OpenApiParameter.PATH, description="Station serial number", required=True)
+    ],
+    request=None,  # Explicitly no request body
+    responses={200: serializers.StationFavoriteResponseSerializer}
+)
 class StationFavoriteView(GenericAPIView, BaseAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = serializers.StationListSerializer  # For schema generation
+    # Remove serializer_class to prevent request body in Swagger
     
-    @extend_schema(
-        tags=["Stations"],
-        summary="Toggle Station Favorite",
-        description="Add or remove station from user's favorites",
-        parameters=[
-            OpenApiParameter("serial_number", OpenApiTypes.STR, OpenApiParameter.PATH, description="Station serial number", required=True)
-        ],
-        responses={200: serializers.StationFavoriteResponseSerializer}
-    )
     @log_api_call()
     def post(self, request: Request, serial_number: str) -> Response:
         """Toggle station favorite status"""

@@ -246,11 +246,17 @@ class StationDetailResponseSerializer(serializers.Serializer):
     data = StationDetailSerializer()
 
 
+class StationFavoriteToggleDataSerializer(serializers.Serializer):
+    """Data serializer for favorite toggle response"""
+    is_favorite = serializers.BooleanField(help_text="Whether station is now in favorites")
+    message = serializers.CharField(help_text="Status message")
+
+
 class StationFavoriteResponseSerializer(serializers.Serializer):
     """Response serializer for station favorite operations"""
     success = serializers.BooleanField()
     message = serializers.CharField()
-    data = serializers.DictField()
+    data = StationFavoriteToggleDataSerializer()
 
 
 class StationIssueResponseSerializer(serializers.Serializer):
