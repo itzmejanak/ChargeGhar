@@ -49,7 +49,25 @@ class UserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
         
-        return self.create_user(identifier, **extra_fields)
+        user = self.create_user(identifier, **extra_fields)
+        
+        # Create related objects for admin user (same as regular user registration)
+        from api.payments.models import Wallet
+        from api.admin.models import AdminProfile
+        
+        UserProfile.objects.get_or_create(user=user, defaults={'is_profile_complete': False})
+        UserPoints.objects.get_or_create(user=user, defaults={'current_points': 0, 'total_points': 0})
+        Wallet.objects.get_or_create(user=user, defaults={'balance': 0, 'currency': 'NPR', 'is_active': True})
+        AdminProfile.objects.get_or_create(
+            user=user, 
+            defaults={
+                'role': 'super_admin',
+                'created_by': user,
+                'is_active': True
+            }
+        )
+        
+        return user
 
 
 class User(AbstractBaseUser, PermissionsMixin):

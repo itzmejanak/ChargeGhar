@@ -34,6 +34,42 @@ class AdminProfile(BaseModel):
     @property
     def is_super_admin(self):
         return self.role == self.RoleChoices.SUPER_ADMIN
+    
+    def can_be_deactivated(self) -> tuple[bool, str]:
+        """Check if this admin profile can be deactivated"""
+        if self.role == self.RoleChoices.SUPER_ADMIN:
+            # Count active super admins
+            active_super_admins = AdminProfile.objects.filter(
+                role=self.RoleChoices.SUPER_ADMIN,
+                is_active=True
+            ).count()
+            
+            if active_super_admins <= 1:
+                return False, "Cannot deactivate the last active super admin"
+        
+        return True, ""
+    
+    def can_change_role(self, new_role: str, changed_by: 'AdminProfile') -> tuple[bool, str]:
+        """Check if role can be changed"""
+        # Only super admin can change roles
+        if changed_by.role != self.RoleChoices.SUPER_ADMIN:
+            return False, "Only super admin can change admin roles"
+        
+        # Only super admin can create/promote to super admin
+        if new_role == self.RoleChoices.SUPER_ADMIN and changed_by.role != self.RoleChoices.SUPER_ADMIN:
+            return False, "Only super admin can promote to super admin"
+        
+        # Can't demote last super admin
+        if self.role == self.RoleChoices.SUPER_ADMIN and new_role != self.RoleChoices.SUPER_ADMIN:
+            active_super_admins = AdminProfile.objects.filter(
+                role=self.RoleChoices.SUPER_ADMIN,
+                is_active=True
+            ).count()
+            
+            if active_super_admins <= 1:
+                return False, "Cannot demote the last super admin"
+        
+        return True, ""
 
 
 class AdminActionLog(BaseModel):

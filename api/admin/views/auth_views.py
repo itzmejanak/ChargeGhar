@@ -3,25 +3,21 @@ Admin authentication and profile management - handles admin login and profile CR
 """
 import logging
 
-from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.admin import serializers
 from api.admin.models import AdminProfile
+from api.admin.services import AdminProfileService
 from api.common.decorators import log_api_call
 from api.common.mixins import BaseAPIView
 from api.common.routers import CustomViewRouter
 from api.common.serializers import BaseResponseSerializer
-from api.common.services.base import ServiceException
-from api.users.models import User
-from api.users.permissions import IsStaffPermission
-from api.users.services import AuthService
+from api.users.permissions import IsStaffPermission, IsSuperAdminPermission
 
 auth_router = CustomViewRouter()
 logger = logging.getLogger(__name__)
@@ -41,7 +37,7 @@ class AdminLoginView(GenericAPIView, BaseAPIView):
     
     @log_api_call(include_request_data=True)
     def post(self, request: Request) -> Response:
-        """Admin login with email/password - generates tokens via AuthService"""
+        """Admin login with email/password - generates tokens via AdminProfileService"""
         def operation():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -49,48 +45,12 @@ class AdminLoginView(GenericAPIView, BaseAPIView):
             email = serializer.validated_data['email']
             password = serializer.validated_data['password']
             
-            # Find admin user
-            try:
-                user = User.objects.get(email=email, is_staff=True, is_active=True)
-            except User.DoesNotExist:
-                raise ServiceException(
-                    detail="Admin user not found or inactive",
-                    code="admin_not_found"
-                )
+            # Use service for authentication
+            service = AdminProfileService()
+            result = service.authenticate_admin(email, password, request)
             
-            # Check password (only works for admin users)
-            if not user.check_password(password):
-                raise ServiceException(
-                    detail="Invalid password",
-                    code="invalid_password"
-                )
-            
-            # Update last login
-            user.last_login = timezone.now()
-            user.save(update_fields=['last_login'])
-            
-            # Generate JWT tokens (same as regular auth flow)
-            refresh = RefreshToken.for_user(user)
-            
-            # Log audit using AuthService
-            auth_service = AuthService()
-            auth_service._log_user_audit(user, 'LOGIN', 'USER', str(user.id), request)
-            
-            logger.info(f"Admin logged in successfully: {user.email}")
-            
-            return {
-                'user_id': str(user.id),
-                'access_token': str(refresh.access_token),
-                'refresh_token': str(refresh),
-                'user': {
-                    'id': str(user.id),
-                    'email': user.email,
-                    'username': user.username,
-                    'is_staff': user.is_staff,
-                    'is_superuser': user.is_superuser,
-                },
-                'message': 'Admin login successful'
-            }
+            logger.info(f"Admin logged in successfully: {email}")
+            return result
         
         return self.handle_service_operation(
             operation,
@@ -122,8 +82,8 @@ class AdminProfileView(GenericAPIView, BaseAPIView):
     def get(self, request: Request) -> Response:
         """Get admin profile list"""
         def operation():
-            from api.admin.models import AdminProfile
-            profiles = AdminProfile.objects.select_related('user', 'created_by').all()
+            service = AdminProfileService()
+            profiles = service.get_admin_profiles()
             serializer = self.get_serializer(profiles, many=True)
             return serializer.data
         
@@ -135,7 +95,7 @@ class AdminProfileView(GenericAPIView, BaseAPIView):
 
     @extend_schema(
         summary="Create Admin Profile",
-        description="Create a new admin profile",
+        description="Create a new admin profile (Super Admin only)",
         request=serializers.AdminProfileCreateSerializer
     )
     @log_api_call()
@@ -145,20 +105,199 @@ class AdminProfileView(GenericAPIView, BaseAPIView):
             create_serializer = serializers.AdminProfileCreateSerializer(data=request.data)
             create_serializer.is_valid(raise_exception=True)
             
-            # Create admin profile
-            from api.admin.models import AdminProfile
-            profile = AdminProfile.objects.create(
-                user_id=create_serializer.validated_data['user'],
-                role=create_serializer.validated_data['role'],
-                created_by=request.user
+            user_id = create_serializer.validated_data['user']
+            role = create_serializer.validated_data['role']
+            password = create_serializer.validated_data['password']
+            
+            # Use service to create profile
+            service = AdminProfileService()
+            profile = service.create_admin_profile(
+                user_id=user_id,
+                role=role,
+                password=password,
+                created_by=request.user,
+                request=request
             )
             
             response_serializer = self.get_serializer(profile)
             return response_serializer.data
         
-        return self.handle_service_operation(
+        result = self.handle_service_operation(
             operation,
             "Admin profile created successfully",
-            "Failed to create admin profile",
-            status_code=status.HTTP_201_CREATED
+            "Failed to create admin profile"
+        )
+        result.status_code = status.HTTP_201_CREATED
+        return result
+
+
+# ============================================================
+# Current Admin Profile View
+# ============================================================
+@auth_router.register(r"admin/me", name="admin-me")
+@extend_schema(
+    tags=["Admin"],
+    summary="Get Current Admin Profile",
+    description="Get the logged-in admin's profile with permissions",
+    responses={200: BaseResponseSerializer}
+)
+class AdminMeView(GenericAPIView, BaseAPIView):
+    """Current admin profile endpoint"""
+    permission_classes = [IsStaffPermission]
+    
+    @log_api_call()
+    def get(self, request: Request) -> Response:
+        """Get current admin's profile with permissions"""
+        def operation():
+            service = AdminProfileService()
+            return service.get_current_admin_profile(request.user)
+        
+        return self.handle_service_operation(
+            operation,
+            "Admin profile retrieved successfully",
+            "Failed to retrieve admin profile"
+        )
+
+
+# ============================================================
+# Admin Profile Detail View
+# ============================================================
+@auth_router.register(r"admin/profiles/<uuid:profile_id>", name="admin-profile-detail")
+@extend_schema(
+    tags=["Admin"],
+    summary="Admin Profile Details",
+    description="Get, update, or deactivate a specific admin profile",
+    responses={200: BaseResponseSerializer}
+)
+class AdminProfileDetailView(GenericAPIView, BaseAPIView):
+    """Admin profile detail operations"""
+    serializer_class = serializers.AdminProfileSerializer
+    permission_classes = [IsStaffPermission]
+    
+    @extend_schema(
+        summary="Get Admin Profile",
+        description="Get a specific admin profile by ID"
+    )
+    @log_api_call()
+    def get(self, request: Request, profile_id: str) -> Response:
+        """Get specific admin profile"""
+        def operation():
+            service = AdminProfileService()
+            profile = service.get_admin_profile(profile_id)
+            serializer = self.get_serializer(profile)
+            return serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            "Admin profile retrieved successfully",
+            "Failed to retrieve admin profile"
+        )
+    
+    @extend_schema(
+        summary="Update Admin Role",
+        description="Update admin's role (Super Admin only)",
+        request=serializers.AdminProfileUpdateSerializer
+    )
+    @log_api_call()
+    def patch(self, request: Request, profile_id: str) -> Response:
+        """Update admin role"""
+        def operation():
+            # Validate request
+            update_serializer = serializers.AdminProfileUpdateSerializer(data=request.data)
+            update_serializer.is_valid(raise_exception=True)
+            new_role = update_serializer.validated_data['role']
+            
+            # Use service to update role
+            service = AdminProfileService()
+            profile = service.update_admin_role(
+                profile_id=profile_id,
+                new_role=new_role,
+                changed_by=request.user,
+                request=request
+            )
+            
+            serializer = self.get_serializer(profile)
+            return serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            "Admin role updated successfully",
+            "Failed to update admin role"
+        )
+
+
+# ============================================================
+# Admin Profile Actions (Activate/Deactivate)
+# ============================================================
+@auth_router.register(r"admin/profiles/<uuid:profile_id>/deactivate", name="admin-profile-deactivate")
+@extend_schema(
+    tags=["Admin"],
+    summary="Deactivate Admin Profile",
+    description="Deactivate an admin account (Super Admin only)",
+    request=serializers.AdminProfileActionSerializer,
+    responses={200: BaseResponseSerializer}
+)
+class AdminProfileDeactivateView(GenericAPIView, BaseAPIView):
+    """Deactivate admin profile"""
+    permission_classes = [IsSuperAdminPermission]
+    
+    @log_api_call()
+    def post(self, request: Request, profile_id: str) -> Response:
+        """Deactivate admin profile"""
+        def operation():
+            # Validate request
+            action_serializer = serializers.AdminProfileActionSerializer(data=request.data)
+            action_serializer.is_valid(raise_exception=True)
+            reason = action_serializer.validated_data.get('reason', '')
+            
+            # Use service to deactivate
+            service = AdminProfileService()
+            return service.deactivate_admin(
+                profile_id=profile_id,
+                reason=reason,
+                deactivated_by=request.user,
+                request=request
+            )
+        
+        return self.handle_service_operation(
+            operation,
+            "Admin profile deactivated successfully",
+            "Failed to deactivate admin profile"
+        )
+
+
+@auth_router.register(r"admin/profiles/<uuid:profile_id>/activate", name="admin-profile-activate")
+@extend_schema(
+    tags=["Admin"],
+    summary="Activate Admin Profile",
+    description="Reactivate a deactivated admin account (Super Admin only)",
+    request=serializers.AdminProfileActionSerializer,
+    responses={200: BaseResponseSerializer}
+)
+class AdminProfileActivateView(GenericAPIView, BaseAPIView):
+    """Activate admin profile"""
+    permission_classes = [IsSuperAdminPermission]
+    
+    @log_api_call()
+    def post(self, request: Request, profile_id: str) -> Response:
+        """Activate admin profile"""
+        def operation():
+            # Validate request
+            action_serializer = serializers.AdminProfileActionSerializer(data=request.data)
+            action_serializer.is_valid(raise_exception=True)
+            reason = action_serializer.validated_data.get('reason', '')
+            
+            # Use service to activate
+            service = AdminProfileService()
+            return service.activate_admin(
+                profile_id=profile_id,
+                reason=reason,
+                activated_by=request.user,
+                request=request
+            )
+        
+        return self.handle_service_operation(
+            operation,
+            "Admin profile activated successfully",
+            "Failed to activate admin profile"
         )

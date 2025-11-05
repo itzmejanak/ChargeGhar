@@ -42,8 +42,19 @@ class AdminProfileSerializer(serializers.ModelSerializer):
 
 class AdminProfileCreateSerializer(serializers.Serializer):
     """Serializer for creating admin profiles"""
-    user = serializers.UUIDField()
+    user = serializers.IntegerField()
     role = serializers.ChoiceField(choices=AdminProfile.RoleChoices.choices)
+    password = serializers.CharField(write_only=True, required=True, min_length=8, max_length=128)
+
+
+class AdminProfileUpdateSerializer(serializers.Serializer):
+    """Serializer for updating admin profile role"""
+    role = serializers.ChoiceField(choices=AdminProfile.RoleChoices.choices)
+
+
+class AdminProfileActionSerializer(serializers.Serializer):
+    """Serializer for admin profile actions (activate/deactivate)"""
+    reason = serializers.CharField(max_length=500, required=False, allow_blank=True)
 
 
 # ============================================================
