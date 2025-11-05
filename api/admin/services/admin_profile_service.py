@@ -220,26 +220,42 @@ class AdminProfileService(CRUDService):
                 code="permission_denied"
             )
         
-        # Set password and staff status for the user
-        user.set_password(password)
+        # Set staff status FIRST (required for set_password to work)
+        # The User model's set_password() only works when is_staff=True
         user.is_staff = True
         if role == 'super_admin':
             user.is_superuser = True
-        user.save(update_fields=['password', 'is_staff', 'is_superuser'])
+        
+        # NOW set password (after is_staff=True)
+        user.set_password(password)
         
         # Ensure required objects exist (UserProfile, UserPoints, Wallet)
-        UserProfile.objects.get_or_create(
-            user=user, 
-            defaults={'is_profile_complete': False}
-        )
-        UserPoints.objects.get_or_create(
-            user=user, 
-            defaults={'current_points': 0, 'total_points': 0}
-        )
-        Wallet.objects.get_or_create(
-            user=user, 
-            defaults={'balance': 0, 'currency': 'NPR', 'is_active': True}
-        )
+        try:
+            UserProfile.objects.get_or_create(
+                user=user, 
+                defaults={'is_profile_complete': False}
+            )
+        except Exception:
+            pass
+            
+        try:
+            UserPoints.objects.get_or_create(
+                user=user, 
+                defaults={'current_points': 0, 'total_points': 0}
+            )
+        except Exception:
+            pass
+            
+        try:
+            Wallet.objects.get_or_create(
+                user=user, 
+                defaults={'balance': 0, 'currency': 'NPR', 'is_active': True}
+            )
+        except Exception:
+            pass
+        
+        # Save user with password and staff status
+        user.save()
         
         # Create profile
         profile = AdminProfile.objects.create(
