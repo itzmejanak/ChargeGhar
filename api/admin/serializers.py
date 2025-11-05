@@ -4,14 +4,10 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from decimal import Decimal
 
-<<<<<<< Updated upstream
-from api.admin.models import AdminProfile, AdminActionLog, SystemLog
-=======
 # Only import what is absolutely necessary at the top level
 from api.admin.models import AdminProfile, AdminActionLog, SystemLog
 from api.promotions.models import Coupon
 from api.rentals.models import RentalPackage
->>>>>>> Stashed changes
 
 User = get_user_model()
 
@@ -36,11 +32,6 @@ class AdminProfileSerializer(serializers.ModelSerializer):
     email = serializers.CharField(source='user.email', read_only=True)
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
     is_super_admin = serializers.BooleanField(read_only=True)
-<<<<<<< Updated upstream
-    
-=======
-
->>>>>>> Stashed changes
     class Meta:
         model = AdminProfile
         fields = [
@@ -65,11 +56,6 @@ class AdminActionLogSerializer(serializers.ModelSerializer):
     """Serializer for admin action logs"""
     admin_username = serializers.CharField(source='admin_user.username', read_only=True)
     admin_email = serializers.CharField(source='admin_user.email', read_only=True)
-<<<<<<< Updated upstream
-    
-=======
-
->>>>>>> Stashed changes
     class Meta:
         model = AdminActionLog
         fields = [
@@ -83,19 +69,11 @@ class AdminActionLogSerializer(serializers.ModelSerializer):
 class SystemLogSerializer(serializers.ModelSerializer):
     """Serializer for system logs"""
     level_display = serializers.CharField(source='get_level_display', read_only=True)
-<<<<<<< Updated upstream
-    
-    class Meta:
-        model = SystemLog
-        fields = [
-            'id', 'level', 'level_display', 'module', 'message', 
-=======
 
     class Meta:
         model = SystemLog
         fields = [
             'id', 'level', 'level_display', 'module', 'message',
->>>>>>> Stashed changes
             'context', 'trace_id', 'created_at'
         ]
         read_only_fields = ['id', 'created_at']
@@ -265,11 +243,6 @@ class ProcessWithdrawalSerializer(serializers.Serializer):
     """Serializer for processing withdrawal"""
     action = serializers.ChoiceField(choices=['APPROVE', 'REJECT'])
     admin_notes = serializers.CharField(max_length=1000, required=False, allow_blank=True)
-<<<<<<< Updated upstream
-    
-=======
-
->>>>>>> Stashed changes
     def validate_admin_notes(self, value):
         action = self.initial_data.get('action')
         if action == 'REJECT' and (not value or len(value.strip()) < 5):
@@ -277,9 +250,6 @@ class ProcessWithdrawalSerializer(serializers.Serializer):
         return value.strip() if value else ''
 
 
-<<<<<<< Updated upstream
-
-=======
 # ============================================================
 # Package Management Serializers
 # ============================================================
@@ -354,4 +324,3 @@ class UpdateCouponSerializer(serializers.Serializer):
     valid_from = serializers.DateTimeField(required=False)
     valid_until = serializers.DateTimeField(required=False)
     status = serializers.ChoiceField(choices=Coupon.StatusChoices.choices, required=False)
->>>>>>> Stashed changes

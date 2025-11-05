@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 
-from drf_spectacular.utils import extend_schema, OpenApiExample
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiExample
 
 from api.common.mixins import BaseAPIView
 from api.common.routers import CustomViewRouter
@@ -19,59 +19,40 @@ package_router = CustomViewRouter()
 
 
 @package_router.register(r"packages", name="admin-packages")
-@extend_schema(
-    tags=["Admin"],
-    summary="Admin: Add New Package",
-    description="Allows administrators to add a new power bank rental package.",
-    request=AddPackageSerializer,
-    responses={
-        201: OpenApiExample(
-            "Add Package Success",
-            value={
-                "success": True,
-                "message": "Package created successfully.",
-                "data": {
-                    "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-                    "name": "Basic Package",
-                    "description": "1-hour rental",
-                    "duration_minutes": 60,
-                    "price": "10.00",
-                    "package_type": "HOURLY",
-                    "payment_model": "PREPAID",
-                    "is_active": True,
-                    "created_at": "2023-10-27T10:00:00Z",
-                    "updated_at": "2023-10-27T10:00:00Z"
-                }
-            },
-            response_only=True,
-            status_codes=["201"]
-        ),
-        400: OpenApiExample(
-            "Invalid Data",
-            value={
-                "success": False,
-                "error": {
-                    "code": "invalid_data",
-                    "message": "Invalid input data.",
-                    "details": {"name": ["Package with this name already exists."]}
-                }
-            },
-            response_only=True,
-            status_codes=["400"]
-        ),
-        409: OpenApiExample(
-            "Package Exists",
-            value={
-                "success": False,
-                "error": {
-                    "code": "package_already_exists",
-                    "message": "A package with this name already exists. Please choose a different name."
-                }
-            },
-            response_only=True,
-            status_codes=["409"]
-        )
-    }
+@extend_schema_view(
+    post=extend_schema(
+        tags=["Admin"],
+        summary="Admin: Add New Package",
+        description="Allows administrators to add a new power bank rental package.",
+        request=AddPackageSerializer,
+        responses={
+            (201, 'application/json'): PackageSerializer,
+        },
+        examples=[
+            OpenApiExample(
+                "Add Package Success",
+                value={
+                    "success": True,
+                    "message": "Package created successfully.",
+                    "data": {
+                        "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                        "name": "Basic Package",
+                        "description": "1-hour rental",
+                        "duration_minutes": 60,
+                        "price": "10.00",
+                        "package_type": "HOURLY",
+                        "payment_model": "PREPAID",
+                        "is_active": True,
+                        "created_at": "2023-10-27T10:00:00Z",
+                        "updated_at": "2023-10-27T10:00:00Z"
+                    }
+                },
+                response_only=True,
+                status_codes=["201"]
+            ),
+        ],
+        operation_id="admin_create_package",
+    )
 )
 class AdminPackageView(GenericAPIView, BaseAPIView):
     """View for admin to add new packages"""
@@ -98,51 +79,32 @@ class AdminPackageView(GenericAPIView, BaseAPIView):
 
 
 @package_router.register(r"packages/<uuid:package_id>", name="admin-package-detail")
-@extend_schema(
-    tags=["Admin"],
-    summary="Admin: Manage a specific package",
-    description="Allows administrators to retrieve, update, or delete a specific power bank rental package.",
-    responses={
-        200: OpenApiExample(
-            "Package Details",
-            value={
-                "success": True,
-                "message": "Package retrieved successfully.",
-                "data": {
-                    "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-                    "name": "Basic Package",
-                    "description": "1-hour rental",
-                    "duration_minutes": 60,
-                    "price": "10.00",
-                    "package_type": "HOURLY",
-                    "payment_model": "PREPAID",
-                    "is_active": True,
-                    "created_at": "2023-10-27T10:00:00Z",
-                    "updated_at": "2023-10-27T10:00:00Z"
-                }
-            },
-            response_only=True,
-            status_codes=["200"]
-        ),
-        204: OpenApiExample(
-            "Delete Success",
-            value=None,
-            response_only=True,
-            status_codes=["204"]
-        ),
-        404: OpenApiExample(
-            "Not Found",
-            value={
-                "success": False,
-                "error": {
-                    "code": "package_not_found",
-                    "message": "The requested package was not found."
-                }
-            },
-            response_only=True,
-            status_codes=["404"]
-        )
-    }
+@extend_schema_view(
+    get=extend_schema(
+        summary="Admin: Get Package Details",
+        description="Retrieve details of a specific package.",
+        responses={
+            (200, 'application/json'): PackageSerializer,
+        },
+        operation_id="admin_get_package_details",
+    ),
+    put=extend_schema(
+        summary="Admin: Update Package",
+        description="Update details of a specific package.",
+        request=UpdatePackageSerializer,
+        responses={
+            (200, 'application/json'): PackageSerializer,
+        },
+        operation_id="admin_update_package_details",
+    ),
+    delete=extend_schema(
+        summary="Admin: Delete Package",
+        description="Delete a specific package.",
+        responses={
+            (204, 'application/json'): None,
+        },
+        operation_id="admin_delete_package",
+    )
 )
 class AdminPackageDetailView(GenericAPIView, BaseAPIView):
     """View for admin to manage a specific package"""

@@ -33,6 +33,13 @@ SPECTACULAR_SETTINGS = {
     "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
     "COMPONENT_SPLIT_REQUEST": True,
 
+    # Enum Naming
+    "ENUM_NAME_OVERRIDES": {
+        "PackageTypeEnum": "api.rentals.models.RentalPackage.PACKAGE_TYPE_CHOICES",
+        "PaymentModelEnum": "api.rentals.models.RentalPackage.PAYMENT_MODEL_CHOICES",
+        "CouponStatusEnum": "api.promotions.models.Coupon.StatusChoices",
+    },
+
     # Endpoint Organization (tags defined in @extend_schema decorators)
     "TAGS": [
         {"name": "App", "description": "Core app functionality (health, version, media, countries)"},
