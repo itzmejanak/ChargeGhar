@@ -18,6 +18,11 @@ from .admin_notification_service import AdminNotificationService
 from .admin_system_service import AdminSystemService
 from .admin_content_service import AdminContentService
 from .admin_withdrawal_service import AdminWithdrawalService
+<<<<<<< Updated upstream
+=======
+from .package_service import PackageService
+from .coupon_service import CouponService
+>>>>>>> Stashed changes
 
 
 # Backward compatibility - all services available at package level
@@ -30,4 +35,9 @@ __all__ = [
     "AdminSystemService",
     "AdminUserService",
     "AdminWithdrawalService",
+<<<<<<< Updated upstream
+=======
+    "PackageService",
+    "CouponService",
+>>>>>>> Stashed changes
 ]

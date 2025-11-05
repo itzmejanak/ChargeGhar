@@ -4,7 +4,14 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from decimal import Decimal
 
+<<<<<<< Updated upstream
 from api.admin.models import AdminProfile, AdminActionLog, SystemLog
+=======
+# Only import what is absolutely necessary at the top level
+from api.admin.models import AdminProfile, AdminActionLog, SystemLog
+from api.promotions.models import Coupon
+from api.rentals.models import RentalPackage
+>>>>>>> Stashed changes
 
 User = get_user_model()
 
@@ -29,7 +36,11 @@ class AdminProfileSerializer(serializers.ModelSerializer):
     email = serializers.CharField(source='user.email', read_only=True)
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
     is_super_admin = serializers.BooleanField(read_only=True)
+<<<<<<< Updated upstream
     
+=======
+
+>>>>>>> Stashed changes
     class Meta:
         model = AdminProfile
         fields = [
@@ -54,7 +65,11 @@ class AdminActionLogSerializer(serializers.ModelSerializer):
     """Serializer for admin action logs"""
     admin_username = serializers.CharField(source='admin_user.username', read_only=True)
     admin_email = serializers.CharField(source='admin_user.email', read_only=True)
+<<<<<<< Updated upstream
     
+=======
+
+>>>>>>> Stashed changes
     class Meta:
         model = AdminActionLog
         fields = [
@@ -68,11 +83,19 @@ class AdminActionLogSerializer(serializers.ModelSerializer):
 class SystemLogSerializer(serializers.ModelSerializer):
     """Serializer for system logs"""
     level_display = serializers.CharField(source='get_level_display', read_only=True)
+<<<<<<< Updated upstream
     
     class Meta:
         model = SystemLog
         fields = [
             'id', 'level', 'level_display', 'module', 'message', 
+=======
+
+    class Meta:
+        model = SystemLog
+        fields = [
+            'id', 'level', 'level_display', 'module', 'message',
+>>>>>>> Stashed changes
             'context', 'trace_id', 'created_at'
         ]
         read_only_fields = ['id', 'created_at']
@@ -242,7 +265,11 @@ class ProcessWithdrawalSerializer(serializers.Serializer):
     """Serializer for processing withdrawal"""
     action = serializers.ChoiceField(choices=['APPROVE', 'REJECT'])
     admin_notes = serializers.CharField(max_length=1000, required=False, allow_blank=True)
+<<<<<<< Updated upstream
     
+=======
+
+>>>>>>> Stashed changes
     def validate_admin_notes(self, value):
         action = self.initial_data.get('action')
         if action == 'REJECT' and (not value or len(value.strip()) < 5):
@@ -250,4 +277,81 @@ class ProcessWithdrawalSerializer(serializers.Serializer):
         return value.strip() if value else ''
 
 
+<<<<<<< Updated upstream
 
+=======
+# ============================================================
+# Package Management Serializers
+# ============================================================
+
+class PackageSerializer(serializers.ModelSerializer):
+    """Serializer for RentalPackage model"""
+    class Meta:
+        model = RentalPackage
+        fields = '__all__'
+
+
+class AddPackageSerializer(serializers.Serializer):
+    """Serializer for adding a new package"""
+    name = serializers.CharField(max_length=100)
+    description = serializers.CharField(max_length=255)
+    duration_minutes = serializers.IntegerField()
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    package_type = serializers.ChoiceField(choices=RentalPackage.PACKAGE_TYPE_CHOICES)
+    payment_model = serializers.ChoiceField(choices=RentalPackage.PAYMENT_MODEL_CHOICES)
+    is_active = serializers.BooleanField(default=True)
+
+    def validate_name(self, value):
+        if RentalPackage.objects.filter(name__iexact=value).exists():
+            raise serializers.ValidationError("Package with this name already exists.")
+        return value
+
+
+class UpdatePackageSerializer(serializers.Serializer):
+    """Serializer for updating a package"""
+    name = serializers.CharField(max_length=100, required=False)
+    description = serializers.CharField(max_length=255, required=False)
+    duration_minutes = serializers.IntegerField(required=False)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    package_type = serializers.ChoiceField(choices=RentalPackage.PACKAGE_TYPE_CHOICES, required=False)
+    payment_model = serializers.ChoiceField(choices=RentalPackage.PAYMENT_MODEL_CHOICES, required=False)
+    is_active = serializers.BooleanField(required=False)
+
+
+# ============================================================
+# Coupon Management Serializers
+# ============================================================
+
+class CouponSerializer(serializers.ModelSerializer):
+    """Serializer for Coupon model"""
+    class Meta:
+        model = Coupon
+        fields = '__all__'
+
+
+class AddCouponSerializer(serializers.Serializer):
+    """Serializer for adding a new coupon"""
+    code = serializers.CharField(max_length=10)
+    name = serializers.CharField(max_length=100)
+    points_value = serializers.IntegerField()
+    max_uses_per_user = serializers.IntegerField(default=1)
+    valid_from = serializers.DateTimeField()
+    valid_until = serializers.DateTimeField()
+    status = serializers.ChoiceField(choices=Coupon.StatusChoices.choices, default=Coupon.StatusChoices.ACTIVE)
+
+    def validate_code(self, value):
+        if Coupon.objects.filter(code__iexact=value).exists():
+            raise serializers.ValidationError("Coupon with this code already exists.")
+        return value
+
+
+class UpdateCouponSerializer(serializers.Serializer):
+    """Serializer for updating a coupon"""
+    code = serializers.CharField(max_length=10, required=False)
+    name = serializers.CharField(max_length=100, required=False)
+    points_value = serializers.IntegerField(required=False)
+    max_uses_per_user = serializers.IntegerField(required=False)
+    valid_from = serializers.DateTimeField(required=False)
+    valid_until = serializers.DateTimeField(required=False)
+    status = serializers.ChoiceField(choices=Coupon.StatusChoices.choices, required=False)
+>>>>>>> Stashed changes

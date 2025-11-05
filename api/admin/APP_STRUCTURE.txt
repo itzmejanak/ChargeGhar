@@ -2,6 +2,18 @@
 📦 APP: admin
 ══════════════════════════════════════════════════════════════════════
 
+<<<<<<< Updated upstream
+=======
+📄 MODELS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/admin/models.py
+├── AdminProfile
+├── AdminActionLog
+├── SystemLog
+└── Package
+└── Coupon
+
+>>>>>>> Stashed changes
 📄 VIEWS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 api/admin/views/
@@ -29,6 +41,13 @@ Renamed to content_admin_views.py for clarity and consistency (8 classes)
 │   └── SystemHealthView
 ├── notification_views.py      # Notification and broadcast management - send system-wide and targeted notifications (1 classes)
 │   └── BroadcastMessageView
+<<<<<<< Updated upstream
+=======
+├── package_views.py           # Package management - add, update, delete, and list packages (1 classes)
+│   └── AdminPackageView
+├── coupon_views.py           # Coupon management - add, update, delete, and list coupons (1 classes)
+│   └── AdminCouponView
+>>>>>>> Stashed changes
 ├── payment_views.py           # Payment and refund administration - handle refund requests and payment operations (2 classes)
 │   ├── AdminRefundsView
 │   └── ProcessRefundView
@@ -42,7 +61,11 @@ Renamed to content_admin_views.py for clarity and consistency (8 classes)
     ├── UpdateUserStatusView
     └── AddUserBalanceView
 
+<<<<<<< Updated upstream
 Total: 7 files, 24 view classes
+=======
+Total: 8 files, 25 view classes
+>>>>>>> Stashed changes
 
 ⚙️  SERVICES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -134,7 +157,11 @@ Date: 2025-10-18 23:39:20
 │   └── AdminSystemService
 │       ├── get_system_health()
 │       └── get_system_logs()
+<<<<<<< Updated upstream
 └── admin_user_service.py          # Service for admin user management
+=======
+├── admin_user_service.py          # Service for admin user management
+>>>>>>> Stashed changes
 ============================================================
 
 This module contains service classes for service for admin user management.
@@ -147,12 +174,27 @@ Date: 2025-10-18 23:39:20
         ├── update_user_status()
         ├── add_user_balance()
         └── _log_admin_action()
+<<<<<<< Updated upstream
 
 Total: 7 files, 7 service classes, 40 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 api/admin/serializers.py          # Single file (226 lines)
+=======
+└── package_service.py             # Service for managing packages
+    └── PackageService
+        ├── create_package()
+└── coupon_service.py             # Service for managing coupons
+    └── CouponService
+        ├── create_coupon()
+
+Total: 8 files, 8 service classes, 41 methods
+
+📋 SERIALIZERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+api/admin/serializers.py          # Single file (XXX lines)
+>>>>>>> Stashed changes
 ├── Authentication Serializers
 │   └── AdminLoginSerializer
 ├── Profile Serializers
@@ -172,6 +214,15 @@ api/admin/serializers.py          # Single file (226 lines)
 ├── Utility Serializers
 │   ├── DashboardAnalyticsSerializer
 │   └── SystemLogFiltersSerializer
+<<<<<<< Updated upstream
+=======
+└── Package Serializers
+    ├── PackageSerializer
+    └── AddPackageSerializer
+└── Coupon Serializers
+    ├── CouponSerializer
+    └── AddCouponSerializer
+>>>>>>> Stashed changes
 └── Other Serializers
     ├── SystemLogSerializer
     ├── ToggleMaintenanceSerializer
@@ -179,4 +230,8 @@ api/admin/serializers.py          # Single file (226 lines)
     ├── BroadcastMessageSerializer
     └── SystemHealthSerializer
 
+<<<<<<< Updated upstream
 Total: 1 file, 17 serializers (8 categories)
+=======
+Total: 1 file, 19 serializers (9 categories)
+>>>>>>> Stashed changes
