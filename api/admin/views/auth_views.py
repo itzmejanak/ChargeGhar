@@ -17,6 +17,7 @@ from api.common.decorators import log_api_call
 from api.common.mixins import BaseAPIView
 from api.common.routers import CustomViewRouter
 from api.common.serializers import BaseResponseSerializer
+from api.common.services.base import ServiceException
 from api.users.permissions import IsStaffPermission, IsSuperAdminPermission
 
 auth_router = CustomViewRouter()
@@ -194,25 +195,27 @@ class AdminProfileDetailView(GenericAPIView, BaseAPIView):
         )
     
     @extend_schema(
-        summary="Update Admin Role",
-        description="Update admin's role (Super Admin only)",
+        summary="Update Admin Profile",
+        description="Update admin's role, password, or active status. Super admin can update any admin, others can only update their own password.",
         request=serializers.AdminProfileUpdateSerializer
     )
     @log_api_call()
     def patch(self, request: Request, profile_id: str) -> Response:
-        """Update admin role"""
+        """Update admin profile (role, password, is_active)"""
         def operation():
             # Validate request
             update_serializer = serializers.AdminProfileUpdateSerializer(data=request.data)
             update_serializer.is_valid(raise_exception=True)
-            new_role = update_serializer.validated_data['role']
             
-            # Use service to update role
+            # Use unified service method
             service = AdminProfileService()
-            profile = service.update_admin_role(
+            profile = service.update_admin_profile(
                 profile_id=profile_id,
-                new_role=new_role,
                 changed_by=request.user,
+                new_role=update_serializer.validated_data.get('role'),
+                new_password=update_serializer.validated_data.get('new_password'),
+                is_active=update_serializer.validated_data.get('is_active'),
+                reason=update_serializer.validated_data.get('reason'),
                 request=request
             )
             
@@ -221,83 +224,45 @@ class AdminProfileDetailView(GenericAPIView, BaseAPIView):
         
         return self.handle_service_operation(
             operation,
-            "Admin role updated successfully",
-            "Failed to update admin role"
+            "Admin profile updated successfully",
+            "Failed to update admin profile"
         )
-
-
-# ============================================================
-# Admin Profile Actions (Activate/Deactivate)
-# ============================================================
-@auth_router.register(r"admin/profiles/<uuid:profile_id>/deactivate", name="admin-profile-deactivate")
-@extend_schema(
-    tags=["Admin"],
-    summary="Deactivate Admin Profile",
-    description="Deactivate an admin account (Super Admin only)",
-    request=serializers.AdminProfileActionSerializer,
-    responses={200: BaseResponseSerializer}
-)
-class AdminProfileDeactivateView(GenericAPIView, BaseAPIView):
-    """Deactivate admin profile"""
-    permission_classes = [IsSuperAdminPermission]
     
+    @extend_schema(
+        summary="Delete Admin Profile",
+        description="Delete an admin profile (Super Admin only)"
+    )
     @log_api_call()
-    def post(self, request: Request, profile_id: str) -> Response:
-        """Deactivate admin profile"""
+    def delete(self, request: Request, profile_id: str) -> Response:
+        """Delete admin profile"""
         def operation():
-            # Validate request
-            action_serializer = serializers.AdminProfileActionSerializer(data=request.data)
-            action_serializer.is_valid(raise_exception=True)
-            reason = action_serializer.validated_data.get('reason', '')
+            # Only super admin can delete
+            if request.user.admin_profile.role != 'super_admin':
+                raise ServiceException(
+                    detail="Only super admin can delete admin profiles",
+                    code="permission_denied"
+                )
             
-            # Use service to deactivate
             service = AdminProfileService()
+            profile = service.get_admin_profile(profile_id)
+            
+            # Can't delete own profile
+            if profile.user.id == request.user.id:
+                raise ServiceException(
+                    detail="Cannot delete your own profile",
+                    code="cannot_delete_self"
+                )
+            
+            # Deactivate instead of hard delete
             return service.deactivate_admin(
                 profile_id=profile_id,
-                reason=reason,
+                reason="Profile deleted",
                 deactivated_by=request.user,
                 request=request
             )
         
         return self.handle_service_operation(
             operation,
-            "Admin profile deactivated successfully",
-            "Failed to deactivate admin profile"
-        )
-
-
-@auth_router.register(r"admin/profiles/<uuid:profile_id>/activate", name="admin-profile-activate")
-@extend_schema(
-    tags=["Admin"],
-    summary="Activate Admin Profile",
-    description="Reactivate a deactivated admin account (Super Admin only)",
-    request=serializers.AdminProfileActionSerializer,
-    responses={200: BaseResponseSerializer}
-)
-class AdminProfileActivateView(GenericAPIView, BaseAPIView):
-    """Activate admin profile"""
-    permission_classes = [IsSuperAdminPermission]
-    
-    @log_api_call()
-    def post(self, request: Request, profile_id: str) -> Response:
-        """Activate admin profile"""
-        def operation():
-            # Validate request
-            action_serializer = serializers.AdminProfileActionSerializer(data=request.data)
-            action_serializer.is_valid(raise_exception=True)
-            reason = action_serializer.validated_data.get('reason', '')
-            
-            # Use service to activate
-            service = AdminProfileService()
-            return service.activate_admin(
-                profile_id=profile_id,
-                reason=reason,
-                activated_by=request.user,
-                request=request
-            )
-        
-        return self.handle_service_operation(
-            operation,
-            "Admin profile activated successfully",
-            "Failed to activate admin profile"
+            "Admin profile deleted successfully",
+            "Failed to delete admin profile"
         )

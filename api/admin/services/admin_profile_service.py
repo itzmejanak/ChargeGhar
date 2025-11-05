@@ -56,8 +56,13 @@ class AdminProfileService(CRUDService):
         # Ensure all required objects exist (backward compatibility)
         self._ensure_admin_objects(user)
         
-        # Get admin profile
+        # Get admin profile and check if active
         admin_profile = user.admin_profile
+        if not admin_profile.is_active:
+            raise ServiceException(
+                detail="Admin profile is deactivated",
+                code="admin_deactivated"
+            )
         
         # Update last login
         user.last_login = timezone.now()
@@ -333,6 +338,124 @@ class AdminProfileService(CRUDService):
         
         self.log_info(f"Admin role updated: {profile.user.email} {old_role} -> {new_role}")
         return profile
+    
+    @transaction.atomic
+    def update_admin_profile(
+        self,
+        profile_id: str,
+        changed_by: User,
+        new_role: str = None,
+        new_password: str = None,
+        is_active: bool = None,
+        reason: str = None,
+        request=None
+    ) -> AdminProfile:
+        """
+        Update admin profile - unified method for role, password, and status updates
+        
+        Args:
+            profile_id: Admin profile ID
+            changed_by: User making the change
+            new_role: New role (optional)
+            new_password: New password (optional)
+            is_active: Activate/deactivate (optional)
+            reason: Reason for changes (optional)
+            request: HTTP request for audit logging
+            
+        Returns:
+            Updated AdminProfile
+            
+        Raises:
+            ServiceException: If validation fails
+        """
+        # Update role if provided
+        if new_role is not None:
+            self.update_admin_role(
+                profile_id=profile_id,
+                new_role=new_role,
+                changed_by=changed_by,
+                request=request
+            )
+        
+        # Update password if provided
+        if new_password is not None:
+            self.update_admin_password(
+                profile_id=profile_id,
+                new_password=new_password,
+                changed_by=changed_by,
+                request=request
+            )
+        
+        # Update active status if provided
+        if is_active is not None:
+            if is_active:
+                self.activate_admin(
+                    profile_id=profile_id,
+                    reason=reason or '',
+                    activated_by=changed_by,
+                    request=request
+                )
+            else:
+                self.deactivate_admin(
+                    profile_id=profile_id,
+                    reason=reason or '',
+                    deactivated_by=changed_by,
+                    request=request
+                )
+        
+        # Return updated profile
+        return self.get_admin_profile(profile_id)
+    
+    @transaction.atomic
+    def update_admin_password(
+        self,
+        profile_id: str,
+        new_password: str,
+        changed_by: User,
+        request=None
+    ) -> Dict[str, str]:
+        """
+        Update admin user's password
+        
+        Args:
+            profile_id: Admin profile ID
+            new_password: New password to set
+            changed_by: User making the change (must be super admin or self)
+            request: HTTP request for audit logging
+            
+        Returns:
+            Success message dict
+            
+        Raises:
+            ServiceException: If validation fails
+        """
+        profile = self.get_admin_profile(profile_id)
+        
+        # Permission check: Super admin can change any password, others can only change their own
+        if changed_by.admin_profile.role != 'super_admin' and profile.user.id != changed_by.id:
+            raise ServiceException(
+                detail="You can only change your own password",
+                code="permission_denied"
+            )
+        
+        # Update password
+        user = profile.user
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+        
+        # Log action
+        self._log_admin_action(
+            admin_user=changed_by,
+            action_type='UPDATE_ADMIN_PASSWORD',
+            target_model='User',
+            target_id=str(user.id),
+            changes={'user_email': user.email},
+            description=f"Password updated for {user.email}",
+            request=request
+        )
+        
+        self.log_info(f"Admin password updated: {user.email}")
+        return {"message": "Password updated successfully"}
     
     @transaction.atomic
     def deactivate_admin(

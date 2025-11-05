@@ -48,8 +48,39 @@ class AdminProfileCreateSerializer(serializers.Serializer):
 
 
 class AdminProfileUpdateSerializer(serializers.Serializer):
-    """Serializer for updating admin profile role"""
-    role = serializers.ChoiceField(choices=AdminProfile.RoleChoices.choices)
+    """Serializer for updating admin profile (role, password, is_active)"""
+    role = serializers.ChoiceField(
+        choices=AdminProfile.RoleChoices.choices,
+        required=False,
+        help_text="Update admin role"
+    )
+    new_password = serializers.CharField(
+        min_length=8,
+        max_length=128,
+        required=False,
+        write_only=True,
+        help_text="Update password (minimum 8 characters)"
+    )
+    is_active = serializers.BooleanField(
+        required=False,
+        help_text="Activate (true) or deactivate (false) admin"
+    )
+    reason = serializers.CharField(
+        max_length=500,
+        required=False,
+        allow_blank=True,
+        help_text="Reason for deactivation/activation"
+    )
+
+
+class AdminPasswordUpdateSerializer(serializers.Serializer):
+    """Serializer for updating admin password"""
+    new_password = serializers.CharField(
+        min_length=8,
+        max_length=128,
+        required=True,
+        help_text="New password (minimum 8 characters)"
+    )
 
 
 class AdminProfileActionSerializer(serializers.Serializer):
