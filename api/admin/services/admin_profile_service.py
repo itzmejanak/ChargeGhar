@@ -197,12 +197,12 @@ class AdminProfileService(CRUDService):
                 code="password_required"
             )
         
-        # Validate user exists and is staff
+        # Validate user exists (super admin can promote any user)
         try:
-            user = User.objects.get(id=user_id, is_staff=True)
+            user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             raise ServiceException(
-                detail="User not found or is not a staff member",
+                detail="User not found",
                 code="user_not_found"
             )
         
@@ -220,9 +220,26 @@ class AdminProfileService(CRUDService):
                 code="permission_denied"
             )
         
-        # Set password for the user
+        # Set password and staff status for the user
         user.set_password(password)
-        user.save(update_fields=['password'])
+        user.is_staff = True
+        if role == 'super_admin':
+            user.is_superuser = True
+        user.save(update_fields=['password', 'is_staff', 'is_superuser'])
+        
+        # Ensure required objects exist (UserProfile, UserPoints, Wallet)
+        UserProfile.objects.get_or_create(
+            user=user, 
+            defaults={'is_profile_complete': False}
+        )
+        UserPoints.objects.get_or_create(
+            user=user, 
+            defaults={'current_points': 0, 'total_points': 0}
+        )
+        Wallet.objects.get_or_create(
+            user=user, 
+            defaults={'balance': 0, 'currency': 'NPR', 'is_active': True}
+        )
         
         # Create profile
         profile = AdminProfile.objects.create(
