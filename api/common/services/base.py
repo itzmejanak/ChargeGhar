@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any, Dict, Optional
-from django.db import transaction
+from django.db import transaction, IntegrityError, DataError
 from django.core.exceptions import ValidationError
 from rest_framework import status
 from rest_framework.exceptions import APIException
@@ -80,8 +80,8 @@ class BaseService:
         error_msg = f"{context}: {str(error)}" if context else str(error)
         self.log_error(error_msg)
         
-        if isinstance(error, ValidationError):
-            raise ServiceException(detail=error_msg, code="validation_error")
+        if isinstance(error, (ValidationError, IntegrityError, DataError)):
+            raise ServiceException(detail=str(error), code="validation_error")
         elif isinstance(error, APIException):
             raise error
         else:

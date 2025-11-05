@@ -261,4 +261,69 @@ class ProcessWithdrawalSerializer(serializers.Serializer):
         return value.strip() if value else ''
 
 
+# ============================================================
+# Coupon Management Serializers
+# ============================================================
+
+class CouponListSerializer(serializers.Serializer):
+    """Serializer for coupon list filters"""
+    status = serializers.ChoiceField(
+        choices=['ACTIVE', 'INACTIVE', 'EXPIRED'],
+        required=False
+    )
+    search = serializers.CharField(required=False, max_length=200)
+    start_date = serializers.DateField(required=False)
+    end_date = serializers.DateField(required=False)
+    page = serializers.IntegerField(default=1, min_value=1)
+    page_size = serializers.IntegerField(default=20, min_value=1, max_value=100)
+
+
+class CreateCouponSerializer(serializers.Serializer):
+    """Serializer for creating a coupon"""
+    code = serializers.CharField(max_length=50, required=True)
+    name = serializers.CharField(max_length=200, required=True)
+    points_value = serializers.IntegerField(min_value=1, required=True)
+    max_uses_per_user = serializers.IntegerField(min_value=1, default=1)
+    valid_from = serializers.DateTimeField(required=True)
+    valid_until = serializers.DateTimeField(required=True)
+    
+    def validate_code(self, value):
+        """Ensure code is uppercase and alphanumeric"""
+        code = value.upper().strip()
+        if not code.replace('_', '').replace('-', '').isalnum():
+            raise serializers.ValidationError("Code must be alphanumeric (can include _ and -)")
+        return code
+    
+    def validate(self, attrs):
+        """Validate date range"""
+        if attrs['valid_from'] >= attrs['valid_until']:
+            raise serializers.ValidationError("valid_from must be before valid_until")
+        return attrs
+
+
+class BulkCreateCouponSerializer(serializers.Serializer):
+    """Serializer for bulk creating coupons"""
+    name_prefix = serializers.CharField(max_length=100, required=True)
+    points_value = serializers.IntegerField(min_value=1, required=True)
+    max_uses_per_user = serializers.IntegerField(min_value=1, default=1)
+    valid_from = serializers.DateTimeField(required=True)
+    valid_until = serializers.DateTimeField(required=True)
+    quantity = serializers.IntegerField(min_value=1, max_value=1000, required=True)
+    code_length = serializers.IntegerField(min_value=6, max_value=20, default=8)
+    
+    def validate(self, attrs):
+        """Validate date range"""
+        if attrs['valid_from'] >= attrs['valid_until']:
+            raise serializers.ValidationError("valid_from must be before valid_until")
+        return attrs
+
+
+class UpdateCouponStatusSerializer(serializers.Serializer):
+    """Serializer for updating coupon status"""
+    status = serializers.ChoiceField(
+        choices=['ACTIVE', 'INACTIVE', 'EXPIRED'],
+        required=True
+    )
+
+
 

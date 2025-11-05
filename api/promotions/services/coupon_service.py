@@ -287,10 +287,9 @@ class CouponService(CRUDService):
     
     def _generate_coupon_code(self, length: int) -> str:
         """Generate random coupon code"""
-        characters = string.ascii_uppercase + string.digits
-        # Exclude confusing characters
-        characters = characters.replace('0', '').replace('O', '').replace('I', '').replace('1')
-        return ''.join(random.choices(characters, k=length))
+        # Use only safe characters (exclude confusing ones: 0, O, I, 1)
+        safe_chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+        return ''.join(random.choices(safe_chars, k=length))
     
     def get_coupons_list(self, filters: Dict[str, Any] = None) -> Dict[str, Any]:
         """Get paginated list of coupons with filters (Admin)"""
