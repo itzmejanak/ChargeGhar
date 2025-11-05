@@ -167,3 +167,19 @@ IOT_SYSTEM_ALLOWED_IPS = [
 
 # IoT system timeout settings
 IOT_SYSTEM_SIGNATURE_TIMEOUT = int(getenv('IOT_SYSTEM_SIGNATURE_TIMEOUT', 300))  # 5 minutes
+
+# ============================================================
+# Device API Configuration (Java Spring API Integration)
+# ============================================================
+DEVICE_API = {
+    'BASE_URL': getenv('DEVICE_API_BASE_URL', 'https://api.chargeghar.com'),
+    'CONNECT_TIMEOUT': int(getenv('DEVICE_API_CONNECT_TIMEOUT', '10')),
+    'READ_TIMEOUT': int(getenv('DEVICE_API_READ_TIMEOUT', '30')),
+    'MAX_RETRIES': int(getenv('DEVICE_API_MAX_RETRIES', '2')),
+    
+    # Authentication for inter-system communication
+    'AUTH_ENABLED': getenv('DEVICE_API_AUTH_ENABLED', 'True').lower() == 'true',
+    'AUTH_USERNAME': getenv('DEVICE_API_AUTH_USERNAME', 'admin'),
+    'AUTH_PASSWORD': getenv('DEVICE_API_AUTH_PASSWORD', 'Admin@123'),
+    'AUTH_LOGIN_ENDPOINT': getenv('DEVICE_API_AUTH_LOGIN_ENDPOINT', '/api/auth/login'),
+}

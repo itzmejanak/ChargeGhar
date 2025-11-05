@@ -156,7 +156,8 @@ mkdir -p logs staticfiles backups
 
 # Stop existing containers and clean up
 print_step "Stopping containers and cleaning up..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" down --remove-orphans --volumes || true
+# IMPORTANT: Removed --volumes flag to preserve database data
+docker-compose -f "$DOCKER_COMPOSE_FILE" down --remove-orphans || true
 
 # Kill any containers using port 8010
 print_step "Checking for port conflicts..."
