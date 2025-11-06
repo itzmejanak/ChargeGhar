@@ -147,6 +147,64 @@ class AddUserBalanceSerializer(serializers.Serializer):
 
 
 # ============================================================
+# KYC Management Serializers
+# ============================================================
+
+class AdminKYCListSerializer(serializers.Serializer):
+    """Serializer for KYC list filters"""
+    status = serializers.ChoiceField(
+        choices=['PENDING', 'APPROVED', 'REJECTED'],
+        required=False
+    )
+    search = serializers.CharField(required=False)
+    start_date = serializers.DateTimeField(required=False)
+    end_date = serializers.DateTimeField(required=False)
+    page = serializers.IntegerField(default=1, min_value=1)
+    page_size = serializers.IntegerField(default=20, min_value=1, max_value=100)
+
+
+class AdminKYCSerializer(serializers.Serializer):
+    """Serializer for KYC submission details"""
+    id = serializers.UUIDField(read_only=True)
+    user_id = serializers.UUIDField(read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+    phone_number = serializers.CharField(source='user.phone_number', read_only=True)
+    
+    document_type = serializers.CharField(read_only=True)
+    document_number = serializers.CharField(read_only=True)
+    document_front_url = serializers.URLField(read_only=True)
+    document_back_url = serializers.URLField(read_only=True)
+    
+    status = serializers.CharField(read_only=True)
+    verified_at = serializers.DateTimeField(read_only=True)
+    verified_by_username = serializers.CharField(source='verified_by.username', read_only=True, allow_null=True)
+    rejection_reason = serializers.CharField(read_only=True, allow_null=True)
+    
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
+
+
+class UpdateKYCStatusSerializer(serializers.Serializer):
+    """Serializer for updating KYC status"""
+    status = serializers.ChoiceField(choices=['APPROVED', 'REJECTED'])
+    rejection_reason = serializers.CharField(
+        max_length=500,
+        required=False,
+        allow_blank=True,
+        help_text="Required when status is REJECTED"
+    )
+    
+    def validate(self, data):
+        """Validate that rejection_reason is provided when status is REJECTED"""
+        if data['status'] == 'REJECTED' and not data.get('rejection_reason'):
+            raise serializers.ValidationError({
+                'rejection_reason': 'This field is required when rejecting KYC'
+            })
+        return data
+
+
+# ============================================================
 # Refund Management Serializers
 # ============================================================
 
@@ -355,6 +413,174 @@ class UpdateCouponStatusSerializer(serializers.Serializer):
         choices=['ACTIVE', 'INACTIVE', 'EXPIRED'],
         required=True
     )
+
+
+# ============================================================
+# Rental Issue Serializers
+# ============================================================
+
+class AdminRentalIssueSerializer(serializers.Serializer):
+    """Serializer for listing rental issues"""
+    id = serializers.UUIDField(read_only=True)
+    rental_code = serializers.CharField(source='rental.rental_code', read_only=True)
+    user_email = serializers.EmailField(source='rental.user.email', read_only=True)
+    user_name = serializers.CharField(source='rental.user.username', read_only=True)
+    issue_type = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    images = serializers.JSONField(read_only=True)
+    reported_at = serializers.DateTimeField(read_only=True)
+    resolved_at = serializers.DateTimeField(read_only=True)
+    
+    # Rental details
+    start_station_name = serializers.CharField(source='rental.start_station.name', read_only=True, allow_null=True)
+    power_bank_code = serializers.CharField(source='rental.power_bank.code', read_only=True, allow_null=True)
+
+
+class AdminRentalIssueDetailSerializer(serializers.Serializer):
+    """Serializer for detailed rental issue view"""
+    id = serializers.UUIDField(read_only=True)
+    issue_type = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    images = serializers.JSONField(read_only=True)
+    reported_at = serializers.DateTimeField(read_only=True)
+    resolved_at = serializers.DateTimeField(read_only=True)
+    
+    # Rental details
+    rental = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    
+    def get_rental(self, obj):
+        return {
+            'id': str(obj.rental.id),
+            'rental_code': obj.rental.rental_code,
+            'status': obj.rental.status,
+            'started_at': obj.rental.started_at,
+            'ended_at': obj.rental.ended_at,
+            'station': {
+                'id': str(obj.rental.station.id),
+                'name': obj.rental.station.station_name,
+                'serial_number': obj.rental.station.serial_number
+            } if obj.rental.station else None,
+            'return_station': {
+                'id': str(obj.rental.return_station.id),
+                'name': obj.rental.return_station.station_name,
+                'serial_number': obj.rental.return_station.serial_number
+            } if obj.rental.return_station else None,
+            'power_bank': {
+                'id': str(obj.rental.power_bank.id),
+                'serial_number': obj.rental.power_bank.serial_number
+            } if obj.rental.power_bank else None
+        }
+    
+    def get_user(self, obj):
+        return {
+            'id': str(obj.rental.user.id),
+            'email': obj.rental.user.email,
+            'username': obj.rental.user.username,
+            'phone_number': obj.rental.user.phone_number
+        }
+
+
+class UpdateRentalIssueSerializer(serializers.Serializer):
+    """Serializer for updating rental issue status"""
+    status = serializers.ChoiceField(
+        choices=['REPORTED', 'RESOLVED'],
+        required=True
+    )
+    notes = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=500
+    )
+
+
+# ============================================================
+# Station Issue Serializers
+# ============================================================
+
+class AdminStationIssueSerializer(serializers.Serializer):
+    """Serializer for station issue list view"""
+    id = serializers.UUIDField(read_only=True)
+    station_name = serializers.CharField(source='station.station_name', read_only=True)
+    station_serial = serializers.CharField(source='station.serial_number', read_only=True)
+    reporter_name = serializers.CharField(source='reported_by.username', read_only=True)
+    reporter_email = serializers.EmailField(source='reported_by.email', read_only=True)
+    assigned_to_name = serializers.CharField(source='assigned_to.username', read_only=True, allow_null=True)
+    issue_type = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True)
+    priority = serializers.CharField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    images = serializers.JSONField(read_only=True)
+    reported_at = serializers.DateTimeField(read_only=True)
+    resolved_at = serializers.DateTimeField(read_only=True)
+
+
+class AdminStationIssueDetailSerializer(serializers.Serializer):
+    """Serializer for detailed station issue view"""
+    id = serializers.UUIDField(read_only=True)
+    issue_type = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True)
+    priority = serializers.CharField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    images = serializers.JSONField(read_only=True)
+    reported_at = serializers.DateTimeField(read_only=True)
+    resolved_at = serializers.DateTimeField(read_only=True)
+    
+    # Station details
+    station = serializers.SerializerMethodField()
+    reporter = serializers.SerializerMethodField()
+    assigned_to = serializers.SerializerMethodField()
+    
+    def get_station(self, obj):
+        return {
+            'id': str(obj.station.id),
+            'station_name': obj.station.station_name,
+            'serial_number': obj.station.serial_number,
+            'address': obj.station.address,
+            'status': obj.station.status
+        }
+    
+    def get_reporter(self, obj):
+        return {
+            'id': str(obj.reported_by.id),
+            'email': obj.reported_by.email,
+            'username': obj.reported_by.username,
+            'phone_number': obj.reported_by.phone_number
+        }
+    
+    def get_assigned_to(self, obj):
+        if not obj.assigned_to:
+            return None
+        return {
+            'id': str(obj.assigned_to.id),
+            'email': obj.assigned_to.email,
+            'username': obj.assigned_to.username
+        }
+
+
+class UpdateStationIssueSerializer(serializers.Serializer):
+    """Serializer for updating station issue"""
+    status = serializers.ChoiceField(
+        choices=['REPORTED', 'ACKNOWLEDGED', 'IN_PROGRESS', 'RESOLVED'],
+        required=False
+    )
+    priority = serializers.ChoiceField(
+        choices=['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'],
+        required=False
+    )
+    assigned_to_id = serializers.UUIDField(
+        required=False,
+        allow_null=True
+    )
+    notes = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=1000
+    )
+
+
 
 
 

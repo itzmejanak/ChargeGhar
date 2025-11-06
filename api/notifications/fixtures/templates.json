@@ -614,5 +614,61 @@
       "created_at": "2025-10-22T02:00:00Z",
       "updated_at": "2025-10-22T02:00:00Z"
     }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 45,
+    "fields": {
+      "name": "Rental Issue Reported",
+      "slug": "rental_issue_reported",
+      "notification_type": "rental",
+      "title_template": "🚨 Rental Issue Reported",
+      "message_template": "Your rental issue for {{rental_code}} has been reported successfully. Issue type: {{issue_type}}. Our team will review and respond shortly.",
+      "is_active": true,
+      "created_at": "2025-11-06T07:30:00Z",
+      "updated_at": "2025-11-06T07:30:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 46,
+    "fields": {
+      "name": "Rental Issue Resolved",
+      "slug": "rental_issue_resolved",
+      "notification_type": "rental",
+      "title_template": "✅ Rental Issue Resolved",
+      "message_template": "Great news! Your rental issue for {{rental_code}} has been resolved. {{notes}}",
+      "is_active": true,
+      "created_at": "2025-11-06T07:30:00Z",
+      "updated_at": "2025-11-06T07:30:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 47,
+    "fields": {
+      "name": "Station Issue Resolved",
+      "slug": "station_issue_resolved",
+      "notification_type": "admin",
+      "title_template": "✅ Station Issue Resolved",
+      "message_template": "The {{issue_type}} issue at {{station_name}} ({{station_serial}}) has been resolved. {{notes}}",
+      "is_active": true,
+      "created_at": "2025-11-06T08:00:00Z",
+      "updated_at": "2025-11-06T08:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 48,
+    "fields": {
+      "name": "Rental Reminder",
+      "slug": "rental_reminder",
+      "notification_type": "rental",
+      "title_template": "⏰ Rental Ending Soon - {{rental_code}}",
+      "message_template": "Reminder: Your rental {{rental_code}} is due at {{due_time}}. Please return your powerbank to any ChargeGhar station to avoid additional charges.",
+      "is_active": true,
+      "created_at": "2025-11-06T08:15:00Z",
+      "updated_at": "2025-11-06T08:15:00Z"
+    }
   }
 ]

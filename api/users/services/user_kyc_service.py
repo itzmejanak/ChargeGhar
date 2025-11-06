@@ -70,9 +70,9 @@ class UserKYCService(BaseService):
             # Send KYC status notification
             notify(
                 user,
-                'kyc_status_updated',
+                'kyc_status_update',
                 async_send=True,
-                status=status.lower(),
+                kyc_status=status.lower(),
                 rejection_reason=rejection_reason
             )
             

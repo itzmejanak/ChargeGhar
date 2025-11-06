@@ -160,3 +160,264 @@ class AdminStationService(CRUDService):
         except Exception as e:
             self.log_error(f"MQTT command failed: {str(e)}")
             return False
+
+    # ============================================================
+    # Station Issue Management Methods
+    # ============================================================
+    
+    def get_station_issues(
+        self,
+        status: str = None,
+        priority: str = None,
+        station_sn: str = None,
+        issue_type: str = None,
+        ordering: str = '-reported_at'
+    ):
+        """
+        Get list of station issues with filtering
+        
+        Args:
+            status: Filter by status (REPORTED, ACKNOWLEDGED, IN_PROGRESS, RESOLVED)
+            priority: Filter by priority (LOW, MEDIUM, HIGH, CRITICAL)
+            station_sn: Filter by station serial number
+            issue_type: Filter by issue type
+            ordering: Order by field
+            
+        Returns:
+            Queryset of station issues
+        """
+        from api.stations.models import StationIssue
+        
+        queryset = StationIssue.objects.select_related(
+            'station',
+            'reported_by',
+            'assigned_to'
+        )
+        
+        # Apply filters
+        if status:
+            queryset = queryset.filter(status=status)
+        
+        if priority:
+            queryset = queryset.filter(priority=priority)
+        
+        if station_sn:
+            queryset = queryset.filter(station__serial_number=station_sn)
+        
+        if issue_type:
+            queryset = queryset.filter(issue_type=issue_type)
+        
+        # Apply ordering
+        queryset = queryset.order_by(ordering)
+        
+        return queryset
+    
+    def get_station_issue(self, issue_id: str):
+        """
+        Get specific station issue by ID
+        
+        Args:
+            issue_id: Issue ID
+            
+        Returns:
+            StationIssue instance
+            
+        Raises:
+            ServiceException: If issue not found
+        """
+        from api.stations.models import StationIssue
+        
+        try:
+            return StationIssue.objects.select_related(
+                'station',
+                'reported_by',
+                'assigned_to'
+            ).get(id=issue_id)
+        except StationIssue.DoesNotExist:
+            raise ServiceException(
+                detail="Station issue not found",
+                code="station_issue_not_found"
+            )
+    
+    @transaction.atomic
+    def update_station_issue(
+        self,
+        issue_id: str,
+        admin_user,
+        status: str = None,
+        priority: str = None,
+        assigned_to_id: str = None,
+        notes: str = None,
+        request=None
+    ):
+        """
+        Update station issue status, priority, or assignment
+        
+        Args:
+            issue_id: Issue ID
+            admin_user: Admin user making the update
+            status: New status
+            priority: New priority
+            assigned_to_id: User ID to assign to
+            notes: Admin notes
+            request: HTTP request for logging
+            
+        Returns:
+            Updated StationIssue instance
+        """
+        from api.stations.models import StationIssue
+        from django.contrib.auth import get_user_model
+        
+        User = get_user_model()
+        
+        try:
+            issue = self.get_station_issue(issue_id)
+            old_status = issue.status
+            old_priority = issue.priority
+            old_assigned = issue.assigned_to
+            
+            changes = {}
+            
+            # Update status
+            if status and status != old_status:
+                issue.status = status
+                changes['status'] = {'old': old_status, 'new': status}
+                
+                # Mark as resolved if status is RESOLVED
+                if status == 'RESOLVED' and not issue.resolved_at:
+                    issue.resolved_at = timezone.now()
+                    changes['resolved_at'] = issue.resolved_at.isoformat()
+            
+            # Update priority
+            if priority and priority != old_priority:
+                issue.priority = priority
+                changes['priority'] = {'old': old_priority, 'new': priority}
+            
+            # Update assignment
+            if assigned_to_id:
+                assigned_user = User.objects.get(id=assigned_to_id)
+                issue.assigned_to = assigned_user
+                changes['assigned_to'] = {
+                    'old': old_assigned.username if old_assigned else None,
+                    'new': assigned_user.username
+                }
+            
+            if notes:
+                changes['notes'] = notes
+            
+            issue.save()
+            
+            # Log admin action
+            self._log_admin_action(
+                admin_user=admin_user,
+                action_type='UPDATE_STATION_ISSUE',
+                target_model='StationIssue',
+                target_id=str(issue.id),
+                changes=changes,
+                description=f"Updated station issue {issue.id}",
+                request=request
+            )
+            
+            # Send notification to reporter if resolved
+            if status == 'RESOLVED':
+                self._send_issue_resolved_notification(issue, notes)
+            
+            self.log_info(f"Station issue {issue.id} updated by {admin_user.username}")
+            return issue
+            
+        except User.DoesNotExist:
+            raise ServiceException(
+                detail="Assigned user not found",
+                code="user_not_found"
+            )
+        except Exception as e:
+            self.handle_service_error(e, "Failed to update station issue")
+    
+    @transaction.atomic
+    def delete_station_issue(self, issue_id: str, admin_user, request=None):
+        """
+        Soft delete a station issue
+        
+        Args:
+            issue_id: Issue ID
+            admin_user: Admin user performing deletion
+            request: HTTP request for logging
+            
+        Returns:
+            Success message dict
+        """
+        try:
+            issue = self.get_station_issue(issue_id)
+            
+            # Soft delete (mark as deleted)
+            issue.delete()
+            
+            # Log admin action
+            self._log_admin_action(
+                admin_user=admin_user,
+                action_type='DELETE_STATION_ISSUE',
+                target_model='StationIssue',
+                target_id=str(issue.id),
+                changes={'deleted': True},
+                description=f"Deleted station issue {issue.id}",
+                request=request
+            )
+            
+            self.log_info(f"Station issue {issue.id} deleted by {admin_user.username}")
+            
+            return {'message': 'Station issue deleted successfully'}
+            
+        except Exception as e:
+            self.handle_service_error(e, "Failed to delete station issue")
+    
+    def _send_issue_resolved_notification(self, issue, notes: str = None):
+        """Send notification to user when station issue is resolved"""
+        try:
+            from api.notifications.services import notify
+            
+            notify(
+                issue.reported_by,
+                'station_issue_resolved',
+                station_name=issue.station.station_name,
+                station_serial=issue.station.serial_number,
+                issue_type=issue.get_issue_type_display(),
+                notes=notes or 'Issue has been resolved'
+            )
+        except Exception as e:
+            self.log_warning(f"Failed to send issue resolved notification: {str(e)}")
+    
+    def _log_admin_action(
+        self,
+        admin_user,
+        action_type: str,
+        target_model: str,
+        target_id: str,
+        changes: dict,
+        description: str,
+        request=None
+    ):
+        """Log admin action to audit trail"""
+        try:
+            from api.admin.models import AdminActionLog
+            
+            AdminActionLog.objects.create(
+                admin_user=admin_user,
+                action_type=action_type,
+                target_model=target_model,
+                target_id=target_id,
+                changes=changes,
+                description=description,
+                ip_address=self._get_client_ip(request) if request else '',
+                user_agent=request.META.get('HTTP_USER_AGENT', '') if request else ''
+            )
+        except Exception as e:
+            self.log_error(f"Failed to log admin action: {str(e)}")
+    
+    def _get_client_ip(self, request) -> str:
+        """Get client IP address from request"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip

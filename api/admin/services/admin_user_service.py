@@ -182,6 +182,134 @@ class AdminUserService(CRUDService):
         except Exception as e:
             self.handle_service_error(e, "Failed to add user balance")
     
+    def get_kyc_submissions(self, filters: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Get paginated list of KYC submissions with filters"""
+        try:
+            from api.users.models import UserKYC
+            
+            queryset = UserKYC.objects.select_related('user', 'verified_by')
+            
+            # Apply filters
+            if filters:
+                if filters.get('status'):
+                    queryset = queryset.filter(status=filters['status'])
+                
+                if filters.get('search'):
+                    search_term = filters['search']
+                    queryset = queryset.filter(
+                        Q(user__username__icontains=search_term) |
+                        Q(user__email__icontains=search_term) |
+                        Q(document_number__icontains=search_term)
+                    )
+                
+                if filters.get('start_date'):
+                    queryset = queryset.filter(created_at__gte=filters['start_date'])
+                
+                if filters.get('end_date'):
+                    queryset = queryset.filter(created_at__lte=filters['end_date'])
+            
+            # Order by latest pending first, then by creation date
+            from django.db.models import Case, When, IntegerField
+            queryset = queryset.annotate(
+                pending_priority=Case(
+                    When(status='PENDING', then=0),
+                    default=1,
+                    output_field=IntegerField()
+                )
+            ).order_by('pending_priority', '-created_at')
+            
+            # Pagination
+            page = filters.get('page', 1) if filters else 1
+            page_size = filters.get('page_size', 20) if filters else 20
+            
+            return paginate_queryset(queryset, page, page_size)
+            
+        except Exception as e:
+            self.handle_service_error(e, "Failed to get KYC submissions")
+    
+    @transaction.atomic
+    def update_kyc_status(self, kyc_id: str, status: str, rejection_reason: str, admin_user) -> Dict[str, Any]:
+        """Approve or reject KYC submission"""
+        try:
+            from api.users.models import UserKYC
+            from django.utils import timezone
+            
+            kyc = UserKYC.objects.select_related('user').get(id=kyc_id)
+            old_status = kyc.status
+            
+            # Update KYC status
+            kyc.status = status
+            kyc.verified_by = admin_user
+            
+            if status == 'APPROVED':
+                kyc.verified_at = timezone.now()
+                kyc.rejection_reason = None
+            elif status == 'REJECTED':
+                kyc.rejection_reason = rejection_reason
+                kyc.verified_at = None
+            
+            kyc.save()
+            
+            # Log admin action
+            self._log_admin_action(
+                admin_user=admin_user,
+                action_type='UPDATE_KYC_STATUS',
+                target_model='UserKYC',
+                target_id=str(kyc.id),
+                changes={
+                    'old_status': old_status,
+                    'new_status': status,
+                    'rejection_reason': rejection_reason,
+                    'user': kyc.user.username
+                },
+                description=f"Updated KYC status from {old_status} to {status} for user {kyc.user.username}"
+            )
+            
+            # Send notification to user
+            from api.notifications.services import notify
+            notify(
+                kyc.user,
+                'kyc_status_update',
+                async_send=True,
+                kyc_status=status.lower(),
+                rejection_reason=rejection_reason or ''
+            )
+            
+            # Award KYC completion points if approved
+            if status == 'APPROVED':
+                from api.points.tasks import award_points_task
+                from api.system.services import AppConfigService
+                
+                config_service = AppConfigService()
+                kyc_points = int(config_service.get_config_cached('POINTS_KYC', 30))
+                
+                transaction.on_commit(
+                    lambda: award_points_task.delay(
+                        str(kyc.user.id),
+                        kyc_points,
+                        'KYC',
+                        'KYC verification completed'
+                    )
+                )
+            
+            self.log_info(f"KYC status updated: {kyc.user.username} -> {status}")
+            
+            return {
+                'kyc_id': str(kyc.id),
+                'user': kyc.user.username,
+                'old_status': old_status,
+                'new_status': status,
+                'verified_by': admin_user.username
+            }
+            
+        except UserKYC.DoesNotExist:
+            raise ServiceException(
+                detail="KYC submission not found",
+                code="kyc_not_found"
+            )
+        except Exception as e:
+            self.handle_service_error(e, "Failed to update KYC status")
+    
     def _log_admin_action(self, admin_user, action_type: str, target_model: str, 
                          target_id: str, changes: Dict[str, Any], description: str = "") -> None:
         """Log admin action for audit trail"""
