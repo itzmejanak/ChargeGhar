@@ -1,16 +1,11 @@
 api/system/views/
 ├── __init__.py                # Router merge
-├── app_info_views.py          # App information and health (3 classes)
-│   ├── AppInitDataView
+├── app_info_views.py          # App information and health (2 classes)
 │   ├── AppVersionCheckView
 │   └── AppHealthView
-├── app_updates_views.py       # App updates and version history (2 classes)
-│   ├── AppUpdatesView
-│   └── AppUpdatesSinceView
-├── config_views.py            # Configuration management (1 classes)
-│   └── PublicConfigView
-└── country_views.py           # Country operations and search (2 classes)
-    ├── CountryListView
-    └── CountrySearchView
+├── app_updates_views.py       # App updates and version history (1 classes)
+│   └── AppUpdatesView
+└── country_views.py           # Country operations and search (1 classes)
+    └── CountryListView
 
-Total: 4 files, 8 view classes
+Total: 3 files, 4 view classes

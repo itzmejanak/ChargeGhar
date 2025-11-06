@@ -1,10 +1,9 @@
 api/promotions/views/
 ├── __init__.py                # Router merge
-├── coupon_views.py            # User coupon operations - apply, validate, and personal history (3 classes)
+├── coupon_views.py            # User coupon operations - apply, validate, and personal history (2 classes)
 │   ├── CouponApplyView
-│   ├── CouponValidateView
 │   └── MyCouponsView
 └── public_views.py            # Public promotion information - active coupons and general info (1 classes)
     └── ActiveCouponsView
 
-Total: 2 files, 4 view classes
+Total: 2 files, 3 view classes

@@ -14,6 +14,8 @@ api/common/services/
 ├── __init__.py                    # Exports
 └── base.py                        # Service operations
     ├── ServiceException
+    │   ├── __init__()
+    │   └── get_context_data()
     ├── BaseService
     │   ├── __init__()
     │   ├── log_info()
@@ -30,7 +32,7 @@ api/common/services/
         ├── update()
         └── delete()
 
-Total: 1 files, 3 service classes, 13 methods
+Total: 1 files, 3 service classes, 15 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

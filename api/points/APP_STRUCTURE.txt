@@ -10,13 +10,12 @@ api/points/views/
 │   ├── PointsHistoryView
 │   ├── PointsSummaryView
 │   └── PointsLeaderboardView
-└── referrals_views.py         # Referral system - codes, validation, claims, and user referrals (4 classes)
+└── referrals_views.py         # Referral system - codes, validation, claims, and user referrals (3 classes)
     ├── UserReferralCodeView
-    ├── ReferralValidationView
     ├── ReferralClaimView
     └── UserReferralsView
 
-Total: 2 files, 7 view classes
+Total: 2 files, 6 view classes
 
 ⚙️  SERVICES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -81,7 +80,7 @@ Total: 4 files, 3 service classes, 16 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/points/serializers.py          # Single file (339 lines)
+api/points/serializers.py          # Single file (317 lines)
 ├── User Serializers
 │   ├── UserPointsSerializer
 │   ├── UserReferralCodeResponseSerializer
@@ -93,7 +92,6 @@ api/points/serializers.py          # Single file (339 lines)
 ├── Point Serializers
 │   ├── ReferralListSerializer
 │   ├── ReferralDetailSerializer
-│   ├── ReferralCodeValidationSerializer
 │   ├── ReferralClaimSerializer
 │   ├── PointsHistoryFilterSerializer
 │   ├── PointsSummarySerializer
@@ -101,13 +99,11 @@ api/points/serializers.py          # Single file (339 lines)
 │   ├── PointsLeaderboardDetailSerializer
 │   ├── PointsHistoryResponseSerializer
 │   ├── PointsSummaryResponseSerializer
-│   ├── ReferralValidationResponseSerializer
 │   ├── ReferralClaimResponseSerializer
 │   ├── PointsLeaderboardResponseSerializer
 │   ├── PointsHistoryDataSerializer
 │   └── ReferralCodeDataSerializer
 └── Other Serializers
-    ├── ValidationDataSerializer
     └── ClaimDataSerializer
 
-Total: 1 file, 23 serializers (4 categories)
+Total: 1 file, 20 serializers (4 categories)

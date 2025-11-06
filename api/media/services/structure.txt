@@ -21,6 +21,10 @@ api/media/services/
         ├── _upload_to_cloud_storage()
         ├── get_user_uploads()
         ├── delete_upload()
-        └── _delete_from_cloud_storage()
+        ├── _delete_from_cloud_storage()
+        ├── get_all_uploads_admin()
+        ├── get_upload_admin()
+        ├── delete_upload_admin()
+        └── get_media_analytics()
 
-Total: 2 files, 4 service classes, 16 methods
+Total: 2 files, 4 service classes, 20 methods

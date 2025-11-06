@@ -6,9 +6,17 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 api/admin/views/
 ├── __init__.py                # Router merge
-├── auth_views.py              # Admin authentication and profile management - handles admin login and profile CRUD operations (2 classes)
+├── app_admin_views.py         # Admin app management views - versions and updates (3 classes)
+│   ├── AdminAppVersionsView
+│   ├── AdminAppVersionDetailView
+│   └── AdminAppUpdatesView
+├── auth_views.py              # Admin authentication and profile management - handles admin login and profile CRUD operations (4 classes)
 │   ├── AdminLoginView
-│   └── AdminProfileView
+│   ├── AdminProfileView
+│   ├── AdminMeView
+│   └── AdminProfileDetailView
+├── config_admin_views.py      # Admin configuration management views (1 classes)
+│   └── AdminConfigView
 ├── content_admin_views.py     # Content administration - manage pages, FAQs, contact info, and banners
 ========================================================================
 
@@ -22,6 +30,20 @@ Renamed to content_admin_views.py for clarity and consistency (8 classes)
 │   ├── AdminContactInfoDetailView
 │   ├── AdminBannerView
 │   └── AdminBannerDetailView
+├── coupon_views.py            # Admin coupon management views
+============================================================
+
+This module contains views for admin coupon management operations.
+
+Created: 2025-11-05 (4 classes)
+│   ├── AdminCouponView
+│   ├── AdminCouponBulkView
+│   ├── AdminCouponDetailView
+│   └── AdminCouponUsageView
+├── media_admin_views.py       # Admin media management views (3 classes)
+│   ├── AdminMediaUploadsView
+│   ├── AdminMediaUploadDetailView
+│   └── AdminMediaAnalyticsView
 ├── monitoring_views.py        # System monitoring, logs, analytics and health checks - centralized observability for platform health (4 classes)
 │   ├── AdminActionLogView
 │   ├── SystemLogView
@@ -36,13 +58,18 @@ Renamed to content_admin_views.py for clarity and consistency (8 classes)
 │   ├── AdminStationsView
 │   ├── ToggleMaintenanceView
 │   └── SendRemoteCommandView
-└── user_management_views.py   # User administration operations - manage user accounts, status, and wallet operations (4 classes)
-    ├── AdminUserListView
-    ├── AdminUserDetailView
-    ├── UpdateUserStatusView
-    └── AddUserBalanceView
+├── user_management_views.py   # User administration operations - manage user accounts, status, and wallet operations (4 classes)
+│   ├── AdminUserListView
+│   ├── AdminUserDetailView
+│   ├── UpdateUserStatusView
+│   └── AddUserBalanceView
+└── withdrawal_views.py        # Admin withdrawal management - handle withdrawal requests and operations (4 classes)
+    ├── AdminWithdrawalAnalyticsView
+    ├── AdminWithdrawalsView
+    ├── ProcessWithdrawalView
+    └── AdminWithdrawalDetailView
 
-Total: 7 files, 24 view classes
+Total: 12 files, 41 view classes
 
 ⚙️  SERVICES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -96,6 +123,27 @@ Date: 2025-10-18 23:39:20
 │   └── AdminNotificationService
 │       ├── send_broadcast_message()
 │       └── _get_target_users()
+├── admin_profile_service.py       # Service for admin profile management
+============================================================
+
+This module contains service classes for admin profile management,
+including authentication, profile CRUD, and role management.
+
+Created: 2025-11-05
+│   └── AdminProfileService
+│       ├── authenticate_admin()
+│       ├── _ensure_admin_objects()
+│       ├── get_admin_profiles()
+│       ├── get_admin_profile()
+│       ├── get_current_admin_profile()
+│       ├── _get_permissions()
+│       ├── create_admin_profile()
+│       ├── update_admin_role()
+│       ├── update_admin_profile()
+│       ├── update_admin_password()
+│       ├── deactivate_admin()
+│       ├── activate_admin()
+│       └── _log_admin_action()
 ├── admin_refund_service.py        # Service for admin refund management
 ============================================================
 
@@ -134,30 +182,50 @@ Date: 2025-10-18 23:39:20
 │   └── AdminSystemService
 │       ├── get_system_health()
 │       └── get_system_logs()
-└── admin_user_service.py          # Service for admin user management
+├── admin_user_service.py          # Service for admin user management
 ============================================================
 
 This module contains service classes for service for admin user management.
 
 Auto-generated by Service Separator
 Date: 2025-10-18 23:39:20
-    └── AdminUserService
-        ├── get_users_list()
-        ├── get_user_detail()
-        ├── update_user_status()
-        ├── add_user_balance()
-        └── _log_admin_action()
+│   └── AdminUserService
+│       ├── get_users_list()
+│       ├── get_user_detail()
+│       ├── update_user_status()
+│       ├── add_user_balance()
+│       └── _log_admin_action()
+└── admin_withdrawal_service.py    # Service for admin withdrawal management
+============================================================
 
-Total: 7 files, 7 service classes, 40 methods
+This module contains service classes for admin withdrawal management operations.
+Delegates core withdrawal logic to the payments WithdrawalService for consistency.
+
+Auto-generated by Service Separator
+Date: 2025-10-22 02:05:00
+    └── AdminWithdrawalService
+        ├── __init__()
+        ├── get_pending_withdrawals()
+        ├── process_withdrawal()
+        ├── _log_admin_action()
+        ├── _send_withdrawal_notification()
+        ├── get_withdrawal_details()
+        ├── get_withdrawals_by_status()
+        └── get_withdrawal_analytics()
+
+Total: 9 files, 9 service classes, 61 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/admin/serializers.py          # Single file (226 lines)
+api/admin/serializers.py          # Single file (360 lines)
 ├── Authentication Serializers
-│   └── AdminLoginSerializer
+│   ├── AdminLoginSerializer
+│   └── AdminPasswordUpdateSerializer
 ├── Profile Serializers
 │   ├── AdminProfileSerializer
-│   └── AdminProfileCreateSerializer
+│   ├── AdminProfileCreateSerializer
+│   ├── AdminProfileUpdateSerializer
+│   └── AdminProfileActionSerializer
 ├── User Serializers
 │   ├── AdminUserListSerializer
 │   ├── UpdateUserStatusSerializer
@@ -171,12 +239,18 @@ api/admin/serializers.py          # Single file (226 lines)
 │   └── AdminActionLogSerializer
 ├── Utility Serializers
 │   ├── DashboardAnalyticsSerializer
-│   └── SystemLogFiltersSerializer
+│   ├── SystemLogFiltersSerializer
+│   ├── WithdrawalFiltersSerializer
+│   └── CouponListSerializer
 └── Other Serializers
     ├── SystemLogSerializer
     ├── ToggleMaintenanceSerializer
     ├── RemoteCommandSerializer
     ├── BroadcastMessageSerializer
-    └── SystemHealthSerializer
+    ├── SystemHealthSerializer
+    ├── ProcessWithdrawalSerializer
+    ├── CreateCouponSerializer
+    ├── BulkCreateCouponSerializer
+    └── UpdateCouponStatusSerializer
 
-Total: 1 file, 17 serializers (8 categories)
+Total: 1 file, 26 serializers (8 categories)

@@ -7,8 +7,11 @@ api/stations/views/
 ├── interaction_views.py       # User interactions - favorite toggle and issue reporting (2 classes)
 │   ├── StationFavoriteView
 │   └── StationReportIssueView
+├── internal_views.py          # Internal API views for IoT system integration
+Endpoints for receiving device data from Java IoT management system (1 classes)
+│   └── StationDataInternalView
 └── user_views.py              # User-specific operations - favorites and reports listing (2 classes)
     ├── UserFavoriteStationsView
     └── UserStationReportsView
 
-Total: 3 files, 7 view classes
+Total: 4 files, 8 view classes

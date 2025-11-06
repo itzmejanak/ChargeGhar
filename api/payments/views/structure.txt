@@ -7,10 +7,15 @@ api/payments/views/
 │   └── CalculatePaymentOptionsView
 ├── refund_views.py            # User refund operations - list and request refunds (1 classes)
 │   └── RefundListView
-└── wallet_views.py            # Wallet operations - topup, balance, verify, and cancel (4 classes)
-    ├── TopupIntentCreateView
-    ├── PaymentVerifyView
-    ├── WalletBalanceView
-    └── PaymentCancelView
+├── wallet_views.py            # Wallet operations - topup, balance, verify, and cancel (4 classes)
+│   ├── TopupIntentCreateView
+│   ├── PaymentVerifyView
+│   ├── WalletBalanceView
+│   └── PaymentCancelView
+└── withdrawal_views.py        # Withdrawal operations - request, list, and cancel withdrawals (4 classes)
+    ├── WithdrawalRequestView
+    ├── WithdrawalListView
+    ├── WithdrawalCancelView
+    └── WithdrawalDetailView
 
-Total: 3 files, 9 view classes
+Total: 4 files, 13 view classes

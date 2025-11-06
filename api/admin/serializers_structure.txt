@@ -1,9 +1,12 @@
-api/admin/serializers.py          # Single file (226 lines)
+api/admin/serializers.py          # Single file (360 lines)
 ├── Authentication Serializers
-│   └── AdminLoginSerializer
+│   ├── AdminLoginSerializer
+│   └── AdminPasswordUpdateSerializer
 ├── Profile Serializers
 │   ├── AdminProfileSerializer
-│   └── AdminProfileCreateSerializer
+│   ├── AdminProfileCreateSerializer
+│   ├── AdminProfileUpdateSerializer
+│   └── AdminProfileActionSerializer
 ├── User Serializers
 │   ├── AdminUserListSerializer
 │   ├── UpdateUserStatusSerializer
@@ -17,12 +20,18 @@ api/admin/serializers.py          # Single file (226 lines)
 │   └── AdminActionLogSerializer
 ├── Utility Serializers
 │   ├── DashboardAnalyticsSerializer
-│   └── SystemLogFiltersSerializer
+│   ├── SystemLogFiltersSerializer
+│   ├── WithdrawalFiltersSerializer
+│   └── CouponListSerializer
 └── Other Serializers
     ├── SystemLogSerializer
     ├── ToggleMaintenanceSerializer
     ├── RemoteCommandSerializer
     ├── BroadcastMessageSerializer
-    └── SystemHealthSerializer
+    ├── SystemHealthSerializer
+    ├── ProcessWithdrawalSerializer
+    ├── CreateCouponSerializer
+    ├── BulkCreateCouponSerializer
+    └── UpdateCouponStatusSerializer
 
-Total: 1 file, 17 serializers (8 categories)
+Total: 1 file, 26 serializers (8 categories)

@@ -1,8 +1,16 @@
 api/admin/views/
 ├── __init__.py                # Router merge
-├── auth_views.py              # Admin authentication and profile management - handles admin login and profile CRUD operations (2 classes)
+├── app_admin_views.py         # Admin app management views - versions and updates (3 classes)
+│   ├── AdminAppVersionsView
+│   ├── AdminAppVersionDetailView
+│   └── AdminAppUpdatesView
+├── auth_views.py              # Admin authentication and profile management - handles admin login and profile CRUD operations (4 classes)
 │   ├── AdminLoginView
-│   └── AdminProfileView
+│   ├── AdminProfileView
+│   ├── AdminMeView
+│   └── AdminProfileDetailView
+├── config_admin_views.py      # Admin configuration management views (1 classes)
+│   └── AdminConfigView
 ├── content_admin_views.py     # Content administration - manage pages, FAQs, contact info, and banners
 ========================================================================
 
@@ -16,6 +24,20 @@ Renamed to content_admin_views.py for clarity and consistency (8 classes)
 │   ├── AdminContactInfoDetailView
 │   ├── AdminBannerView
 │   └── AdminBannerDetailView
+├── coupon_views.py            # Admin coupon management views
+============================================================
+
+This module contains views for admin coupon management operations.
+
+Created: 2025-11-05 (4 classes)
+│   ├── AdminCouponView
+│   ├── AdminCouponBulkView
+│   ├── AdminCouponDetailView
+│   └── AdminCouponUsageView
+├── media_admin_views.py       # Admin media management views (3 classes)
+│   ├── AdminMediaUploadsView
+│   ├── AdminMediaUploadDetailView
+│   └── AdminMediaAnalyticsView
 ├── monitoring_views.py        # System monitoring, logs, analytics and health checks - centralized observability for platform health (4 classes)
 │   ├── AdminActionLogView
 │   ├── SystemLogView
@@ -30,10 +52,15 @@ Renamed to content_admin_views.py for clarity and consistency (8 classes)
 │   ├── AdminStationsView
 │   ├── ToggleMaintenanceView
 │   └── SendRemoteCommandView
-└── user_management_views.py   # User administration operations - manage user accounts, status, and wallet operations (4 classes)
-    ├── AdminUserListView
-    ├── AdminUserDetailView
-    ├── UpdateUserStatusView
-    └── AddUserBalanceView
+├── user_management_views.py   # User administration operations - manage user accounts, status, and wallet operations (4 classes)
+│   ├── AdminUserListView
+│   ├── AdminUserDetailView
+│   ├── UpdateUserStatusView
+│   └── AddUserBalanceView
+└── withdrawal_views.py        # Admin withdrawal management - handle withdrawal requests and operations (4 classes)
+    ├── AdminWithdrawalAnalyticsView
+    ├── AdminWithdrawalsView
+    ├── ProcessWithdrawalView
+    └── AdminWithdrawalDetailView
 
-Total: 7 files, 24 view classes
+Total: 12 files, 41 view classes

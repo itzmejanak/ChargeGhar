@@ -4,10 +4,9 @@ api/points/views/
 │   ├── PointsHistoryView
 │   ├── PointsSummaryView
 │   └── PointsLeaderboardView
-└── referrals_views.py         # Referral system - codes, validation, claims, and user referrals (4 classes)
+└── referrals_views.py         # Referral system - codes, validation, claims, and user referrals (3 classes)
     ├── UserReferralCodeView
-    ├── ReferralValidationView
     ├── ReferralClaimView
     └── UserReferralsView
 
-Total: 2 files, 7 view classes
+Total: 2 files, 6 view classes

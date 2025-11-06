@@ -13,13 +13,18 @@ api/payments/views/
 │   └── CalculatePaymentOptionsView
 ├── refund_views.py            # User refund operations - list and request refunds (1 classes)
 │   └── RefundListView
-└── wallet_views.py            # Wallet operations - topup, balance, verify, and cancel (4 classes)
-    ├── TopupIntentCreateView
-    ├── PaymentVerifyView
-    ├── WalletBalanceView
-    └── PaymentCancelView
+├── wallet_views.py            # Wallet operations - topup, balance, verify, and cancel (4 classes)
+│   ├── TopupIntentCreateView
+│   ├── PaymentVerifyView
+│   ├── WalletBalanceView
+│   └── PaymentCancelView
+└── withdrawal_views.py        # Withdrawal operations - request, list, and cancel withdrawals (4 classes)
+    ├── WithdrawalRequestView
+    ├── WithdrawalListView
+    ├── WithdrawalCancelView
+    └── WithdrawalDetailView
 
-Total: 3 files, 9 view classes
+Total: 4 files, 13 view classes
 
 ⚙️  SERVICES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -69,19 +74,36 @@ api/payments/services/
 │   └── TransactionService
 │       ├── get_user_transactions()
 │       └── get_user_transactions_queryset()
-└── wallet.py                      # Service operations
-    └── WalletService
-        ├── get_or_create_wallet()
-        ├── add_balance()
-        ├── deduct_balance()
-        ├── get_wallet_balance()
-        └── get_wallet_balance()
+├── wallet.py                      # Service operations
+│   └── WalletService
+│       ├── get_or_create_wallet()
+│       ├── add_balance()
+│       ├── deduct_balance()
+│       ├── get_wallet_balance()
+│       └── get_wallet_balance()
+└── withdrawal.py                  # Service operations
+    └── WithdrawalService
+        ├── __init__()
+        ├── request_withdrawal()
+        ├── get_user_withdrawals()
+        ├── approve_withdrawal()
+        ├── reject_withdrawal()
+        ├── cancel_withdrawal()
+        ├── calculate_withdrawal_fee()
+        ├── validate_withdrawal_limits()
+        ├── _validate_account_details()
+        ├── _update_withdrawal_limits()
+        ├── _reverse_withdrawal_limits()
+        ├── _process_withdrawal_payment()
+        ├── get_pending_withdrawals()
+        ├── get_withdrawal_by_id()
+        └── get_withdrawals_by_status()
 
-Total: 7 files, 7 service classes, 37 methods
+Total: 8 files, 8 service classes, 52 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/payments/serializers.py          # Single file (395 lines)
+api/payments/serializers.py          # Single file (562 lines)
 ├── User Serializers
 │   └── UserTransactionHistorySerializer
 ├── Payment Serializers
@@ -101,9 +123,15 @@ api/payments/serializers.py          # Single file (395 lines)
 │   └── PaymentStatusSerializer
 ├── Rental Serializers
 │   └── RentalPackageSerializer
+├── Utility Serializers
+│   └── WithdrawalListSerializer
 └── Other Serializers
     ├── TopupIntentCreateSerializer
     ├── PayDueSerializer
-    └── VerifyTopupSerializer
+    ├── VerifyTopupSerializer
+    ├── WithdrawalRequestSerializer
+    ├── WithdrawalSerializer
+    ├── WithdrawalCancelSerializer
+    └── WithdrawalStatusSerializer
 
-Total: 1 file, 19 serializers (4 categories)
+Total: 1 file, 24 serializers (5 categories)

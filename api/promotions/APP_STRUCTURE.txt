@@ -6,14 +6,13 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 api/promotions/views/
 ├── __init__.py                # Router merge
-├── coupon_views.py            # User coupon operations - apply, validate, and personal history (3 classes)
+├── coupon_views.py            # User coupon operations - apply, validate, and personal history (2 classes)
 │   ├── CouponApplyView
-│   ├── CouponValidateView
 │   └── MyCouponsView
 └── public_views.py            # Public promotion information - active coupons and general info (1 classes)
     └── ActiveCouponsView
 
-Total: 2 files, 4 view classes
+Total: 2 files, 3 view classes
 
 ⚙️  SERVICES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -50,7 +49,7 @@ Total: 2 files, 2 service classes, 10 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/promotions/serializers.py          # Single file (224 lines)
+api/promotions/serializers.py          # Single file (222 lines)
 ├── User Serializers
 │   └── UserCouponHistorySerializer
 ├── Utility Serializers
@@ -61,7 +60,6 @@ api/promotions/serializers.py          # Single file (224 lines)
 │   ├── CouponFilterSerializer
 │   ├── ActiveCouponsResponseSerializer
 │   ├── CouponApplyResponseSerializer
-│   ├── CouponValidationResponseSerializer
 │   └── MyCouponsResponseSerializer
 └── Other Serializers
     ├── CouponPublicSerializer
@@ -70,4 +68,4 @@ api/promotions/serializers.py          # Single file (224 lines)
     ├── CouponApplyDataSerializer
     └── MyCouponsDataSerializer
 
-Total: 1 file, 15 serializers (3 categories)
+Total: 1 file, 14 serializers (3 categories)

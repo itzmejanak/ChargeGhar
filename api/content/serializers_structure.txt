@@ -1,4 +1,4 @@
-api/content/serializers.py          # Single file (219 lines)
+api/content/serializers.py          # Single file (194 lines)
 ├── Utility Serializers
 │   ├── ContentPageListSerializer
 │   ├── BannerListSerializer
@@ -13,8 +13,6 @@ api/content/serializers.py          # Single file (219 lines)
     ├── ContactInfoPublicSerializer
     ├── BannerSerializer
     ├── BannerPublicSerializer
-    ├── AppHealthSerializer
-    ├── ContentSearchSerializer
-    └── ContentSearchResultSerializer
+    └── AppHealthSerializer
 
-Total: 1 file, 15 serializers (2 categories)
+Total: 1 file, 13 serializers (2 categories)

@@ -44,12 +44,29 @@ api/payments/services/
 │   └── TransactionService
 │       ├── get_user_transactions()
 │       └── get_user_transactions_queryset()
-└── wallet.py                      # Service operations
-    └── WalletService
-        ├── get_or_create_wallet()
-        ├── add_balance()
-        ├── deduct_balance()
-        ├── get_wallet_balance()
-        └── get_wallet_balance()
+├── wallet.py                      # Service operations
+│   └── WalletService
+│       ├── get_or_create_wallet()
+│       ├── add_balance()
+│       ├── deduct_balance()
+│       ├── get_wallet_balance()
+│       └── get_wallet_balance()
+└── withdrawal.py                  # Service operations
+    └── WithdrawalService
+        ├── __init__()
+        ├── request_withdrawal()
+        ├── get_user_withdrawals()
+        ├── approve_withdrawal()
+        ├── reject_withdrawal()
+        ├── cancel_withdrawal()
+        ├── calculate_withdrawal_fee()
+        ├── validate_withdrawal_limits()
+        ├── _validate_account_details()
+        ├── _update_withdrawal_limits()
+        ├── _reverse_withdrawal_limits()
+        ├── _process_withdrawal_payment()
+        ├── get_pending_withdrawals()
+        ├── get_withdrawal_by_id()
+        └── get_withdrawals_by_status()
 
-Total: 7 files, 7 service classes, 37 methods
+Total: 8 files, 8 service classes, 52 methods

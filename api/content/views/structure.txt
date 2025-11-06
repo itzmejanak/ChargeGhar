@@ -1,7 +1,6 @@
 api/content/views/
 ├── __init__.py                # Router merge
-├── app_views.py               # App-related functionality - version check and content search (1 classes)
-│   └── ContentSearchView
+├── app_views.py               # App-related functionality 
 ├── dynamic_content_views.py   # Dynamic content - contact info, FAQ, and banners (3 classes)
 │   ├── ContactView
 │   ├── FAQView
@@ -11,4 +10,4 @@ api/content/views/
     ├── PrivacyPolicyView
     └── AboutView
 
-Total: 3 files, 7 view classes
+Total: 3 files, 6 view classes
