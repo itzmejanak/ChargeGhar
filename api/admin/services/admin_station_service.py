@@ -283,6 +283,15 @@ class AdminStationService(CRUDService):
                 issue.status = status
                 changes['status'] = {'old': old_status, 'new': status}
                 
+                # Auto-assign to current admin if status changed to IN_PROGRESS and not yet assigned
+                if status == 'IN_PROGRESS' and not issue.assigned_to and not assigned_to_id:
+                    issue.assigned_to = admin_user
+                    changes['assigned_to'] = {
+                        'old': None,
+                        'new': admin_user.username,
+                        'note': 'Auto-assigned when marked as IN_PROGRESS'
+                    }
+                
                 # Mark as resolved if status is RESOLVED
                 if status == 'RESOLVED' and not issue.resolved_at:
                     issue.resolved_at = timezone.now()
@@ -295,12 +304,49 @@ class AdminStationService(CRUDService):
             
             # Update assignment
             if assigned_to_id:
-                assigned_user = User.objects.get(id=assigned_to_id)
-                issue.assigned_to = assigned_user
-                changes['assigned_to'] = {
-                    'old': old_assigned.username if old_assigned else None,
-                    'new': assigned_user.username
-                }
+                try:
+                    # assigned_to_id can be either AdminProfile UUID or User integer ID
+                    # Try to get AdminProfile first (UUID), then fall back to User (int)
+                    from api.admin.models import AdminProfile
+                    
+                    try:
+                        # Try as AdminProfile UUID first
+                        admin_profile = AdminProfile.objects.select_related('user').get(id=assigned_to_id)
+                        assigned_user = admin_profile.user
+                        
+                        # Validate AdminProfile is active
+                        if not admin_profile.is_active:
+                            raise ServiceException(
+                                detail="Cannot assign issue to inactive admin profile",
+                                code="invalid_assignment_inactive_profile"
+                            )
+                    except (AdminProfile.DoesNotExist, ValueError):
+                        # Try as User ID (integer) as fallback
+                        assigned_user = User.objects.get(id=assigned_to_id)
+                    
+                    # Validate user is staff and active
+                    if not assigned_user.is_staff:
+                        raise ServiceException(
+                            detail="Can only assign issues to staff members",
+                            code="invalid_assignment_not_staff"
+                        )
+                    
+                    if not assigned_user.is_active:
+                        raise ServiceException(
+                            detail="Cannot assign issue to inactive user",
+                            code="invalid_assignment_inactive_user"
+                        )
+                    
+                    issue.assigned_to = assigned_user
+                    changes['assigned_to'] = {
+                        'old': old_assigned.username if old_assigned else None,
+                        'new': assigned_user.username
+                    }
+                except User.DoesNotExist:
+                    raise ServiceException(
+                        detail="Assigned user not found",
+                        code="user_not_found"
+                    )
             
             if notes:
                 changes['notes'] = notes
@@ -325,11 +371,8 @@ class AdminStationService(CRUDService):
             self.log_info(f"Station issue {issue.id} updated by {admin_user.username}")
             return issue
             
-        except User.DoesNotExist:
-            raise ServiceException(
-                detail="Assigned user not found",
-                code="user_not_found"
-            )
+        except ServiceException:
+            raise
         except Exception as e:
             self.handle_service_error(e, "Failed to update station issue")
     

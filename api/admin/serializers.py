@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model
 from decimal import Decimal
 
 from api.admin.models import AdminProfile, AdminActionLog, SystemLog
+from api.payments.models import PaymentMethod
+from api.rentals.models import RentalPackage
 
 User = get_user_model()
 
@@ -572,13 +574,171 @@ class UpdateStationIssueSerializer(serializers.Serializer):
     )
     assigned_to_id = serializers.UUIDField(
         required=False,
-        allow_null=True
+        allow_null=True,
+        help_text="Admin Profile ID (UUID) to assign the issue to. Must be an active staff member."
     )
     notes = serializers.CharField(
         required=False,
         allow_blank=True,
         max_length=1000
     )
+
+
+# ============================================================
+# Payment Method Management Serializers
+# ============================================================
+
+class AdminPaymentMethodListSerializer(serializers.Serializer):
+    """Serializer for payment method list filters"""
+    is_active = serializers.BooleanField(required=False, allow_null=True, default=None)
+    gateway = serializers.CharField(required=False)
+    search = serializers.CharField(required=False)
+    page = serializers.IntegerField(default=1, min_value=1)
+    page_size = serializers.IntegerField(default=20, min_value=1, max_value=100)
+
+
+class AdminPaymentMethodSerializer(serializers.ModelSerializer):
+    """Serializer for payment method details"""
+    
+    class Meta:
+        model = PaymentMethod
+        fields = [
+            'id', 'name', 'gateway', 'is_active', 'configuration',
+            'min_amount', 'max_amount', 'supported_currencies',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class CreatePaymentMethodSerializer(serializers.Serializer):
+    """Serializer for creating payment method"""
+    name = serializers.CharField(max_length=100)
+    gateway = serializers.CharField(max_length=255)
+    is_active = serializers.BooleanField(default=True)
+    configuration = serializers.JSONField(default=dict, required=False)
+    min_amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    max_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    supported_currencies = serializers.ListField(
+        child=serializers.CharField(max_length=10),
+        default=list,
+        required=False
+    )
+    
+    def validate_min_amount(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Minimum amount cannot be negative")
+        return value
+    
+    def validate(self, data):
+        if data.get('max_amount') and data.get('min_amount'):
+            if data['max_amount'] < data['min_amount']:
+                raise serializers.ValidationError({
+                    'max_amount': 'Maximum amount must be greater than minimum amount'
+                })
+        return data
+
+
+class UpdatePaymentMethodSerializer(serializers.Serializer):
+    """Serializer for updating payment method"""
+    name = serializers.CharField(max_length=100, required=False)
+    gateway = serializers.CharField(max_length=255, required=False)
+    is_active = serializers.BooleanField(required=False)
+    configuration = serializers.JSONField(required=False)
+    min_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    max_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    supported_currencies = serializers.ListField(
+        child=serializers.CharField(max_length=10),
+        required=False
+    )
+    
+    def validate_min_amount(self, value):
+        if value and value < 0:
+            raise serializers.ValidationError("Minimum amount cannot be negative")
+        return value
+
+
+# ============================================================
+# Rental Package Management Serializers
+# ============================================================
+
+class AdminRentalPackageListSerializer(serializers.Serializer):
+    """Serializer for rental package list filters"""
+    is_active = serializers.BooleanField(required=False, allow_null=True, default=None)
+    package_type = serializers.ChoiceField(
+        choices=['HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY'],
+        required=False
+    )
+    payment_model = serializers.ChoiceField(
+        choices=['PREPAID', 'POSTPAID'],
+        required=False
+    )
+    search = serializers.CharField(required=False)
+    page = serializers.IntegerField(default=1, min_value=1)
+    page_size = serializers.IntegerField(default=20, min_value=1, max_value=100)
+
+
+class AdminRentalPackageSerializer(serializers.ModelSerializer):
+    """Serializer for rental package details"""
+    duration_display = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = RentalPackage
+        fields = [
+            'id', 'name', 'description', 'duration_minutes', 'price',
+            'package_type', 'payment_model', 'is_active', 'package_metadata',
+            'duration_display', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_duration_display(self, obj):
+        """Get human-readable duration"""
+        minutes = obj.duration_minutes
+        if minutes < 60:
+            return f"{minutes} minutes"
+        elif minutes < 1440:  # Less than 24 hours
+            hours = minutes // 60
+            remaining_minutes = minutes % 60
+            if remaining_minutes == 0:
+                return f"{hours} hour{'s' if hours > 1 else ''}"
+            else:
+                return f"{hours}h {remaining_minutes}m"
+        else:  # Days
+            days = minutes // 1440
+            return f"{days} day{'s' if days > 1 else ''}"
+
+
+class CreateRentalPackageSerializer(serializers.Serializer):
+    """Serializer for creating rental package"""
+    name = serializers.CharField(max_length=100)
+    description = serializers.CharField(max_length=255)
+    duration_minutes = serializers.IntegerField(min_value=1)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0)
+    package_type = serializers.ChoiceField(
+        choices=['HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY']
+    )
+    payment_model = serializers.ChoiceField(
+        choices=['PREPAID', 'POSTPAID']
+    )
+    is_active = serializers.BooleanField(default=True)
+    package_metadata = serializers.JSONField(default=dict, required=False)
+
+
+class UpdateRentalPackageSerializer(serializers.Serializer):
+    """Serializer for updating rental package"""
+    name = serializers.CharField(max_length=100, required=False)
+    description = serializers.CharField(max_length=255, required=False)
+    duration_minutes = serializers.IntegerField(min_value=1, required=False)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0, required=False)
+    package_type = serializers.ChoiceField(
+        choices=['HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY'],
+        required=False
+    )
+    payment_model = serializers.ChoiceField(
+        choices=['PREPAID', 'POSTPAID'],
+        required=False
+    )
+    is_active = serializers.BooleanField(required=False)
+    package_metadata = serializers.JSONField(required=False)
 
 
 
