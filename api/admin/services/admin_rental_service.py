@@ -259,3 +259,139 @@ class AdminRentalService(BaseService):
         else:
             ip = request.META.get('REMOTE_ADDR')
         return ip
+    
+    # ============================================================
+    # Rental List Methods
+    # ============================================================
+    
+    def get_rentals_list(self, filters: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Get paginated list of rentals with filters
+        
+        Args:
+            filters: Dictionary containing filter parameters
+                - status: Filter by rental status
+                - payment_status: Filter by payment status
+                - user_id: Filter by user ID
+                - station_id: Filter by station ID
+                - search: Search by rental code or user name
+                - recent: 'today', '24h', '7d', '30d' for recent rentals
+                - start_date: Filter rentals started after this date
+                - end_date: Filter rentals started before this date
+                - page: Page number (default: 1)
+                - page_size: Items per page (default: 20)
+                
+        Returns:
+            Dict with results and pagination info
+        """
+        from api.common.utils.helpers import paginate_queryset
+        from datetime import timedelta
+        from django.db.models import Q
+        
+        queryset = self._get_base_rental_queryset()
+        
+        if filters:
+            # Status filter
+            if filters.get('status'):
+                queryset = queryset.filter(status=filters['status'])
+            
+            # Payment status filter
+            if filters.get('payment_status'):
+                queryset = queryset.filter(payment_status=filters['payment_status'])
+            
+            # User filter
+            if filters.get('user_id'):
+                queryset = queryset.filter(user_id=filters['user_id'])
+            
+            # Station filter
+            if filters.get('station_id'):
+                queryset = queryset.filter(
+                    Q(station_id=filters['station_id']) | 
+                    Q(return_station_id=filters['station_id'])
+                )
+            
+            # Search filter
+            if filters.get('search'):
+                search_term = filters['search']
+                queryset = queryset.filter(
+                    Q(rental_code__icontains=search_term) |
+                    Q(user__username__icontains=search_term) |
+                    Q(user__phone_number__icontains=search_term)
+                )
+            
+            # Recent rentals filter
+            if filters.get('recent'):
+                now = timezone.now()
+                recent_type = filters['recent']
+                
+                if recent_type == 'today':
+                    queryset = queryset.filter(
+                        created_at__date=now.date()
+                    )
+                elif recent_type == '24h':
+                    queryset = queryset.filter(
+                        created_at__gte=now - timedelta(hours=24)
+                    )
+                elif recent_type == '7d':
+                    queryset = queryset.filter(
+                        created_at__gte=now - timedelta(days=7)
+                    )
+                elif recent_type == '30d':
+                    queryset = queryset.filter(
+                        created_at__gte=now - timedelta(days=30)
+                    )
+            
+            # Date range filters
+            if filters.get('start_date'):
+                queryset = queryset.filter(started_at__gte=filters['start_date'])
+            
+            if filters.get('end_date'):
+                queryset = queryset.filter(started_at__lte=filters['end_date'])
+        
+        # Order by latest first
+        queryset = queryset.order_by('-created_at')
+        
+        # Pagination
+        page = filters.get('page', 1) if filters else 1
+        page_size = filters.get('page_size', 20) if filters else 20
+        
+        return paginate_queryset(queryset, page, page_size)
+    
+    def get_rental_detail(self, rental_id: str):
+        """
+        Get detailed rental information
+        
+        Args:
+            rental_id: Rental ID (UUID)
+            
+        Returns:
+            Rental instance with all related data
+            
+        Raises:
+            ServiceException: If rental not found
+        """
+        from api.rentals.models import Rental
+        
+        try:
+            return self._get_base_rental_queryset().get(id=rental_id)
+        except Rental.DoesNotExist:
+            raise ServiceException(
+                detail="Rental not found",
+                code="rental_not_found"
+            )
+    
+    def _get_base_rental_queryset(self):
+        """Get base queryset with all necessary relationships"""
+        from api.rentals.models import Rental
+        
+        return Rental.objects.select_related(
+            'user',
+            'station',
+            'return_station',
+            'slot',
+            'package',
+            'power_bank'
+        ).prefetch_related(
+            'extensions',
+            'issues'
+        )

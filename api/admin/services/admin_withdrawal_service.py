@@ -24,6 +24,10 @@ class AdminWithdrawalService(CRUDService):
         super().__init__()
         self.withdrawal_service = WithdrawalService()
     
+    def get_withdrawals(self, filters: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Get all withdrawals with filters (not just pending)"""
+        return self.withdrawal_service.get_withdrawals(filters)
+    
     def get_pending_withdrawals(self, filters: Dict[str, Any] = None) -> Dict[str, Any]:
         """Get pending withdrawal requests - delegates to core service"""
         return self.withdrawal_service.get_pending_withdrawals(filters)

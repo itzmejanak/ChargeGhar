@@ -504,6 +504,52 @@ class WithdrawalService(CRUDService):
                 code="payment_processing_failed"
             )
 
+    def get_withdrawals(self, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Get all withdrawals with filters (admin view)"""
+        try:
+            queryset = WithdrawalRequest.objects.select_related(
+                'user', 'payment_method', 'processed_by'
+            )
+            
+            # Apply filters if provided
+            if filters:
+                # Status filter
+                if filters.get('status'):
+                    queryset = queryset.filter(status=filters['status'])
+                
+                # Payment method filter
+                if filters.get('payment_method'):
+                    queryset = queryset.filter(payment_method__name__icontains=filters['payment_method'])
+                
+                # Date range filters
+                if filters.get('start_date'):
+                    queryset = queryset.filter(requested_at__gte=filters['start_date'])
+                
+                if filters.get('end_date'):
+                    queryset = queryset.filter(requested_at__lte=filters['end_date'])
+                
+                # Search filter
+                if filters.get('search'):
+                    search_term = filters['search']
+                    queryset = queryset.filter(
+                        Q(internal_reference__icontains=search_term) |
+                        Q(user__username__icontains=search_term) |
+                        Q(user__email__icontains=search_term)
+                    )
+            
+            # Order by latest first
+            queryset = queryset.order_by('-requested_at')
+            
+            # Pagination
+            page = filters.get('page', 1) if filters else 1
+            page_size = filters.get('page_size', 20) if filters else 20
+
+            return paginate_queryset(queryset, page, page_size)
+
+        except Exception as e:
+            self.log_error(f"Error getting withdrawals: {str(e)}")
+            return self.handle_service_error(e, "Failed to get withdrawals")
+
     def get_pending_withdrawals(self, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Get all pending withdrawal requests for admin review"""
         try:

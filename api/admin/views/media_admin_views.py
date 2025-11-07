@@ -26,23 +26,23 @@ media_admin_router = CustomViewRouter()
 logger = logging.getLogger(__name__)
 
 @media_admin_router.register(r"admin/media/uploads", name="admin-media-uploads")
-@extend_schema(
-    tags=["Admin - Media"],
-    summary="Admin Media Uploads",
-    description="Get all media uploads with admin privileges (can see all users' uploads) or upload new media",
-    parameters=[
-        OpenApiParameter("type", OpenApiTypes.STR, description="Filter by file type"),
-        OpenApiParameter("user_id", OpenApiTypes.STR, description="Filter by user ID"),
-        OpenApiParameter("page", OpenApiTypes.INT, description="Page number"),
-        OpenApiParameter("page_size", OpenApiTypes.INT, description="Items per page"),
-    ],
-    responses={200: PaginatedResponseSerializer}
-)
 class AdminMediaUploadsView(GenericAPIView, BaseAPIView):
     """Admin view for all media uploads"""
     serializer_class = MediaUploadSerializer
     permission_classes = [IsStaffPermission]
     
+    @extend_schema(
+        tags=["Admin - Media"],
+        summary="List Media Uploads",
+        description="Get all media uploads with admin privileges (can see all users' uploads)",
+        parameters=[
+            OpenApiParameter("type", OpenApiTypes.STR, description="Filter by file type"),
+            OpenApiParameter("user_id", OpenApiTypes.STR, description="Filter by user ID"),
+            OpenApiParameter("page", OpenApiTypes.INT, description="Page number"),
+            OpenApiParameter("page_size", OpenApiTypes.INT, description="Items per page"),
+        ],
+        responses={200: PaginatedResponseSerializer}
+    )
     @log_api_call()
     def get(self, request: Request) -> Response:
         """Get all media uploads (admin can see all users' uploads)"""
@@ -80,6 +80,16 @@ class AdminMediaUploadsView(GenericAPIView, BaseAPIView):
             error_message="Failed to retrieve media uploads"
         )
     
+    @extend_schema(
+        tags=["Admin - Media"],
+        summary="Upload Media File",
+        description="Upload new media file (images, videos, documents) to Cloudinary",
+        request=MediaUploadCreateSerializer,
+        responses={
+            201: MediaUploadResponseSerializer,
+            400: BaseResponseSerializer
+        }
+    )
     @log_api_call()
     def post(self, request: Request) -> Response:
         """Upload new media file (admin upload)"""

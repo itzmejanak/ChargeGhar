@@ -52,24 +52,26 @@ class AdminWithdrawalAnalyticsView(GenericAPIView, BaseAPIView):
 @withdrawal_admin_router.register(r"admin/withdrawals", name="admin-withdrawals")
 @extend_schema(
     tags=["Admin - Withdrawals"],
-    summary="Pending Withdrawals",
-    description="Get list of pending withdrawal requests (Staff only)",
-    request=serializers.WithdrawalFiltersSerializer,
+    summary="All Withdrawals",
+    description="Get list of all withdrawal requests with filters (Staff only)",
+    parameters=[
+        serializers.WithdrawalFiltersSerializer
+    ],
     responses={200: BaseResponseSerializer}
 )
 class AdminWithdrawalsView(GenericAPIView, BaseAPIView):
-    """Pending withdrawals management"""
+    """All withdrawals management"""
     permission_classes = [IsStaffPermission]
 
     @log_api_call()
     def get(self, request: Request) -> Response:
-        """Get pending withdrawals"""
+        """Get all withdrawals"""
         def operation():
             filter_serializer = serializers.WithdrawalFiltersSerializer(data=request.query_params)
             filter_serializer.is_valid(raise_exception=True)
             
             service = AdminWithdrawalService()
-            result = service.get_pending_withdrawals(filter_serializer.validated_data)
+            result = service.get_withdrawals(filter_serializer.validated_data)
             
             # Serialize the withdrawals in the results
             if result and 'results' in result:

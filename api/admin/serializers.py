@@ -326,18 +326,251 @@ class SystemLogFiltersSerializer(serializers.Serializer):
 
 
 # ============================================================
+# Analytics - Rentals & Revenue Over Time Serializers
+# ============================================================
+
+class RentalsOverTimeQuerySerializer(serializers.Serializer):
+    """Query parameters for rentals over time analytics"""
+    period = serializers.ChoiceField(
+        choices=['daily', 'weekly', 'monthly'],
+        required=True,
+        help_text="Aggregation period: daily, weekly, or monthly"
+    )
+    start_date = serializers.DateField(
+        required=False,
+        help_text="Start date (default: 30 days ago)"
+    )
+    end_date = serializers.DateField(
+        required=False,
+        help_text="End date (default: today)"
+    )
+    status = serializers.ChoiceField(
+        choices=['PENDING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'OVERDUE'],
+        required=False,
+        help_text="Filter by rental status"
+    )
+
+
+class RevenueOverTimeQuerySerializer(serializers.Serializer):
+    """Query parameters for revenue over time analytics"""
+    period = serializers.ChoiceField(
+        choices=['daily', 'weekly', 'monthly'],
+        required=True,
+        help_text="Aggregation period: daily, weekly, or monthly"
+    )
+    start_date = serializers.DateField(
+        required=False,
+        help_text="Start date (default: 180 days ago)"
+    )
+    end_date = serializers.DateField(
+        required=False,
+        help_text="End date (default: today)"
+    )
+    transaction_type = serializers.ChoiceField(
+        choices=['TOPUP', 'RENTAL', 'RENTAL_DUE', 'REFUND', 'FINE'],
+        required=False,
+        help_text="Filter by transaction type"
+    )
+
+
+class RentalChartDataSerializer(serializers.Serializer):
+    """Single data point for rentals chart"""
+    date = serializers.DateField()
+    label = serializers.CharField()
+    total = serializers.IntegerField()
+    completed = serializers.IntegerField()
+    active = serializers.IntegerField()
+    pending = serializers.IntegerField()
+    cancelled = serializers.IntegerField()
+    overdue = serializers.IntegerField()
+
+
+class RentalsSummarySerializer(serializers.Serializer):
+    """Summary statistics for rentals over time"""
+    avg_per_period = serializers.FloatField()
+    peak_date = serializers.DateField(allow_null=True)
+    peak_count = serializers.IntegerField()
+
+
+class RentalsOverTimeResponseSerializer(serializers.Serializer):
+    """Response format for rentals over time endpoint"""
+    period = serializers.CharField()
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    total_rentals = serializers.IntegerField()
+    chart_data = RentalChartDataSerializer(many=True)
+    summary = RentalsSummarySerializer()
+
+
+class RevenueChartDataSerializer(serializers.Serializer):
+    """Single data point for revenue chart"""
+    date = serializers.DateField()
+    label = serializers.CharField()
+    total_revenue = serializers.FloatField()
+    rental_revenue = serializers.FloatField()
+    rental_due_revenue = serializers.FloatField()
+    topup_revenue = serializers.FloatField()
+    fine_revenue = serializers.FloatField()
+    transaction_count = serializers.IntegerField()
+
+
+class RevenueSummarySerializer(serializers.Serializer):
+    """Summary statistics for revenue over time"""
+    avg_per_period = serializers.FloatField()
+    peak_month = serializers.CharField(allow_null=True)
+    peak_revenue = serializers.FloatField()
+    growth_rate = serializers.FloatField(allow_null=True)
+
+
+class RevenueOverTimeResponseSerializer(serializers.Serializer):
+    """Response format for revenue over time endpoint"""
+    period = serializers.CharField()
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    currency = serializers.CharField()
+    total_revenue = serializers.FloatField()
+    chart_data = RevenueChartDataSerializer(many=True)
+    summary = RevenueSummarySerializer()
+
+
+# ============================================================
+# Transactions Management Serializers
+# ============================================================
+
+class TransactionsQuerySerializer(serializers.Serializer):
+    """Query parameters for transactions list"""
+    status = serializers.ChoiceField(
+        choices=['PENDING', 'SUCCESS', 'FAILED', 'REFUNDED'],
+        required=False,
+        help_text="Filter by transaction status"
+    )
+    transaction_type = serializers.ChoiceField(
+        choices=['TOPUP', 'RENTAL', 'RENTAL_DUE', 'REFUND', 'FINE'],
+        required=False,
+        help_text="Filter by transaction type"
+    )
+    payment_method_type = serializers.ChoiceField(
+        choices=['WALLET', 'POINTS', 'COMBINATION', 'GATEWAY'],
+        required=False,
+        help_text="Filter by payment method type"
+    )
+    wallet_transaction_type = serializers.ChoiceField(
+        choices=['CREDIT', 'DEBIT', 'ADJUSTMENT'],
+        required=False,
+        help_text="Filter wallet transactions by type"
+    )
+    user_id = serializers.UUIDField(
+        required=False,
+        help_text="Filter by user ID"
+    )
+    recent = serializers.ChoiceField(
+        choices=['today', '24h', '7d', '30d'],
+        required=False,
+        help_text="Get recent transactions"
+    )
+    start_date = serializers.DateTimeField(
+        required=False,
+        help_text="Start date for filtering"
+    )
+    end_date = serializers.DateTimeField(
+        required=False,
+        help_text="End date for filtering"
+    )
+    include_wallet = serializers.BooleanField(
+        default=True,
+        required=False,
+        help_text="Include wallet transactions in results"
+    )
+    search = serializers.CharField(
+        required=False,
+        max_length=200,
+        help_text="Search by transaction ID, username, or email"
+    )
+    page = serializers.IntegerField(
+        default=1,
+        min_value=1,
+        help_text="Page number"
+    )
+    page_size = serializers.IntegerField(
+        default=20,
+        min_value=1,
+        max_value=100,
+        help_text="Items per page"
+    )
+
+
+class TransactionUserSerializer(serializers.Serializer):
+    """User info in transaction response"""
+    id = serializers.UUIDField()
+    username = serializers.CharField()
+    email = serializers.EmailField()
+
+
+class TransactionItemSerializer(serializers.Serializer):
+    """Single transaction item (combined Transaction + WalletTransaction)"""
+    source = serializers.CharField(help_text="'transaction' or 'wallet_transaction'")
+    id = serializers.UUIDField()
+    transaction_id = serializers.CharField()
+    user = TransactionUserSerializer()
+    type = serializers.CharField()
+    amount = serializers.FloatField()
+    currency = serializers.CharField()
+    status = serializers.CharField()
+    payment_method_type = serializers.CharField(required=False)
+    related_rental_id = serializers.UUIDField(allow_null=True, required=False)
+    gateway_reference = serializers.CharField(allow_null=True, required=False)
+    balance_before = serializers.FloatField(required=False, help_text="Only for wallet transactions")
+    balance_after = serializers.FloatField(required=False, help_text="Only for wallet transactions")
+    created_at = serializers.DateTimeField()
+    description = serializers.CharField()
+
+
+class TransactionsResponseSerializer(serializers.Serializer):
+    """Response format for transactions list"""
+    results = TransactionItemSerializer(many=True)
+    pagination = serializers.DictField()
+
+
+# ============================================================
 # Withdrawal Management Serializers
 # ============================================================
 
 class WithdrawalFiltersSerializer(serializers.Serializer):
     """Serializer for withdrawal filters"""
-    start_date = serializers.DateTimeField(required=False)
-    end_date = serializers.DateTimeField(required=False)
-    search = serializers.CharField(required=False)
-    status = serializers.CharField(required=False)
-    payment_method = serializers.CharField(required=False)
-    page = serializers.IntegerField(default=1, min_value=1)
-    page_size = serializers.IntegerField(default=20, min_value=1, max_value=100)
+    status = serializers.ChoiceField(
+        choices=['REQUESTED', 'APPROVED', 'PROCESSING', 'COMPLETED', 'REJECTED', 'CANCELLED'],
+        required=False,
+        help_text="Filter by withdrawal status"
+    )
+    payment_method = serializers.CharField(
+        required=False,
+        max_length=100,
+        help_text="Filter by payment method name (e.g., 'eSewa', 'Khalti')"
+    )
+    search = serializers.CharField(
+        required=False,
+        max_length=200,
+        help_text="Search by internal reference, username, or email"
+    )
+    start_date = serializers.DateTimeField(
+        required=False,
+        help_text="Filter withdrawals requested after this date"
+    )
+    end_date = serializers.DateTimeField(
+        required=False,
+        help_text="Filter withdrawals requested before this date"
+    )
+    page = serializers.IntegerField(
+        default=1,
+        min_value=1,
+        help_text="Page number"
+    )
+    page_size = serializers.IntegerField(
+        default=20,
+        min_value=1,
+        max_value=100,
+        help_text="Items per page (max 100)"
+    )
 
 
 class ProcessWithdrawalSerializer(serializers.Serializer):
@@ -1149,6 +1382,143 @@ class UpdateStationAmenitySerializer(serializers.Serializer):
         if StationAmenity.objects.filter(name=value).exclude(id=amenity_id).exists():
             raise serializers.ValidationError("Amenity with this name already exists")
         return value
+
+
+# ============================================================
+# Rental Serializers
+# ============================================================
+
+class AdminRentalSerializer(serializers.Serializer):
+    """Serializer for listing rentals"""
+    id = serializers.UUIDField(read_only=True)
+    rental_code = serializers.CharField()
+    status = serializers.CharField()
+    payment_status = serializers.CharField()
+    
+    # User info
+    user_id = serializers.IntegerField(source='user.id')
+    username = serializers.CharField(source='user.username')
+    user_phone = serializers.CharField(source='user.phone_number')
+    
+    # Station info
+    station_id = serializers.UUIDField(source='station.id')
+    station_name = serializers.CharField(source='station.station_name')
+    station_serial = serializers.CharField(source='station.serial_number')
+    
+    # Return station info
+    return_station_id = serializers.UUIDField(source='return_station.id', allow_null=True)
+    return_station_name = serializers.CharField(source='return_station.station_name', allow_null=True)
+    
+    # PowerBank info
+    powerbank_serial = serializers.CharField(source='power_bank.serial_number', allow_null=True)
+    
+    # Package info
+    package_name = serializers.CharField(source='package.name')
+    package_duration = serializers.IntegerField(source='package.duration_minutes')
+    
+    # Timestamps and amounts
+    started_at = serializers.DateTimeField()
+    ended_at = serializers.DateTimeField(allow_null=True)
+    due_at = serializers.DateTimeField()
+    amount_paid = serializers.DecimalField(max_digits=10, decimal_places=2)
+    overdue_amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    
+    is_returned_on_time = serializers.BooleanField()
+    created_at = serializers.DateTimeField(read_only=True)
+
+
+class AdminRentalDetailSerializer(serializers.Serializer):
+    """Serializer for rental detail view"""
+    id = serializers.UUIDField(read_only=True)
+    rental_code = serializers.CharField()
+    status = serializers.CharField()
+    payment_status = serializers.CharField()
+    
+    # User info
+    user = serializers.SerializerMethodField()
+    
+    # Station info
+    station = serializers.SerializerMethodField()
+    return_station = serializers.SerializerMethodField()
+    
+    # Slot and PowerBank
+    slot_number = serializers.IntegerField(source='slot.slot_number')
+    powerbank = serializers.SerializerMethodField()
+    
+    # Package
+    package = serializers.SerializerMethodField()
+    
+    # Timestamps
+    started_at = serializers.DateTimeField()
+    ended_at = serializers.DateTimeField(allow_null=True)
+    due_at = serializers.DateTimeField()
+    created_at = serializers.DateTimeField()
+    updated_at = serializers.DateTimeField()
+    
+    # Amounts
+    amount_paid = serializers.DecimalField(max_digits=10, decimal_places=2)
+    overdue_amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Flags
+    is_returned_on_time = serializers.BooleanField()
+    timely_return_bonus_awarded = serializers.BooleanField()
+    
+    # Extensions and issues
+    extensions_count = serializers.SerializerMethodField()
+    issues_count = serializers.SerializerMethodField()
+    
+    # Metadata
+    rental_metadata = serializers.JSONField()
+    
+    def get_user(self, obj):
+        return {
+            'id': obj.user.id,
+            'username': obj.user.username,
+            'phone_number': obj.user.phone_number,
+            'email': obj.user.email
+        }
+    
+    def get_station(self, obj):
+        return {
+            'id': str(obj.station.id),
+            'station_name': obj.station.station_name,
+            'serial_number': obj.station.serial_number,
+            'address': obj.station.address
+        }
+    
+    def get_return_station(self, obj):
+        if not obj.return_station:
+            return None
+        return {
+            'id': str(obj.return_station.id),
+            'station_name': obj.return_station.station_name,
+            'serial_number': obj.return_station.serial_number,
+            'address': obj.return_station.address
+        }
+    
+    def get_powerbank(self, obj):
+        if not obj.power_bank:
+            return None
+        return {
+            'id': str(obj.power_bank.id),
+            'serial_number': obj.power_bank.serial_number,
+            'model': obj.power_bank.model,
+            'battery_level': obj.power_bank.battery_level
+        }
+    
+    def get_package(self, obj):
+        return {
+            'id': str(obj.package.id),
+            'name': obj.package.name,
+            'duration_minutes': obj.package.duration_minutes,
+            'price': str(obj.package.price)
+        }
+    
+    def get_extensions_count(self, obj):
+        return obj.extensions.count() if hasattr(obj, 'extensions') else 0
+    
+    def get_issues_count(self, obj):
+        return obj.issues.count() if hasattr(obj, 'issues') else 0
 
 
 

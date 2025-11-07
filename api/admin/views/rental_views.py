@@ -1,9 +1,10 @@
 """
-Admin Rental Views - Rental issue management operations
+Admin Rental Views - Rental management and issue operations
 """
 import logging
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 from rest_framework.generics import GenericAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -13,11 +14,105 @@ from api.admin.services import AdminRentalService
 from api.common.decorators import log_api_call
 from api.common.mixins import BaseAPIView
 from api.common.routers import CustomViewRouter
-from api.common.serializers import BaseResponseSerializer
+from api.common.serializers import BaseResponseSerializer, PaginatedResponseSerializer
 from api.users.permissions import IsStaffPermission
 
 rental_router = CustomViewRouter()
 logger = logging.getLogger(__name__)
+
+
+@rental_router.register(r"admin/rentals", name="admin-rentals")
+@extend_schema(
+    tags=["Admin - Rentals"],
+    summary="List Rentals",
+    description="Get list of all rentals with filtering and pagination (Staff only)",
+    parameters=[
+        OpenApiParameter("status", OpenApiTypes.STR, description="Filter by status (PENDING, ACTIVE, COMPLETED, CANCELLED, OVERDUE)"),
+        OpenApiParameter("payment_status", OpenApiTypes.STR, description="Filter by payment status (PENDING, PAID, FAILED, REFUNDED)"),
+        OpenApiParameter("user_id", OpenApiTypes.INT, description="Filter by user ID"),
+        OpenApiParameter("station_id", OpenApiTypes.STR, description="Filter by station ID"),
+        OpenApiParameter("search", OpenApiTypes.STR, description="Search by rental code or user name/phone"),
+        OpenApiParameter("recent", OpenApiTypes.STR, description="Recent rentals: 'today', '24h', '7d', '30d'"),
+        OpenApiParameter("start_date", OpenApiTypes.DATETIME, description="Filter rentals started after this date"),
+        OpenApiParameter("end_date", OpenApiTypes.DATETIME, description="Filter rentals started before this date"),
+        OpenApiParameter("page", OpenApiTypes.INT, description="Page number"),
+        OpenApiParameter("page_size", OpenApiTypes.INT, description="Items per page"),
+    ],
+    responses={200: PaginatedResponseSerializer}
+)
+class AdminRentalsListView(GenericAPIView, BaseAPIView):
+    """Admin rentals list with comprehensive filtering"""
+    serializer_class = serializers.AdminRentalSerializer
+    permission_classes = [IsStaffPermission]
+
+    @log_api_call()
+    def get(self, request: Request) -> Response:
+        """Get list of rentals with optional filtering"""
+        def operation():
+            # Parse filters
+            filters = {
+                'status': request.query_params.get('status'),
+                'payment_status': request.query_params.get('payment_status'),
+                'user_id': request.query_params.get('user_id'),
+                'station_id': request.query_params.get('station_id'),
+                'search': request.query_params.get('search'),
+                'recent': request.query_params.get('recent'),
+                'start_date': request.query_params.get('start_date'),
+                'end_date': request.query_params.get('end_date'),
+                'page': int(request.query_params.get('page', 1)),
+                'page_size': int(request.query_params.get('page_size', 20)),
+            }
+            
+            # Remove None values
+            filters = {k: v for k, v in filters.items() if v is not None}
+            
+            # Get rentals
+            service = AdminRentalService()
+            rentals_data = service.get_rentals_list(filters)
+            
+            # Serialize rentals
+            serializer = serializers.AdminRentalSerializer(
+                rentals_data['results'], many=True
+            )
+            
+            return {
+                'results': serializer.data,
+                'pagination': rentals_data['pagination']
+            }
+        
+        return self.handle_service_operation(
+            operation,
+            "Rentals retrieved successfully",
+            "Failed to retrieve rentals"
+        )
+
+
+@rental_router.register(r"admin/rentals/<str:rental_id>", name="admin-rental-detail")
+@extend_schema(
+    tags=["Admin - Rentals"],
+    summary="Rental Detail",
+    description="Get detailed information about a specific rental (Staff only)",
+    responses={200: BaseResponseSerializer}
+)
+class AdminRentalDetailView(GenericAPIView, BaseAPIView):
+    """Admin rental detail view"""
+    serializer_class = serializers.AdminRentalDetailSerializer
+    permission_classes = [IsStaffPermission]
+
+    @log_api_call()
+    def get(self, request: Request, rental_id: str) -> Response:
+        """Get specific rental details"""
+        def operation():
+            service = AdminRentalService()
+            rental = service.get_rental_detail(rental_id)
+            serializer = serializers.AdminRentalDetailSerializer(rental)
+            return serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            "Rental details retrieved successfully",
+            "Failed to retrieve rental details"
+        )
 
 
 @rental_router.register(r"admin/rentals/issues", name="admin-rental-issues")

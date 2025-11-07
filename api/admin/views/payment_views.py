@@ -374,3 +374,63 @@ class AdminRentalPackageDetailView(GenericAPIView, BaseAPIView):
             success_message="Rental package deleted successfully",
             error_message="Failed to delete rental package"
         )
+
+
+# ============================================================
+# Transactions Management Views
+# ============================================================
+
+@payment_router.register(r"admin/transactions", name="admin-transactions")
+class AdminTransactionsView(GenericAPIView, BaseAPIView):
+    """Combined transactions list (Transaction + WalletTransaction)"""
+    permission_classes = [IsStaffPermission]
+    
+    @extend_schema(
+        tags=["Admin - Payments"],
+        summary="List All Transactions",
+        description="""
+        Get comprehensive list of all transactions including:
+        - Payment transactions (TOPUP, RENTAL, RENTAL_DUE, REFUND, FINE)
+        - Wallet transactions (CREDIT, DEBIT, ADJUSTMENT)
+        
+        **Features**:
+        - Combined view of Transaction and WalletTransaction models
+        - Filter by status, type, user, date range
+        - Recent transactions (today, 24h, 7d, 30d)
+        - Search by transaction ID, username, or email
+        - Pagination support
+        
+        **Use Cases**:
+        - Financial reporting and auditing
+        - Transaction monitoring
+        - User payment history
+        - Recent activity tracking
+        """,
+        parameters=[
+            serializers.TransactionsQuerySerializer
+        ],
+        responses={
+            200: serializers.TransactionsResponseSerializer,
+            400: BaseResponseSerializer
+        }
+    )
+    @log_api_call()
+    def get(self, request: Request) -> Response:
+        """Get combined transactions list"""
+        def operation():
+            # Validate query parameters
+            query_serializer = serializers.TransactionsQuerySerializer(data=request.query_params)
+            query_serializer.is_valid(raise_exception=True)
+            
+            # Get transactions data
+            service = AdminPaymentService()
+            result = service.get_transactions(query_serializer.validated_data)
+            
+            return result
+        
+        return self.handle_service_operation(
+            operation,
+            success_message="Transactions retrieved successfully",
+            error_message="Failed to retrieve transactions"
+        )
+
