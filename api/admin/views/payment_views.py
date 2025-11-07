@@ -382,29 +382,19 @@ class AdminRentalPackageDetailView(GenericAPIView, BaseAPIView):
 
 @payment_router.register(r"admin/transactions", name="admin-transactions")
 class AdminTransactionsView(GenericAPIView, BaseAPIView):
-    """Combined transactions list (Transaction + WalletTransaction)"""
+    """All transactions (Payment + Wallet + Points)"""
     permission_classes = [IsStaffPermission]
     
     @extend_schema(
         tags=["Admin - Payments"],
         summary="List All Transactions",
         description="""
-        Get comprehensive list of all transactions including:
-        - Payment transactions (TOPUP, RENTAL, RENTAL_DUE, REFUND, FINE)
+        Get all transactions from three sources:
+        - Payment transactions (TOPUP, RENTAL, REFUND, etc.)
         - Wallet transactions (CREDIT, DEBIT, ADJUSTMENT)
+        - Points transactions (EARNED, SPENT, ADJUSTMENT)
         
-        **Features**:
-        - Combined view of Transaction and WalletTransaction models
-        - Filter by status, type, user, date range
-        - Recent transactions (today, 24h, 7d, 30d)
-        - Search by transaction ID, username, or email
-        - Pagination support
-        
-        **Use Cases**:
-        - Financial reporting and auditing
-        - Transaction monitoring
-        - User payment history
-        - Recent activity tracking
+        Filter by user, search, or date range.
         """,
         parameters=[
             serializers.TransactionsQuerySerializer

@@ -439,34 +439,20 @@ class RevenueOverTimeResponseSerializer(serializers.Serializer):
 
 class TransactionsQuerySerializer(serializers.Serializer):
     """Query parameters for transactions list"""
-    status = serializers.ChoiceField(
-        choices=['PENDING', 'SUCCESS', 'FAILED', 'REFUNDED'],
+    source = serializers.ChoiceField(
+        choices=['all', 'payment', 'wallet', 'points'],
+        default='all',
         required=False,
-        help_text="Filter by transaction status"
-    )
-    transaction_type = serializers.ChoiceField(
-        choices=['TOPUP', 'RENTAL', 'RENTAL_DUE', 'REFUND', 'FINE'],
-        required=False,
-        help_text="Filter by transaction type"
-    )
-    payment_method_type = serializers.ChoiceField(
-        choices=['WALLET', 'POINTS', 'COMBINATION', 'GATEWAY'],
-        required=False,
-        help_text="Filter by payment method type"
-    )
-    wallet_transaction_type = serializers.ChoiceField(
-        choices=['CREDIT', 'DEBIT', 'ADJUSTMENT'],
-        required=False,
-        help_text="Filter wallet transactions by type"
+        help_text="Filter by transaction source: all, payment, wallet, or points"
     )
     user_id = serializers.UUIDField(
         required=False,
         help_text="Filter by user ID"
     )
-    recent = serializers.ChoiceField(
-        choices=['today', '24h', '7d', '30d'],
+    search = serializers.CharField(
         required=False,
-        help_text="Get recent transactions"
+        max_length=200,
+        help_text="Search by username or email"
     )
     start_date = serializers.DateTimeField(
         required=False,
@@ -475,16 +461,6 @@ class TransactionsQuerySerializer(serializers.Serializer):
     end_date = serializers.DateTimeField(
         required=False,
         help_text="End date for filtering"
-    )
-    include_wallet = serializers.BooleanField(
-        default=True,
-        required=False,
-        help_text="Include wallet transactions in results"
-    )
-    search = serializers.CharField(
-        required=False,
-        max_length=200,
-        help_text="Search by transaction ID, username, or email"
     )
     page = serializers.IntegerField(
         default=1,
@@ -507,20 +483,18 @@ class TransactionUserSerializer(serializers.Serializer):
 
 
 class TransactionItemSerializer(serializers.Serializer):
-    """Single transaction item (combined Transaction + WalletTransaction)"""
-    source = serializers.CharField(help_text="'transaction' or 'wallet_transaction'")
+    """Single transaction item"""
+    source = serializers.CharField(help_text="payment, wallet, or points")
     id = serializers.UUIDField()
     transaction_id = serializers.CharField()
     user = TransactionUserSerializer()
     type = serializers.CharField()
-    amount = serializers.FloatField()
-    currency = serializers.CharField()
+    amount = serializers.FloatField(required=False)
+    points = serializers.IntegerField(required=False)
+    points_source = serializers.CharField(required=False)
     status = serializers.CharField()
-    payment_method_type = serializers.CharField(required=False)
-    related_rental_id = serializers.UUIDField(allow_null=True, required=False)
-    gateway_reference = serializers.CharField(allow_null=True, required=False)
-    balance_before = serializers.FloatField(required=False, help_text="Only for wallet transactions")
-    balance_after = serializers.FloatField(required=False, help_text="Only for wallet transactions")
+    balance_before = serializers.FloatField(required=False)
+    balance_after = serializers.FloatField(required=False)
     created_at = serializers.DateTimeField()
     description = serializers.CharField()
 

@@ -5,7 +5,7 @@ Admin Payment Service
 Service for managing payment methods, rental packages, and transactions.
 
 Created: 2025-11-06
-Updated: 2025-11-08 - Added transactions list
+Updated: 2025-11-08 - Added transactions list with PointsTransaction
 """
 from typing import Dict, Any, List
 from datetime import timedelta
@@ -17,6 +17,7 @@ from api.common.services import BaseService
 from api.common.services.base import ServiceException
 from api.common.utils.helpers import paginate_queryset
 from api.payments.models import PaymentMethod, Transaction, WalletTransaction
+from api.points.models import PointsTransaction
 from api.rentals.models import RentalPackage
 
 
@@ -260,175 +261,118 @@ class AdminPaymentService(BaseService):
     # ============================================================
     
     def get_transactions(self, filters: Dict[str, Any] = None) -> Dict[str, Any]:
-        """
-        Get combined list of Transactions and WalletTransactions
-        
-        Args:
-            filters: Dictionary containing filter parameters
-                - status: Filter by transaction status (for Transaction)
-                - transaction_type: Filter by type (TOPUP, RENTAL, etc.)
-                - user_id: Filter by user ID
-                - recent: 'today', '24h', '7d', '30d' for recent transactions
-                - start_date: Filter transactions after this date
-                - end_date: Filter transactions before this date
-                - include_wallet: Include wallet transactions (default: True)
-                - search: Search by transaction_id or user name
-                - page: Page number
-                - page_size: Items per page
-                
-        Returns:
-            Dict with combined results and pagination
-        """
+        """Get combined list of all transactions (Transaction, WalletTransaction, PointsTransaction)"""
         try:
             if not filters:
                 filters = {}
             
-            # Get Transactions
-            transaction_queryset = Transaction.objects.select_related(
-                'user', 'related_rental'
-            ).order_by('-created_at')
-            
-            # Get WalletTransactions (if included)
-            include_wallet = filters.get('include_wallet', True)
-            wallet_transaction_queryset = None
-            if include_wallet:
-                wallet_transaction_queryset = WalletTransaction.objects.select_related(
-                    'wallet__user', 'transaction'
-                ).order_by('-created_at')
-            
-            # Apply common filters
-            # Recent filter
-            if filters.get('recent'):
-                now = timezone.now()
-                recent_type = filters['recent']
-                
-                if recent_type == 'today':
-                    filter_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
-                elif recent_type == '24h':
-                    filter_time = now - timedelta(hours=24)
-                elif recent_type == '7d':
-                    filter_time = now - timedelta(days=7)
-                elif recent_type == '30d':
-                    filter_time = now - timedelta(days=30)
-                else:
-                    filter_time = None
-                
-                if filter_time:
-                    transaction_queryset = transaction_queryset.filter(created_at__gte=filter_time)
-                    if wallet_transaction_queryset:
-                        wallet_transaction_queryset = wallet_transaction_queryset.filter(created_at__gte=filter_time)
-            
-            # Date range filters
-            if filters.get('start_date'):
-                transaction_queryset = transaction_queryset.filter(created_at__gte=filters['start_date'])
-                if wallet_transaction_queryset:
-                    wallet_transaction_queryset = wallet_transaction_queryset.filter(created_at__gte=filters['start_date'])
-            
-            if filters.get('end_date'):
-                transaction_queryset = transaction_queryset.filter(created_at__lte=filters['end_date'])
-                if wallet_transaction_queryset:
-                    wallet_transaction_queryset = wallet_transaction_queryset.filter(created_at__lte=filters['end_date'])
-            
-            # User filter
-            if filters.get('user_id'):
-                transaction_queryset = transaction_queryset.filter(user_id=filters['user_id'])
-                if wallet_transaction_queryset:
-                    wallet_transaction_queryset = wallet_transaction_queryset.filter(wallet__user_id=filters['user_id'])
-            
-            # Search filter
-            if filters.get('search'):
-                search_term = filters['search']
-                transaction_queryset = transaction_queryset.filter(
-                    Q(transaction_id__icontains=search_term) |
-                    Q(user__username__icontains=search_term) |
-                    Q(user__email__icontains=search_term)
-                )
-                if wallet_transaction_queryset:
-                    wallet_transaction_queryset = wallet_transaction_queryset.filter(
-                        Q(wallet__user__username__icontains=search_term) |
-                        Q(wallet__user__email__icontains=search_term) |
-                        Q(description__icontains=search_term)
-                    )
-            
-            # Transaction-specific filters
-            if filters.get('status'):
-                transaction_queryset = transaction_queryset.filter(status=filters['status'])
-            
-            if filters.get('transaction_type'):
-                transaction_queryset = transaction_queryset.filter(transaction_type=filters['transaction_type'])
-            
-            if filters.get('payment_method_type'):
-                transaction_queryset = transaction_queryset.filter(payment_method_type=filters['payment_method_type'])
-            
-            # WalletTransaction-specific filters
-            if filters.get('wallet_transaction_type') and wallet_transaction_queryset:
-                wallet_transaction_queryset = wallet_transaction_queryset.filter(
-                    transaction_type=filters['wallet_transaction_type']
-                )
-            
-            # Combine querysets into a unified list
             combined_transactions = []
             
-            # Add Transactions
-            for txn in transaction_queryset:
-                combined_transactions.append({
-                    'source': 'transaction',
-                    'id': str(txn.id),
-                    'transaction_id': txn.transaction_id,
-                    'user': {
-                        'id': str(txn.user.id),
-                        'username': txn.user.username,
-                        'email': txn.user.email
-                    },
-                    'type': txn.transaction_type,
-                    'amount': float(txn.amount),
-                    'currency': txn.currency,
-                    'status': txn.status,
-                    'payment_method_type': txn.payment_method_type,
-                    'related_rental_id': str(txn.related_rental.id) if txn.related_rental else None,
-                    'gateway_reference': txn.gateway_reference,
-                    'created_at': txn.created_at,
-                    'description': f"{txn.get_transaction_type_display()} - {txn.get_status_display()}"
-                })
+            # Common filters
+            source = filters.get('source', 'all')
+            user_id = filters.get('user_id')
+            search = filters.get('search')
+            start_date = filters.get('start_date')
+            end_date = filters.get('end_date')
             
-            # Add WalletTransactions
-            if wallet_transaction_queryset:
-                for wtxn in wallet_transaction_queryset:
+            # Get Payment Transactions
+            if source in ['all', 'payment']:
+                txn_query = Transaction.objects.select_related('user', 'related_rental')
+                if user_id:
+                    txn_query = txn_query.filter(user_id=user_id)
+                if search:
+                    txn_query = txn_query.filter(
+                        Q(transaction_id__icontains=search) | Q(user__username__icontains=search) | Q(user__email__icontains=search)
+                    )
+                if start_date:
+                    txn_query = txn_query.filter(created_at__gte=start_date)
+                if end_date:
+                    txn_query = txn_query.filter(created_at__lte=end_date)
+                
+                for txn in txn_query:
                     combined_transactions.append({
-                        'source': 'wallet_transaction',
+                        'source': 'payment',
+                        'id': str(txn.id),
+                        'transaction_id': txn.transaction_id,
+                        'user': {'id': str(txn.user.id), 'username': txn.user.username, 'email': txn.user.email},
+                        'type': txn.transaction_type,
+                        'amount': float(txn.amount),
+                        'status': txn.status,
+                        'created_at': txn.created_at,
+                        'description': f"{txn.get_transaction_type_display()} - {txn.get_status_display()}"
+                    })
+            
+            # Get Wallet Transactions
+            if source in ['all', 'wallet']:
+                wallet_query = WalletTransaction.objects.select_related('wallet__user')
+                if user_id:
+                    wallet_query = wallet_query.filter(wallet__user_id=user_id)
+                if search:
+                    wallet_query = wallet_query.filter(
+                        Q(wallet__user__username__icontains=search) | Q(wallet__user__email__icontains=search)
+                    )
+                if start_date:
+                    wallet_query = wallet_query.filter(created_at__gte=start_date)
+                if end_date:
+                    wallet_query = wallet_query.filter(created_at__lte=end_date)
+                
+                for wtxn in wallet_query:
+                    combined_transactions.append({
+                        'source': 'wallet',
                         'id': str(wtxn.id),
-                        'transaction_id': str(wtxn.transaction.transaction_id) if wtxn.transaction else f"WT-{wtxn.id}",
-                        'user': {
-                            'id': str(wtxn.wallet.user.id),
-                            'username': wtxn.wallet.user.username,
-                            'email': wtxn.wallet.user.email
-                        },
+                        'transaction_id': f"W-{wtxn.id}",
+                        'user': {'id': str(wtxn.wallet.user.id), 'username': wtxn.wallet.user.username, 'email': wtxn.wallet.user.email},
                         'type': wtxn.transaction_type,
                         'amount': float(wtxn.amount),
-                        'currency': wtxn.wallet.currency,
-                        'status': 'COMPLETED',  # Wallet transactions are always completed
-                        'payment_method_type': 'WALLET',
+                        'status': 'COMPLETED',
                         'balance_before': float(wtxn.balance_before),
                         'balance_after': float(wtxn.balance_after),
                         'created_at': wtxn.created_at,
                         'description': wtxn.description
                     })
             
-            # Sort combined list by created_at (most recent first)
+            # Get Points Transactions
+            if source in ['all', 'points']:
+                points_query = PointsTransaction.objects.select_related('user')
+                if user_id:
+                    points_query = points_query.filter(user_id=user_id)
+                if search:
+                    points_query = points_query.filter(
+                        Q(user__username__icontains=search) | Q(user__email__icontains=search)
+                    )
+                if start_date:
+                    points_query = points_query.filter(created_at__gte=start_date)
+                if end_date:
+                    points_query = points_query.filter(created_at__lte=end_date)
+                
+                for ptxn in points_query:
+                    combined_transactions.append({
+                        'source': 'points',
+                        'id': str(ptxn.id),
+                        'transaction_id': f"P-{ptxn.id}",
+                        'user': {'id': str(ptxn.user.id), 'username': ptxn.user.username, 'email': ptxn.user.email},
+                        'type': ptxn.transaction_type,
+                        'points': ptxn.points,
+                        'points_source': ptxn.source,
+                        'status': 'COMPLETED',
+                        'balance_before': ptxn.balance_before,
+                        'balance_after': ptxn.balance_after,
+                        'created_at': ptxn.created_at,
+                        'description': ptxn.description
+                    })
+            
+            # Sort by date (newest first)
             combined_transactions.sort(key=lambda x: x['created_at'], reverse=True)
             
-            # Manual pagination
+            # Pagination
             page = filters.get('page', 1)
             page_size = filters.get('page_size', 20)
-            
             total_count = len(combined_transactions)
-            start_index = (page - 1) * page_size
-            end_index = start_index + page_size
-            
-            paginated_results = combined_transactions[start_index:end_index]
+            start_idx = (page - 1) * page_size
+            end_idx = start_idx + page_size
             
             return {
-                'results': paginated_results,
+                'results': combined_transactions[start_idx:end_idx],
                 'pagination': {
                     'total_count': total_count,
                     'page': page,
