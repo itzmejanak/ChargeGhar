@@ -52,7 +52,7 @@ class MediaUploadView(GenericAPIView, BaseAPIView):
             operation,
             "Media uploaded successfully",
             "Failed to upload media",
-            status_code=status.HTTP_201_CREATED
+            success_status=status.HTTP_201_CREATED
         )
 
 

@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 @content_admin_router.register(r"admin/content/pages", name="admin-content-pages")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Contents"],
     summary="Admin Content Pages",
     description="Manage content pages (admin only)",
     request=serializers.ContentPageSerializer,
@@ -65,7 +65,7 @@ class AdminContentPagesView(GenericAPIView, BaseAPIView):
 
 @content_admin_router.register(r"admin/content/analytics", name="admin-content-analytics")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Contents"],
     summary="Content Analytics",
     description="Get comprehensive content analytics (admin only)",
     responses={200: BaseResponseSerializer}
@@ -95,7 +95,7 @@ class AdminContentAnalyticsView(GenericAPIView, BaseAPIView):
 
 @content_admin_router.register(r"admin/content/faqs", name="admin-content-faqs")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Contents"],
     summary="Admin FAQ Management",
     description="List and create FAQs (admin only)",
     request=serializers.FAQSerializer,
@@ -152,7 +152,7 @@ class AdminFAQDetailView(GenericAPIView, BaseAPIView):
 
     @extend_schema(
         operation_id="admin_content_faq_detail_retrieve",
-        tags=["Admin"],
+        tags=["Admin - Contents"],
         summary="Get FAQ by ID",
         description="Retrieve specific FAQ details (admin only)",
         responses={200: BaseResponseSerializer}
@@ -173,7 +173,7 @@ class AdminFAQDetailView(GenericAPIView, BaseAPIView):
 
     @extend_schema(
         operation_id="admin_content_faq_detail_update",
-        tags=["Admin"],
+        tags=["Admin - Contents"],
         summary="Update FAQ",
         description="Update specific FAQ (admin only)",
         request=serializers.FAQSerializer,
@@ -205,7 +205,7 @@ class AdminFAQDetailView(GenericAPIView, BaseAPIView):
 
     @extend_schema(
         operation_id="admin_content_faq_detail_delete",
-        tags=["Admin"],
+        tags=["Admin - Contents"],
         summary="Delete FAQ",
         description="Delete specific FAQ (admin only)",
         responses={200: BaseResponseSerializer}
@@ -229,7 +229,7 @@ class AdminFAQDetailView(GenericAPIView, BaseAPIView):
 
 @content_admin_router.register(r"admin/content/contact", name="admin-content-contact")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Contents"],
     summary="Admin Contact Info Management",
     description="List and create/update contact information (admin only)",
     request=serializers.ContactInfoSerializer,
@@ -287,7 +287,7 @@ class AdminContactInfoDetailView(GenericAPIView, BaseAPIView):
 
     @extend_schema(
         operation_id="admin_content_contact_detail_retrieve",
-        tags=["Admin"],
+        tags=["Admin - Contents"],
         summary="Get Contact Info by ID",
         description="Retrieve specific contact info details (admin only)",
         responses={200: BaseResponseSerializer}
@@ -308,7 +308,7 @@ class AdminContactInfoDetailView(GenericAPIView, BaseAPIView):
 
     @extend_schema(
         operation_id="admin_content_contact_detail_delete",
-        tags=["Admin"],
+        tags=["Admin - Contents"],
         summary="Delete Contact Info",
         description="Delete specific contact info (admin only)",
         responses={200: BaseResponseSerializer}
@@ -332,7 +332,7 @@ class AdminContactInfoDetailView(GenericAPIView, BaseAPIView):
 
 @content_admin_router.register(r"admin/content/banners", name="admin-content-banners")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Contents"],
     summary="Admin Banner Management",
     description="List and create banners (admin only)",
     request=serializers.BannerSerializer,
@@ -391,7 +391,7 @@ class AdminBannerDetailView(GenericAPIView, BaseAPIView):
 
     @extend_schema(
         operation_id="admin_content_banner_detail_retrieve",
-        tags=["Admin"],
+        tags=["Admin - Contents"],
         summary="Get Banner by ID",
         description="Retrieve specific banner details (admin only)",
         responses={200: BaseResponseSerializer}
@@ -412,7 +412,7 @@ class AdminBannerDetailView(GenericAPIView, BaseAPIView):
 
     @extend_schema(
         operation_id="admin_content_banner_detail_update",
-        tags=["Admin"],
+        tags=["Admin - Contents"],
         summary="Update Banner",
         description="Update specific banner (admin only)",
         request=serializers.BannerSerializer,
@@ -446,7 +446,7 @@ class AdminBannerDetailView(GenericAPIView, BaseAPIView):
 
     @extend_schema(
         operation_id="admin_content_banner_detail_delete",
-        tags=["Admin"],
+        tags=["Admin - Contents"],
         summary="Delete Banner",
         description="Delete specific banner (admin only)",
         responses={200: BaseResponseSerializer}

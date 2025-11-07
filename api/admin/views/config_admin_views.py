@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 @config_admin_router.register(r"admin/config", name="admin-config")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Config"],
     summary="Admin Config Management",
     description="CRUD operations for app configurations (Admin only)",
     responses={200: BaseResponseSerializer}

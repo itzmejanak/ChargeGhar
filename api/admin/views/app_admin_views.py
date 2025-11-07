@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 @app_admin_router.register(r"admin/app/versions", name="admin-app-versions")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - App"],
     summary="Admin App Versions",
     description="CRUD operations for app versions (Admin only)",
     parameters=[
@@ -106,7 +106,7 @@ class AdminAppVersionsView(GenericAPIView, BaseAPIView):
 
 @app_admin_router.register(r"admin/app/versions/<str:version_id>", name="admin-app-version-detail")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - App"],
     summary="Admin App Version Detail",
     description="Get, update, or delete specific app version (admin privileges)",
     parameters=[
@@ -220,7 +220,7 @@ class AdminAppVersionDetailView(GenericAPIView, BaseAPIView):
 # ============================================================================
 @app_admin_router.register(r"admin/app/updates", name="admin-app-updates")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - App"],
     summary="Admin App Updates",
     description="CRUD operations for app updates (Admin only)",
     parameters=[

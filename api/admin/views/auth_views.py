@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 @auth_router.register(r"admin/login", name="admin-login")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Auth"],
     summary="Admin Login",
     description="Password-based login for admin users (generates JWT tokens)",
     request=serializers.AdminLoginSerializer,
@@ -65,7 +65,7 @@ class AdminLoginView(GenericAPIView, BaseAPIView):
 # ============================================================
 @auth_router.register(r"admin/profiles", name="admin-profiles")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Auth"],
     summary="Admin Profile Management",
     description="Manage admin profiles and roles (Staff only)",
     responses={200: BaseResponseSerializer}
@@ -137,7 +137,7 @@ class AdminProfileView(GenericAPIView, BaseAPIView):
 # ============================================================
 @auth_router.register(r"admin/me", name="admin-me")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Auth"],
     summary="Get Current Admin Profile",
     description="Get the logged-in admin's profile with permissions",
     responses={200: BaseResponseSerializer}
@@ -165,7 +165,7 @@ class AdminMeView(GenericAPIView, BaseAPIView):
 # ============================================================
 @auth_router.register(r"admin/profiles/<uuid:profile_id>", name="admin-profile-detail")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Auth"],
     summary="Admin Profile Details",
     description="Get, update, or deactivate a specific admin profile",
     responses={200: BaseResponseSerializer}

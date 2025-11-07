@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 @monitoring_router.register(r"admin/action-logs", name="admin-action-logs")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Monitor"],
     summary="Admin Action Logs",
     description="View admin action audit logs (Staff only)",
     responses={200: BaseResponseSerializer}
@@ -48,7 +48,7 @@ class AdminActionLogView(GenericAPIView, BaseAPIView):
 
 @monitoring_router.register(r"admin/system-logs", name="admin-system-logs")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Monitor"],
     summary="System Logs",
     description="View system logs for debugging (Staff only)",
     request=serializers.SystemLogFiltersSerializer,
@@ -88,7 +88,7 @@ class SystemLogView(GenericAPIView, BaseAPIView):
 # ============================================================
 @monitoring_router.register(r"admin/dashboard", name="admin-dashboard")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Monitor"],
     summary="Admin Dashboard Analytics",
     description="Get comprehensive dashboard analytics and metrics (Staff only)",
     responses={200: serializers.DashboardAnalyticsSerializer}
@@ -113,7 +113,7 @@ class AdminDashboardView(GenericAPIView, BaseAPIView):
 
 @monitoring_router.register(r"admin/system-health", name="admin-system-health")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Monitor"],
     summary="System Health",
     description="Get comprehensive system health metrics (Staff only)",
     responses={200: serializers.SystemHealthSerializer}

@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 @withdrawal_admin_router.register(r"admin/withdrawals/analytics", name="admin-withdrawal-analytics")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Withdrawals"],
     summary="Withdrawal Analytics",
     description="Get withdrawal analytics for admin dashboard (Staff only)",
     responses={200: BaseResponseSerializer}
@@ -51,7 +51,7 @@ class AdminWithdrawalAnalyticsView(GenericAPIView, BaseAPIView):
 
 @withdrawal_admin_router.register(r"admin/withdrawals", name="admin-withdrawals")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Withdrawals"],
     summary="Pending Withdrawals",
     description="Get list of pending withdrawal requests (Staff only)",
     request=serializers.WithdrawalFiltersSerializer,
@@ -87,7 +87,7 @@ class AdminWithdrawalsView(GenericAPIView, BaseAPIView):
 
 @withdrawal_admin_router.register(r"admin/withdrawals/<str:withdrawal_id>/process", name="admin-process-withdrawal")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Withdrawals"],
     summary="Process Withdrawal",
     description="Approve or reject withdrawal request (Staff only)",
     request=serializers.ProcessWithdrawalSerializer,
@@ -129,7 +129,7 @@ class ProcessWithdrawalView(GenericAPIView, BaseAPIView):
 
 @withdrawal_admin_router.register(r"admin/withdrawals/<str:withdrawal_id>", name="admin-withdrawal-detail")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Withdrawals"],
     summary="Withdrawal Details",
     description="Get detailed withdrawal information (Staff only)",
     responses={200: BaseResponseSerializer}

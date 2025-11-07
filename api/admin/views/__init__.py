@@ -21,10 +21,11 @@ from .withdrawal_views import withdrawal_admin_router
 from .coupon_views import coupon_router
 from .rental_views import rental_router
 from .kyc_views import kyc_router
+from .amenity_views import amenity_admin_router
 
 # Merge all sub-routers
 router = CustomViewRouter()
 
-for sub_router in [auth_router, monitoring_router, user_management_router, payment_router, station_router, station_issue_router, notification_router, content_admin_router, config_admin_router, media_admin_router, app_admin_router, withdrawal_admin_router, coupon_router, rental_router, kyc_router]:
+for sub_router in [auth_router, monitoring_router, user_management_router, payment_router, station_router, station_issue_router, notification_router, content_admin_router, config_admin_router, media_admin_router, app_admin_router, withdrawal_admin_router, coupon_router, rental_router, kyc_router, amenity_admin_router]:
     router._paths.extend(sub_router._paths)
     router._drf_router.registry.extend(sub_router._drf_router.registry)

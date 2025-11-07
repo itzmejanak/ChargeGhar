@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 @user_management_router.register(r"admin/users", name="admin-users")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Users"],
     summary="User Management",
     description="Manage users (list with filters) (Staff only)",
     request=serializers.AdminUserListSerializer,
@@ -62,7 +62,7 @@ class AdminUserDetailView(GenericAPIView, BaseAPIView):
 
     @extend_schema(
         operation_id="admin_user_detail_retrieve",
-        tags=["Admin"],
+        tags=["Admin - Users"],
         summary="Get User Detail",
         description="Get detailed user information (Staff only)",
         responses={200: BaseResponseSerializer}
@@ -93,7 +93,7 @@ class AdminUserDetailView(GenericAPIView, BaseAPIView):
 
 @user_management_router.register(r"admin/users/<str:user_id>/status", name="admin-user-status")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Users"],
     summary="Update User Status",
     description="Update user status (ACTIVE/BANNED/INACTIVE) (Staff only)",
     request=serializers.UpdateUserStatusSerializer,
@@ -133,7 +133,7 @@ class UpdateUserStatusView(GenericAPIView, BaseAPIView):
 
 @user_management_router.register(r"admin/users/<str:user_id>/add-balance", name="admin-add-balance")
 @extend_schema(
-    tags=["Admin"],
+    tags=["Admin - Users"],
     summary="Add User Balance",
     description="Add balance to user wallet (Staff only)",
     request=serializers.AddUserBalanceSerializer,

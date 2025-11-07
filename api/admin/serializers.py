@@ -741,6 +741,415 @@ class UpdateRentalPackageSerializer(serializers.Serializer):
     package_metadata = serializers.JSONField(required=False)
 
 
+# ============================================================
+# Station Management Serializers
+# ============================================================
+
+class AdminStationListSerializer(serializers.Serializer):
+    """Serializer for station list filters"""
+    status = serializers.ChoiceField(
+        choices=['ONLINE', 'OFFLINE', 'MAINTENANCE'],
+        required=False
+    )
+    is_maintenance = serializers.BooleanField(required=False, allow_null=True, default=None)
+    search = serializers.CharField(required=False)
+    start_date = serializers.DateTimeField(required=False)
+    end_date = serializers.DateTimeField(required=False)
+    page = serializers.IntegerField(default=1, min_value=1)
+    page_size = serializers.IntegerField(default=20, min_value=1, max_value=100)
+
+
+class AdminStationSlotSerializer(serializers.Serializer):
+    """Serializer for station slot details in admin view"""
+    id = serializers.UUIDField(read_only=True)
+    slot_number = serializers.IntegerField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    battery_level = serializers.IntegerField(read_only=True)
+    last_updated = serializers.DateTimeField(read_only=True)
+    powerbank = serializers.SerializerMethodField()
+    current_rental_id = serializers.CharField(source='current_rental.id', read_only=True, allow_null=True)
+    
+    def get_powerbank(self, obj):
+        """Get powerbank details if slot is occupied"""
+        if obj.status == 'OCCUPIED':
+            # Find powerbank in this slot
+            from api.stations.models import PowerBank
+            try:
+                powerbank = PowerBank.objects.filter(current_slot=obj).first()
+                if powerbank:
+                    return {
+                        'id': str(powerbank.id),
+                        'serial_number': powerbank.serial_number,
+                        'model': powerbank.model,
+                        'capacity_mah': powerbank.capacity_mah,
+                        'battery_level': powerbank.battery_level,
+                        'status': powerbank.status
+                    }
+            except Exception:
+                pass
+        return None
+
+
+class AdminStationAmenitySerializer(serializers.Serializer):
+    """Serializer for station amenity in admin view"""
+    id = serializers.UUIDField(read_only=True)
+    name = serializers.CharField(read_only=True)
+    icon = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True)
+    is_available = serializers.BooleanField(read_only=True)
+    notes = serializers.CharField(read_only=True, allow_null=True)
+
+
+class AdminStationIssueCompactSerializer(serializers.Serializer):
+    """Compact serializer for station issues in station detail"""
+    id = serializers.UUIDField(read_only=True)
+    issue_type = serializers.CharField(read_only=True)
+    priority = serializers.CharField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    reported_at = serializers.DateTimeField(read_only=True)
+    reported_by_username = serializers.CharField(source='reported_by.username', read_only=True)
+
+
+class AdminStationSerializer(serializers.Serializer):
+    """Serializer for station list view - includes minimal amenities, slots, and powerbank counts"""
+    id = serializers.UUIDField(read_only=True)
+    station_name = serializers.CharField(read_only=True)
+    serial_number = serializers.CharField(read_only=True)
+    imei = serializers.CharField(read_only=True)
+    latitude = serializers.DecimalField(max_digits=10, decimal_places=6, read_only=True)
+    longitude = serializers.DecimalField(max_digits=10, decimal_places=6, read_only=True)
+    address = serializers.CharField(read_only=True)
+    landmark = serializers.CharField(read_only=True, allow_null=True)
+    total_slots = serializers.IntegerField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    is_maintenance = serializers.BooleanField(read_only=True)
+    last_heartbeat = serializers.DateTimeField(read_only=True, allow_null=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
+    
+    # Minimal related data
+    amenities = serializers.SerializerMethodField()
+    
+    # Summary statistics
+    available_slots = serializers.SerializerMethodField()
+    occupied_slots = serializers.SerializerMethodField()
+    total_powerbanks = serializers.SerializerMethodField()
+    available_powerbanks = serializers.SerializerMethodField()
+    
+    def get_amenities(self, obj):
+        """Get amenity names only (minimal)"""
+        amenity_mappings = obj.amenity_mappings.select_related('amenity').filter(
+            amenity__is_active=True,
+            is_available=True
+        )
+        return [mapping.amenity.name for mapping in amenity_mappings]
+    
+    def get_available_slots(self, obj):
+        """Count available slots"""
+        return obj.slots.filter(status='AVAILABLE').count()
+    
+    def get_occupied_slots(self, obj):
+        """Count occupied slots"""
+        return obj.slots.filter(status='OCCUPIED').count()
+    
+    def get_total_powerbanks(self, obj):
+        """Count total powerbanks at this station"""
+        from api.stations.models import PowerBank
+        return PowerBank.objects.filter(current_station=obj).count()
+    
+    def get_available_powerbanks(self, obj):
+        """Count available powerbanks at this station"""
+        from api.stations.models import PowerBank
+        return PowerBank.objects.filter(
+            current_station=obj,
+            status='AVAILABLE'
+        ).count()
+
+
+class AdminStationDetailSerializer(serializers.Serializer):
+    """Serializer for detailed station view - minimal, focused on slots and powerbanks"""
+    id = serializers.UUIDField(read_only=True)
+    station_name = serializers.CharField(read_only=True)
+    serial_number = serializers.CharField(read_only=True)
+    imei = serializers.CharField(read_only=True)
+    latitude = serializers.DecimalField(max_digits=10, decimal_places=6, read_only=True)
+    longitude = serializers.DecimalField(max_digits=10, decimal_places=6, read_only=True)
+    address = serializers.CharField(read_only=True)
+    landmark = serializers.CharField(read_only=True, allow_null=True)
+    total_slots = serializers.IntegerField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    is_maintenance = serializers.BooleanField(read_only=True)
+    hardware_info = serializers.JSONField(read_only=True)
+    last_heartbeat = serializers.DateTimeField(read_only=True, allow_null=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
+    
+    # Only slots and powerbanks in detail
+    slots = serializers.SerializerMethodField()
+    powerbanks = serializers.SerializerMethodField()
+    
+    def get_slots(self, obj):
+        """Get all slots with powerbank details"""
+        slots = obj.slots.order_by('slot_number')
+        return AdminStationSlotSerializer(slots, many=True).data
+    
+    def get_powerbanks(self, obj):
+        """Get powerbanks at this station"""
+        from api.stations.models import PowerBank
+        powerbanks = PowerBank.objects.filter(current_station=obj).select_related('current_slot')
+        
+        result = []
+        for pb in powerbanks:
+            result.append({
+                'id': str(pb.id),
+                'serial_number': pb.serial_number,
+                'model': pb.model,
+                'capacity_mah': pb.capacity_mah,
+                'status': pb.status,
+                'battery_level': pb.battery_level,
+                'slot_number': pb.current_slot.slot_number if pb.current_slot else None,
+                'last_updated': pb.last_updated
+            })
+        return result
+
+
+class CreateStationSerializer(serializers.Serializer):
+    """Serializer for creating a new station with amenities and media"""
+    station_name = serializers.CharField(max_length=100)
+    serial_number = serializers.CharField(max_length=255)
+    imei = serializers.CharField(max_length=255)
+    latitude = serializers.DecimalField(max_digits=10, decimal_places=6)
+    longitude = serializers.DecimalField(max_digits=10, decimal_places=6)
+    address = serializers.CharField(max_length=255)
+    landmark = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    total_slots = serializers.IntegerField(min_value=1, max_value=50)
+    status = serializers.ChoiceField(
+        choices=['ONLINE', 'OFFLINE', 'MAINTENANCE'],
+        default='OFFLINE'
+    )
+    is_maintenance = serializers.BooleanField(default=False)
+    hardware_info = serializers.JSONField(default=dict, required=False)
+    
+    # Amenities configuration
+    amenity_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+        allow_empty=True,
+        help_text="List of amenity IDs to assign to this station"
+    )
+    
+    # Media/Images configuration
+    media_uploads = serializers.ListField(
+        child=serializers.JSONField(),
+        required=False,
+        allow_empty=True,
+        help_text="List of media objects: [{'media_upload_id': 'uuid', 'media_type': 'IMAGE', 'title': 'Main Photo', 'is_primary': true}]"
+    )
+    
+    # PowerBank assignments configuration
+    powerbank_assignments = serializers.ListField(
+        child=serializers.JSONField(),
+        required=False,
+        allow_empty=True,
+        help_text="List of powerbank assignments: [{'powerbank_serial': 'PB-001', 'slot_number': 1}, ...]"
+    )
+    
+    def validate_latitude(self, value):
+        if not -90 <= float(value) <= 90:
+            raise serializers.ValidationError("Latitude must be between -90 and 90")
+        return value
+    
+    def validate_longitude(self, value):
+        if not -180 <= float(value) <= 180:
+            raise serializers.ValidationError("Longitude must be between -180 and 180")
+        return value
+    
+    def validate_serial_number(self, value):
+        """Check if serial number is unique"""
+        from api.stations.models import Station
+        if Station.objects.filter(serial_number=value).exists():
+            raise serializers.ValidationError("Station with this serial number already exists")
+        return value
+    
+    def validate_imei(self, value):
+        """Check if IMEI is unique"""
+        from api.stations.models import Station
+        if Station.objects.filter(imei=value).exists():
+            raise serializers.ValidationError("Station with this IMEI already exists")
+        return value
+    
+    def validate_amenity_ids(self, value):
+        """Validate amenity IDs exist"""
+        if value:
+            from api.stations.models import StationAmenity
+            existing_ids = set(StationAmenity.objects.filter(
+                id__in=value, 
+                is_active=True
+            ).values_list('id', flat=True))
+            
+            invalid_ids = set(value) - existing_ids
+            if invalid_ids:
+                raise serializers.ValidationError(
+                    f"Invalid or inactive amenity IDs: {', '.join(str(id) for id in invalid_ids)}"
+                )
+        return value
+    
+    def validate_media_uploads(self, value):
+        """Validate media upload objects"""
+        if value:
+            from api.media.models import MediaUpload
+            
+            for idx, media_obj in enumerate(value):
+                # Validate required fields
+                if 'media_upload_id' not in media_obj:
+                    raise serializers.ValidationError(
+                        f"Media object at index {idx} missing 'media_upload_id'"
+                    )
+                
+                if 'media_type' not in media_obj:
+                    raise serializers.ValidationError(
+                        f"Media object at index {idx} missing 'media_type'"
+                    )
+                
+                # Validate media_type
+                valid_types = ['IMAGE', 'VIDEO', '360_VIEW', 'FLOOR_PLAN']
+                if media_obj['media_type'] not in valid_types:
+                    raise serializers.ValidationError(
+                        f"Media object at index {idx} has invalid media_type. Must be one of: {', '.join(valid_types)}"
+                    )
+                
+                # Validate media upload exists
+                media_upload_id = media_obj['media_upload_id']
+                if not MediaUpload.objects.filter(id=media_upload_id).exists():
+                    raise serializers.ValidationError(
+                        f"MediaUpload with ID {media_upload_id} not found"
+                    )
+        
+        return value
+    
+    def validate_powerbank_assignments(self, value):
+        """Validate powerbank assignment objects"""
+        if value:
+            from api.stations.models import PowerBank
+            
+            # Validate unique slot assignments
+            slot_numbers = []
+            powerbank_serials = []
+            
+            for idx, assignment in enumerate(value):
+                # Validate required fields
+                if 'powerbank_serial' not in assignment:
+                    raise serializers.ValidationError(
+                        f"Assignment at index {idx} missing 'powerbank_serial'"
+                    )
+                
+                if 'slot_number' not in assignment:
+                    raise serializers.ValidationError(
+                        f"Assignment at index {idx} missing 'slot_number'"
+                    )
+                
+                powerbank_serial = assignment['powerbank_serial']
+                slot_number = assignment['slot_number']
+                
+                # Validate slot_number is positive integer
+                if not isinstance(slot_number, int) or slot_number < 1:
+                    raise serializers.ValidationError(
+                        f"Assignment at index {idx} has invalid slot_number. Must be a positive integer."
+                    )
+                
+                # Check for duplicate slot assignments
+                if slot_number in slot_numbers:
+                    raise serializers.ValidationError(
+                        f"Duplicate slot assignment: slot {slot_number} is assigned multiple times"
+                    )
+                slot_numbers.append(slot_number)
+                
+                # Check for duplicate powerbank assignments
+                if powerbank_serial in powerbank_serials:
+                    raise serializers.ValidationError(
+                        f"Duplicate powerbank assignment: {powerbank_serial} is assigned multiple times"
+                    )
+                powerbank_serials.append(powerbank_serial)
+                
+                # Validate powerbank exists
+                if not PowerBank.objects.filter(serial_number=powerbank_serial).exists():
+                    raise serializers.ValidationError(
+                        f"PowerBank with serial {powerbank_serial} not found"
+                    )
+        
+        return value
+
+
+class UpdateStationSerializer(serializers.Serializer):
+    """Serializer for updating station details"""
+    station_name = serializers.CharField(max_length=100, required=False)
+    latitude = serializers.DecimalField(max_digits=10, decimal_places=6, required=False)
+    longitude = serializers.DecimalField(max_digits=10, decimal_places=6, required=False)
+    address = serializers.CharField(max_length=255, required=False)
+    landmark = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    status = serializers.ChoiceField(
+        choices=['ONLINE', 'OFFLINE', 'MAINTENANCE'],
+        required=False
+    )
+    is_maintenance = serializers.BooleanField(required=False)
+    hardware_info = serializers.JSONField(required=False)
+    
+    def validate_latitude(self, value):
+        if value is not None and not -90 <= float(value) <= 90:
+            raise serializers.ValidationError("Latitude must be between -90 and 90")
+        return value
+    
+    def validate_longitude(self, value):
+        if value is not None and not -180 <= float(value) <= 180:
+            raise serializers.ValidationError("Longitude must be between -180 and 180")
+        return value
+
+
+# ============================================================
+# Station Amenity Serializers
+# ============================================================
+
+class AdminStationAmenitySerializer(serializers.Serializer):
+    """Serializer for listing station amenities"""
+    id = serializers.UUIDField(read_only=True)
+    name = serializers.CharField()
+    icon = serializers.CharField()
+    description = serializers.CharField()
+    is_active = serializers.BooleanField()
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
+
+
+class CreateStationAmenitySerializer(serializers.Serializer):
+    """Serializer for creating station amenity"""
+    name = serializers.CharField(max_length=100, required=True)
+    icon = serializers.CharField(max_length=255, required=True)
+    description = serializers.CharField(max_length=255, required=True)
+    is_active = serializers.BooleanField(default=True, required=False)
+    
+    def validate_name(self, value):
+        """Validate name is unique"""
+        from api.stations.models import StationAmenity
+        if StationAmenity.objects.filter(name=value).exists():
+            raise serializers.ValidationError("Amenity with this name already exists")
+        return value
+
+
+class UpdateStationAmenitySerializer(serializers.Serializer):
+    """Serializer for updating station amenity"""
+    name = serializers.CharField(max_length=100, required=False)
+    icon = serializers.CharField(max_length=255, required=False)
+    description = serializers.CharField(max_length=255, required=False)
+    is_active = serializers.BooleanField(required=False)
+    
+    def validate_name(self, value):
+        """Validate name is unique (excluding current instance)"""
+        from api.stations.models import StationAmenity
+        amenity_id = self.context.get('amenity_id')
+        if StationAmenity.objects.filter(name=value).exclude(id=amenity_id).exists():
+            raise serializers.ValidationError("Amenity with this name already exists")
+        return value
+
 
 
 
