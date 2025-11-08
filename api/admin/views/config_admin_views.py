@@ -60,7 +60,7 @@ class AdminConfigView(GenericAPIView, BaseAPIView):
             key = request.data.get('key')
             value = request.data.get('value')
             description = request.data.get('description', '')
-            is_public = request.data.get('is_public', False)
+            is_active = request.data.get('is_active', True)
             
             if not key or value is None:
                 raise ValueError("Key and value are required")
@@ -70,7 +70,7 @@ class AdminConfigView(GenericAPIView, BaseAPIView):
                 key=key,
                 value=value,
                 description=description,
-                is_public=is_public,
+                is_active=is_active,
                 admin_user=request.user
             )
             
@@ -78,7 +78,7 @@ class AdminConfigView(GenericAPIView, BaseAPIView):
                 'config_id': str(config.id),
                 'key': config.key,
                 'value': config.value,
-                'is_public': config.is_public,
+                'is_active': config.is_active,
                 'message': f'Configuration {key} created successfully'
             }
         
@@ -98,7 +98,7 @@ class AdminConfigView(GenericAPIView, BaseAPIView):
             key = request.data.get('key')
             value = request.data.get('value')
             description = request.data.get('description')
-            is_public = request.data.get('is_public')
+            is_active = request.data.get('is_active')
             
             if not config_id and not key:
                 raise ValueError("Either config_id or key is required")
@@ -109,7 +109,7 @@ class AdminConfigView(GenericAPIView, BaseAPIView):
                 key=key,
                 value=value,
                 description=description,
-                is_public=is_public,
+                is_active=is_active,
                 admin_user=request.user
             )
             
@@ -117,7 +117,7 @@ class AdminConfigView(GenericAPIView, BaseAPIView):
                 'config_id': str(config.id),
                 'key': config.key,
                 'value': config.value,
-                'is_public': config.is_public,
+                'is_active': config.is_active,
                 'message': f'Configuration {config.key} updated successfully'
             }
         

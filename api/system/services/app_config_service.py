@@ -93,7 +93,7 @@ class AppConfigService(CRUDService):
             self.handle_service_error(e, "Failed to get all configs")
     
     def create_config(self, key: str, value: str, description: str = None, 
-                     is_public: bool = False, admin_user=None) -> AppConfig:
+                     is_active: bool = True, admin_user=None) -> AppConfig:
         """Create new configuration with enhanced error handling"""
         try:
             # Check for duplicates first with enhanced error
@@ -112,7 +112,7 @@ class AppConfigService(CRUDService):
                 key=key,
                 value=str(value),
                 description=description,
-                is_active=True
+                is_active=is_active
             )
             
             # Clear cache
@@ -159,7 +159,7 @@ class AppConfigService(CRUDService):
             )
     
     def update_config(self, config_id: str = None, key: str = None, value: str = None, 
-                     description: str = None, is_public: bool = None, admin_user=None) -> AppConfig:
+                     description: str = None, is_active: bool = None, admin_user=None) -> AppConfig:
         """Update configuration (Admin)"""
         try:
             if config_id:
@@ -171,13 +171,16 @@ class AppConfigService(CRUDService):
             
             old_values = {
                 'value': config.value,
-                'description': config.description
+                'description': config.description,
+                'is_active': config.is_active
             }
             
             if value is not None:
                 config.value = str(value)
             if description is not None:
                 config.description = description
+            if is_active is not None:
+                config.is_active = is_active
             
             config.save()
             
