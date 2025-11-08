@@ -50,6 +50,87 @@ class AppConfigAdminSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 
+class CreateAppConfigSerializer(serializers.Serializer):
+    """Serializer for creating app configuration"""
+    key = serializers.CharField(
+        max_length=255,
+        required=True,
+        help_text="Configuration key (unique identifier)"
+    )
+    value = serializers.JSONField(
+        required=True,
+        help_text="Configuration value (can be any JSON type)"
+    )
+    description = serializers.CharField(
+        max_length=500,
+        required=False,
+        allow_blank=True,
+        default='',
+        help_text="Description of the configuration"
+    )
+    is_active = serializers.BooleanField(
+        required=False,
+        default=True,
+        help_text="Whether the configuration is active"
+    )
+
+
+class UpdateAppConfigSerializer(serializers.Serializer):
+    """Serializer for updating app configuration"""
+    config_id = serializers.UUIDField(
+        required=False,
+        help_text="Configuration ID (use either config_id or key)"
+    )
+    key = serializers.CharField(
+        max_length=255,
+        required=False,
+        help_text="Configuration key (use either config_id or key)"
+    )
+    value = serializers.JSONField(
+        required=False,
+        help_text="New configuration value"
+    )
+    description = serializers.CharField(
+        max_length=500,
+        required=False,
+        allow_blank=True,
+        help_text="New description"
+    )
+    is_active = serializers.BooleanField(
+        required=False,
+        help_text="New active status"
+    )
+    
+    def validate(self, data):
+        """Ensure at least one of config_id or key is provided"""
+        if not data.get('config_id') and not data.get('key'):
+            raise serializers.ValidationError(
+                "Either config_id or key must be provided"
+            )
+        return data
+
+
+class DeleteAppConfigSerializer(serializers.Serializer):
+    """Serializer for deleting app configuration"""
+    config_id = serializers.UUIDField(
+        required=False,
+        help_text="Configuration ID (use either config_id or key)"
+    )
+    key = serializers.CharField(
+        max_length=255,
+        required=False,
+        help_text="Configuration key (use either config_id or key)"
+    )
+    
+    def validate(self, data):
+        """Ensure at least one of config_id or key is provided"""
+        if not data.get('config_id') and not data.get('key'):
+            raise serializers.ValidationError(
+                "Either config_id or key must be provided"
+            )
+        return data
+
+
 # ============================================================================
 # App Version Serializers
 # ============================================================================

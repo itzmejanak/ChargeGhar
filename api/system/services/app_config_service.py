@@ -11,7 +11,8 @@ from __future__ import annotations
 
 from typing import Any, Dict
 from django.core.cache import cache
-from api.common.services.base import CRUDService
+from rest_framework import status
+from api.common.services.base import CRUDService, ServiceException
 from api.system.models import AppConfig
 
 class AppConfigService(CRUDService):
@@ -98,8 +99,6 @@ class AppConfigService(CRUDService):
         try:
             # Check for duplicates first with enhanced error
             if self.model.objects.filter(key=key).exists():
-                from api.common.services.base import ServiceException
-                from rest_framework import status
                 raise ServiceException(
                     detail=f"Configuration with key '{key}' already exists",
                     code="config_already_exists",
@@ -144,8 +143,6 @@ class AppConfigService(CRUDService):
             raise
         except Exception as e:
             # Enhanced error handling for unexpected errors
-            from api.common.services.base import ServiceException
-            from rest_framework import status
             raise ServiceException(
                 detail="Failed to create configuration",
                 code="config_creation_failed",

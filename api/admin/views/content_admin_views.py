@@ -367,10 +367,11 @@ class AdminBannerView(GenericAPIView, BaseAPIView):
             service = AdminContentService()
             banner = service.create_banner(
                 title=serializer.validated_data['title'],
+                description=serializer.validated_data.get('description', ''),
                 image_url=serializer.validated_data['image_url'],
-                link_url=serializer.validated_data.get('link_url', ''),
-                display_order=serializer.validated_data.get('display_order', 0),
-                is_active=serializer.validated_data.get('is_active', True),
+                redirect_url=serializer.validated_data.get('redirect_url', ''),
+                valid_from=serializer.validated_data['valid_from'],
+                valid_until=serializer.validated_data['valid_until'],
                 admin_user=request.user
             )
             
@@ -429,10 +430,11 @@ class AdminBannerDetailView(GenericAPIView, BaseAPIView):
             banner = service.update_banner(
                 banner_id=banner_id,
                 title=serializer.validated_data['title'],
+                description=serializer.validated_data.get('description', ''),
                 image_url=serializer.validated_data['image_url'],
-                link_url=serializer.validated_data.get('link_url', ''),
-                display_order=serializer.validated_data.get('display_order', 0),
-                is_active=serializer.validated_data.get('is_active', True),
+                redirect_url=serializer.validated_data.get('redirect_url', ''),
+                valid_from=serializer.validated_data['valid_from'],
+                valid_until=serializer.validated_data['valid_until'],
                 admin_user=request.user
             )
             

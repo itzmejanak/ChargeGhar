@@ -206,13 +206,19 @@ class AdminContentService(BaseService):
     
     @transaction.atomic
     def create_banner(
-        self, title: str, image_url: str, link_url: str,
-        display_order: int, is_active: bool, admin_user
+        self, title: str, description: str, image_url: str, redirect_url: str,
+        valid_from, valid_until, admin_user
     ) -> Banner:
         """Create banner with admin logging"""
         try:
             banner = self.banner_service.create_banner(
-                title, image_url, link_url, display_order, is_active, admin_user
+                title=title,
+                description=description,
+                image_url=image_url,
+                redirect_url=redirect_url,
+                valid_from=valid_from,
+                valid_until=valid_until,
+                admin_user=admin_user
             )
             
             self._log_admin_action(
@@ -228,14 +234,19 @@ class AdminContentService(BaseService):
     
     @transaction.atomic
     def update_banner(
-        self, banner_id: str, title: str, image_url: str, link_url: str,
-        display_order: int, is_active: bool, admin_user
+        self, banner_id: str, title: str, description: str, image_url: str,
+        redirect_url: str, valid_from, valid_until, admin_user
     ) -> Banner:
         """Update banner with admin logging"""
         try:
             banner = self.banner_service.update_banner(
-                banner_id, title, image_url, link_url,
-                display_order, is_active, admin_user
+                banner_id=banner_id,
+                title=title,
+                description=description,
+                image_url=image_url,
+                redirect_url=redirect_url,
+                valid_from=valid_from,
+                valid_until=valid_until
             )
             
             self._log_admin_action(
