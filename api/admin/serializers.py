@@ -642,8 +642,8 @@ class AdminRentalIssueSerializer(serializers.Serializer):
     resolved_at = serializers.DateTimeField(read_only=True)
     
     # Rental details
-    start_station_name = serializers.CharField(source='rental.start_station.name', read_only=True, allow_null=True)
-    power_bank_code = serializers.CharField(source='rental.power_bank.code', read_only=True, allow_null=True)
+    station_name = serializers.CharField(source='rental.station.station_name', read_only=True, allow_null=True)
+    power_bank_serial = serializers.CharField(source='rental.power_bank.serial_number', read_only=True, allow_null=True)
 
 
 class AdminRentalIssueDetailSerializer(serializers.Serializer):

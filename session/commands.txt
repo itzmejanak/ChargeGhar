@@ -230,3 +230,5 @@ docker-compose logs > iotdemo_full_logs.txt 2>&1
 In LOcal Terminal
 scp root@213.210.21.113:/opt/powerbank/latest_full_logs.txt ~/Downloads/
 scp root@213.210.21.113:/opt/iotdemo/iotdemo_full_logs.txt ~/Downloads/
+
+sudo systemctl stop valkey-server

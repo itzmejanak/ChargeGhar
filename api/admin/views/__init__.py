@@ -25,6 +25,8 @@ from .amenity_views import amenity_admin_router
 from .analytics_views import analytics_router
 
 # Merge all sub-routers
+# IMPORTANT: Order matters! More specific routes must come before generic ones
+# e.g., /admin/stations/issues must come before /admin/stations/<station_sn>
 router = CustomViewRouter()
 
 for sub_router in [
@@ -32,8 +34,8 @@ for sub_router in [
     monitoring_router, 
     user_management_router, 
     payment_router, 
-    station_router, 
-    station_issue_router, 
+    station_issue_router,  # MUST come before station_router (specific before generic)
+    station_router,        # Generic route with <station_sn> parameter
     notification_router, 
     content_admin_router, 
     config_admin_router, 

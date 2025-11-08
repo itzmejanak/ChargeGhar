@@ -87,33 +87,8 @@ class AdminRentalsListView(GenericAPIView, BaseAPIView):
         )
 
 
-@rental_router.register(r"admin/rentals/<str:rental_id>", name="admin-rental-detail")
-@extend_schema(
-    tags=["Admin - Rentals"],
-    summary="Rental Detail",
-    description="Get detailed information about a specific rental (Staff only)",
-    responses={200: BaseResponseSerializer}
-)
-class AdminRentalDetailView(GenericAPIView, BaseAPIView):
-    """Admin rental detail view"""
-    serializer_class = serializers.AdminRentalDetailSerializer
-    permission_classes = [IsStaffPermission]
-
-    @log_api_call()
-    def get(self, request: Request, rental_id: str) -> Response:
-        """Get specific rental details"""
-        def operation():
-            service = AdminRentalService()
-            rental = service.get_rental_detail(rental_id)
-            serializer = serializers.AdminRentalDetailSerializer(rental)
-            return serializer.data
-        
-        return self.handle_service_operation(
-            operation,
-            "Rental details retrieved successfully",
-            "Failed to retrieve rental details"
-        )
-
+# IMPORTANT: Specific routes must come before generic ones
+# /admin/rentals/issues must come before /admin/rentals/<rental_id>
 
 @rental_router.register(r"admin/rentals/issues", name="admin-rental-issues")
 @extend_schema(
@@ -230,4 +205,33 @@ class AdminRentalIssueDetailView(GenericAPIView, BaseAPIView):
             operation,
             "Rental issue deleted successfully",
             "Failed to delete rental issue"
+        )
+
+
+# Generic route with <rental_id> parameter - MUST come after specific routes
+@rental_router.register(r"admin/rentals/<str:rental_id>", name="admin-rental-detail")
+@extend_schema(
+    tags=["Admin - Rentals"],
+    summary="Rental Detail",
+    description="Get detailed information about a specific rental (Staff only)",
+    responses={200: BaseResponseSerializer}
+)
+class AdminRentalDetailView(GenericAPIView, BaseAPIView):
+    """Admin rental detail view"""
+    serializer_class = serializers.AdminRentalDetailSerializer
+    permission_classes = [IsStaffPermission]
+
+    @log_api_call()
+    def get(self, request: Request, rental_id: str) -> Response:
+        """Get specific rental details"""
+        def operation():
+            service = AdminRentalService()
+            rental = service.get_rental_detail(rental_id)
+            serializer = serializers.AdminRentalDetailSerializer(rental)
+            return serializer.data
+        
+        return self.handle_service_operation(
+            operation,
+            "Rental details retrieved successfully",
+            "Failed to retrieve rental details"
         )
