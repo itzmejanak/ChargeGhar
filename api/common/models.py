@@ -204,8 +204,8 @@ class LateFeeConfiguration(BaseModel):
 
         # Apply daily cap if specified
         if self.max_daily_rate:
-            max_per_day = self.max_daily_rate / 24  # Per hour rate
-            hours_overdue = effective_overdue_minutes / 60
+            max_per_day = self.max_daily_rate / Decimal('24')  # Per hour rate
+            hours_overdue = Decimal(str(effective_overdue_minutes / 60))
             max_fee = max_per_day * hours_overdue
             fee = min(fee, max_fee)
 

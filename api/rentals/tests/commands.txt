@@ -1,0 +1,71 @@
+docker-compose exec api python manage.py shell -c "
+from api.stations.models import Station, PowerBank, StationSlot
+
+# Get a station
+station = Station.objects.first()
+print(f'Station: {station.station_name} ({station.serial_number})')
+
+# Get or create a slot
+slot = StationSlot.objects.filter(station=station, status='AVAILABLE').first()
+if not slot:
+    slot = StationSlot.objects.filter(station=station).first()
+
+if not slot:
+    slot = StationSlot.objects.create(
+        station=station,
+        slot_number=1,
+        status='AVAILABLE',
+        battery_level=100
+    )
+    print(f'Created Slot #{slot.slot_number}')
+else:
+    slot.battery_level = 100
+    slot.status='AVAILABLE'
+    slot.save()
+    print(f'Updated Slot #{slot.slot_number} to 100%')
+
+# Get or create a powerbank
+powerbank = PowerBank.objects.filter(status='AVAILABLE', battery_level__gte=50).first()
+if not powerbank:
+    powerbank = PowerBank.objects.create(
+        serial_number='PB_TEST_EXTENSION',
+        model='Test Model',
+        capacity_mah=10000,
+        battery_level=100,
+        status='AVAILABLE',
+        current_station=station,
+        current_slot=slot
+    )
+    print(f'✅ Created PowerBank: {powerbank.serial_number}')
+else:
+    powerbank.battery_level = 100
+    powerbank.status = 'AVAILABLE'
+    powerbank.current_station = station
+    powerbank.current_slot = slot
+    powerbank.save()
+    print(f'✅ Updated PowerBank: {powerbank.serial_number}')
+
+print(f'   Battery: {powerbank.battery_level}%')
+print(f'   Slot: #{slot.slot_number} (battery: {slot.battery_level}%)')
+"
+
+docker-compose exec api python tests/test_rental_flows.py start-prepaid --email janak@powerbank.com
+docker-compose exec api python tests/test_rental_flows.py extend --rental-code UPGYDOS6
+
+
+docker-compose exec api python manage.py shell -c "
+from api.notifications.models import Notification
+
+notifications = Notification.objects.filter(
+    template__slug='rental_extended'
+).select_related('user', 'template').order_by('-created_at')[:5]
+
+print(f'Found {notifications.count()} rental_extended notification(s)\n')
+
+for notif in notifications:
+    print(f'ID: {str(notif.id)[:8]}...')
+    print(f'User: {notif.user.email}')
+    print(f'Title: {notif.title}')
+    print(f'Message: {notif.message[:100]}...')
+    print(f'Created: {notif.created_at.strftime(\"%Y-%m-%d %H:%M:%S\")}')
+    print()

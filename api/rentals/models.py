@@ -47,6 +47,66 @@ class Rental(BaseModel):
         db_table = "rentals"
         verbose_name = "Rental"
         verbose_name_plural = "Rentals"
+    
+    @property
+    def current_overdue_amount(self):
+        """
+        Calculate REALTIME overdue amount for active/overdue rentals.
+        Returns the live, current late fee if rental is still ongoing.
+        For completed rentals, returns the stored final amount.
+        """
+        from decimal import Decimal
+        from django.utils import timezone
+        
+        # If already returned, use stored final amount
+        if self.ended_at:
+            return self.overdue_amount
+        
+        # If not overdue yet, return 0
+        if not self.due_at or timezone.now() <= self.due_at:
+            return Decimal('0')
+        
+        # Calculate REALTIME late fee using current time
+        from api.common.utils.helpers import (
+            calculate_late_fee_amount, 
+            get_package_rate_per_minute
+        )
+        
+        # Use current time as hypothetical end time
+        hypothetical_end = timezone.now()
+        overdue_duration = hypothetical_end - self.due_at
+        overdue_minutes = int(overdue_duration.total_seconds() / 60)
+        
+        package_rate = get_package_rate_per_minute(self.package)
+        return calculate_late_fee_amount(package_rate, overdue_minutes)
+    
+    @property
+    def estimated_total_cost(self):
+        """
+        Calculate total estimated cost including current late fees.
+        For active/overdue rentals, this updates in realtime.
+        """
+        return self.amount_paid + self.current_overdue_amount
+    
+    @property
+    def minutes_overdue(self):
+        """
+        Calculate how many minutes the rental is currently overdue.
+        Returns 0 if not overdue yet or already returned.
+        """
+        from django.utils import timezone
+        
+        if not self.due_at:
+            return 0
+        
+        # Use ended_at if returned, otherwise use current time
+        end_time = self.ended_at if self.ended_at else timezone.now()
+        
+        if end_time <= self.due_at:
+            return 0
+        
+        overdue_duration = end_time - self.due_at
+        return int(overdue_duration.total_seconds() / 60)
 
     def __str__(self):
         return f"{self.rental_code} - {self.user.username}"

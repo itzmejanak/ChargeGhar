@@ -71,8 +71,14 @@ class PaymentCalculationService(BaseService):
                                 amount += late_fee
 
                                 # Send fines/dues notification
-                                from api.notifications.services import notify_fines_dues
-                                notify_fines_dues(user, float(late_fee), f"Late return penalty - {overdue_minutes} minutes overdue")
+                                from api.notifications.services import notify
+                                notify(
+                                    user,
+                                    'fines_dues',
+                                    async_send=True,
+                                    amount=float(late_fee),
+                                    reason=f"Late return penalty - {overdue_minutes} minutes overdue"
+                                )
                         else:
                             # Use package price as fallback
                             amount = rental.package.price

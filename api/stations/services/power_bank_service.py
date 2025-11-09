@@ -19,25 +19,41 @@ class PowerBankService(BaseService):
         try:
             pass
             
-            # Update power bank status
-            power_bank.status = 'RENTED'
-            power_bank.save(update_fields=['status', 'last_updated'])
+            # Store original slot reference before clearing
+            original_slot = power_bank.current_slot
             
-            # Update slot to occupied
-            if power_bank.current_slot:
-                power_bank.current_slot.status = 'OCCUPIED'
-                power_bank.current_slot.current_rental = rental
-                power_bank.current_slot.save(update_fields=['status', 'current_rental', 'last_updated'])
+            # CRITICAL FIX: Clear location when powerbank is rented out
+            # Powerbank is no longer "at" any station when in user's possession
+            power_bank.current_station = None
+            power_bank.current_slot = None
+            power_bank.status = 'RENTED'
+            power_bank.save(update_fields=['current_station', 'current_slot', 'status', 'last_updated'])
+            
+            # Update original slot to occupied by this rental
+            if original_slot:
+                original_slot.status = 'OCCUPIED'
+                original_slot.current_rental = rental
+                original_slot.save(update_fields=['status', 'current_rental', 'last_updated'])
             
             self.log_info(f"Power bank {power_bank.serial_number} assigned to rental {rental.rental_code}")
             
         except Exception as e:
             self.handle_service_error(e, "Failed to assign power bank to rental")
     
-    def return_power_bank(self, power_bank, return_station, return_slot):
+    def return_power_bank(self, power_bank, return_station, return_slot, rental=None):
         """Return power bank to a station slot"""
         try:
             pass
+            
+            # CRITICAL FIX: Release the original pickup slot
+            if rental and rental.slot:
+                original_slot = rental.slot
+                # Only release if it's different from return slot (cross-station return)
+                if original_slot.id != return_slot.id:
+                    original_slot.status = 'AVAILABLE'
+                    original_slot.current_rental = None
+                    original_slot.save(update_fields=['status', 'current_rental', 'last_updated'])
+                    self.log_info(f"Released original pickup slot {original_slot.slot_number} at {rental.station.station_name}")
             
             # Update power bank location and status
             power_bank.current_station = return_station
@@ -45,7 +61,7 @@ class PowerBankService(BaseService):
             power_bank.status = 'AVAILABLE'
             power_bank.save(update_fields=['current_station', 'current_slot', 'status', 'last_updated'])
             
-            # Update slot status
+            # Update return slot status
             if return_slot:
                 return_slot.status = 'OCCUPIED'  # Occupied by returned power bank
                 return_slot.current_rental = None

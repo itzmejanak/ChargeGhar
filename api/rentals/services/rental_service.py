@@ -53,11 +53,12 @@ class RentalService(CRUDService):
             # Get available power bank and slot
             power_bank, slot = self._get_available_power_bank_and_slot(station)
             
-            # Process payment based on package payment model
-            if package.payment_model == 'PREPAID':
-                self._process_prepayment(user, package)
+            # FIX #5: Validate POSTPAID minimum balance requirement
+            if package.payment_model == 'POSTPAID':
+                self._validate_postpaid_balance(user)
             
-            # Create rental
+            # CRITICAL FIX: Create rental FIRST (in PENDING status)
+            # This allows transaction to be linked to rental
             rental = Rental.objects.create(
                 user=user,
                 station=station,
@@ -65,9 +66,18 @@ class RentalService(CRUDService):
                 package=package,
                 power_bank=power_bank,
                 rental_code=generate_rental_code(),
+                status='PENDING',  # Will be set to ACTIVE after payment
                 due_at=timezone.now() + timezone.timedelta(minutes=package.duration_minutes),
-                amount_paid=package.price if package.payment_model == 'PREPAID' else Decimal('0')
+                amount_paid=Decimal('0')  # Will be updated after payment
             )
+            
+            # Process payment based on package payment model
+            payment_transaction = None
+            if package.payment_model == 'PREPAID':
+                payment_transaction = self._process_prepayment(user, package, rental)
+                # Update rental amount after payment
+                rental.amount_paid = package.price
+                rental.save(update_fields=['amount_paid'])
             
             # Assign power bank to rental
             from api.stations.services import PowerBankService
@@ -153,10 +163,39 @@ class RentalService(CRUDService):
                 code="station_maintenance"
             )
     
+    def _validate_postpaid_balance(self, user) -> None:
+        """
+        Validate user has minimum balance for POSTPAID rentals.
+        
+        POSTPAID rentals allow users to pay after returning the powerbank.
+        However, we require a minimum wallet balance to ensure payment capability
+        and reduce risk of unpaid rentals.
+        """
+        from api.system.models import AppConfig
+        
+        # Get minimum balance requirement from AppConfig (default NPR 50)
+        min_balance = Decimal(AppConfig.objects.filter(
+            key='POSTPAID_MINIMUM_BALANCE', is_active=True
+        ).values_list('value', flat=True).first() or '50')
+        
+        # Get user's wallet balance
+        wallet_balance = Decimal('0')
+        if hasattr(user, 'wallet') and user.wallet:
+            wallet_balance = user.wallet.balance
+        
+        if wallet_balance < min_balance:
+            raise ServiceException(
+                detail=f"POSTPAID rentals require minimum wallet balance of NPR {min_balance}. Your balance: NPR {wallet_balance}. Please top up your wallet.",
+                code="insufficient_postpaid_balance"
+            )
+        
+        self.log_info(f"POSTPAID balance check passed for user {user.username}: NPR {wallet_balance} >= NPR {min_balance}")
+    
     def _get_available_power_bank_and_slot(self, station: Station) -> Tuple[PowerBank, StationSlot]:
         """Get available power bank and slot from station"""
-        # Find available slot with good battery level
-        available_slot = station.slots.filter(
+        # CRITICAL FIX: Use select_for_update() to prevent race conditions
+        # Lock the slot row until transaction completes
+        available_slot = station.slots.select_for_update().filter(
             status='AVAILABLE'
         ).order_by('-battery_level').first()
         
@@ -166,8 +205,8 @@ class RentalService(CRUDService):
                 code="no_available_slots"
             )
         
-        # Find power bank in the slot
-        power_bank = PowerBank.objects.filter(
+        # Find power bank in the slot with row-level lock
+        power_bank = PowerBank.objects.select_for_update().filter(
             current_station=station,
             current_slot=available_slot,
             status='AVAILABLE',
@@ -182,7 +221,7 @@ class RentalService(CRUDService):
         
         return power_bank, available_slot
     
-    def _process_prepayment(self, user, package: RentalPackage) -> None:
+    def _process_prepayment(self, user, package: RentalPackage, rental=None):
         """Process pre-payment for rental"""
         from api.payments.services import PaymentCalculationService, RentalPaymentService
         
@@ -201,13 +240,15 @@ class RentalService(CRUDService):
                 code="insufficient_balance"
             )
         
-        # Process payment
+        # Process payment with rental link
         payment_service = RentalPaymentService()
-        payment_service.process_rental_payment(
+        transaction = payment_service.process_rental_payment(
             user=user,
-            rental=None,  # Will be set after rental creation
+            rental=rental,  # FIXED: Now rental is passed correctly
             payment_breakdown=payment_options['payment_breakdown']
         )
+        
+        return transaction
     
     @transaction.atomic
     def cancel_rental(self, rental_id: str, user, reason: str = "") -> Rental:
@@ -221,14 +262,56 @@ class RentalService(CRUDService):
                     code="invalid_rental_status"
                 )
             
-            # Check if rental can be cancelled (e.g., within 5 minutes of start)
+            # Check if rental can be cancelled (configurable time window)
             if rental.started_at:
+                from api.system.models import AppConfig
+                
+                # Get cancellation window from AppConfig (default 5 minutes)
+                cancellation_window_minutes = int(AppConfig.objects.filter(
+                    key='RENTAL_CANCELLATION_WINDOW_MINUTES', is_active=True
+                ).values_list('value', flat=True).first() or 5)
+                
                 time_since_start = timezone.now() - rental.started_at
-                if time_since_start.total_seconds() > 300:  # 5 minutes
+                cancellation_window_seconds = cancellation_window_minutes * 60
+                
+                if time_since_start.total_seconds() > cancellation_window_seconds:
                     raise ServiceException(
-                        detail="Rental can only be cancelled within 5 minutes of start",
+                        detail=f"Rental can only be cancelled within {cancellation_window_minutes} minutes of start",
                         code="cancellation_time_expired"
                     )
+            
+            # CRITICAL FIX: Verify powerbank is physically back in station
+            # This prevents users from taking powerbank and cancelling for free
+            if rental.power_bank and rental.status == 'ACTIVE':
+                # Check database state first
+                if rental.power_bank.current_station != rental.station:
+                    raise ServiceException(
+                        detail="Cannot cancel rental. Please return powerbank to station first.",
+                        code="powerbank_not_returned"
+                    )
+                
+                if rental.power_bank.current_slot is None:
+                    raise ServiceException(
+                        detail="Cannot cancel rental. Powerbank not detected in any slot.",
+                        code="powerbank_not_in_slot"
+                    )
+                
+                # Verify slot is occupied (powerbank is physically there)
+                if rental.slot.status != 'OCCUPIED':
+                    raise ServiceException(
+                        detail="Cannot cancel rental. Powerbank must be inserted back in slot.",
+                        code="slot_not_occupied"
+                    )
+                
+                # Additional safety: Check battery level was recently updated
+                # (indicates recent sync from IoT system)
+                if rental.power_bank.updated_at:
+                    time_since_update = timezone.now() - rental.power_bank.updated_at
+                    if time_since_update.total_seconds() > 60:  # 1 minute threshold
+                        self.log_warning(
+                            f"Powerbank {rental.power_bank.serial_number} location data is stale "
+                            f"({time_since_update.total_seconds():.0f}s old). Allowing cancellation with caution."
+                        )
             
             # Update rental status
             rental.status = 'CANCELLED'
@@ -236,25 +319,71 @@ class RentalService(CRUDService):
             rental.rental_metadata['cancellation_reason'] = reason
             rental.save(update_fields=['status', 'ended_at', 'rental_metadata'])
             
-            # Release power bank and slot
+            # Release power bank and slot - FIXED: Restore to original location
             if rental.power_bank:
                 rental.power_bank.status = 'AVAILABLE'
-                rental.power_bank.save(update_fields=['status'])
+                # Restore to original station/slot
+                rental.power_bank.current_station = rental.station
+                rental.power_bank.current_slot = rental.slot
+                rental.power_bank.save(update_fields=['status', 'current_station', 'current_slot'])
             
             if rental.slot:
                 rental.slot.status = 'AVAILABLE'
                 rental.slot.current_rental = None
                 rental.slot.save(update_fields=['status', 'current_rental'])
             
-            # Process refund for pre-paid rentals
+            # FIXED: Process proper refund (points + wallet)
             if rental.payment_status == 'PAID' and rental.amount_paid > 0:
+                from api.payments.models import Transaction
                 from api.payments.services import WalletService
-                wallet_service = WalletService()
-                wallet_service.add_balance(
-                    user=user,
-                    amount=rental.amount_paid,
-                    description=f"Refund for cancelled rental {rental.rental_code}"
-                )
+                
+                # Find original payment transaction to get breakdown
+                original_txn = Transaction.objects.filter(
+                    related_rental=rental,
+                    transaction_type='RENTAL',
+                    status='SUCCESS'
+                ).first()
+                
+                if original_txn:
+                    payment_method = original_txn.payment_method_type
+                    
+                    # Refund points if used
+                    if payment_method in ['POINTS', 'COMBINATION']:
+                        points_used = original_txn.gateway_response.get('points_used', 0)
+                        if points_used > 0:
+                            from api.points.services import award_points
+                            award_points(
+                                user, 
+                                points_used, 
+                                'REFUND', 
+                                f'Points refund for cancelled rental {rental.rental_code}',
+                                async_send=False
+                            )
+                    
+                    # Refund wallet if used
+                    if payment_method in ['WALLET', 'COMBINATION']:
+                        wallet_amount = original_txn.gateway_response.get('wallet_amount', rental.amount_paid)
+                        wallet_service = WalletService()
+                        wallet_service.add_balance(
+                            user=user,
+                            amount=wallet_amount,
+                            description=f"Wallet refund for cancelled rental {rental.rental_code}"
+                        )
+                    
+                    # Update transaction status to refunded
+                    original_txn.status = 'REFUNDED'
+                    original_txn.save(update_fields=['status'])
+                    
+                    rental.payment_status = 'REFUNDED'
+                    rental.save(update_fields=['payment_status'])
+                else:
+                    # Fallback: refund to wallet if no transaction found
+                    wallet_service = WalletService()
+                    wallet_service.add_balance(
+                        user=user,
+                        amount=rental.amount_paid,
+                        description=f"Refund for cancelled rental {rental.rental_code}"
+                    )
             
             self.log_info(f"Rental cancelled: {rental.rental_code}")
             return rental
@@ -271,13 +400,34 @@ class RentalService(CRUDService):
     def extend_rental(self, rental_id: str, user, package_id: str) -> RentalExtension:
         """Extend rental duration"""
         try:
-            rental = Rental.objects.get(id=rental_id, user=user)
+            # FIX #4: Lock rental row to prevent race conditions
+            rental = Rental.objects.select_for_update().get(id=rental_id, user=user)
             package = RentalPackage.objects.get(id=package_id, is_active=True)
             
             if rental.status != 'ACTIVE':
                 raise ServiceException(
                     detail="Only active rentals can be extended",
                     code="invalid_rental_status"
+                )
+            
+            # FIX #2: Check if rental is already overdue
+            if timezone.now() >= rental.due_at:
+                raise ServiceException(
+                    detail="Cannot extend overdue rental. Please return powerbank.",
+                    code="rental_overdue"
+                )
+            
+            # FIX #1: Check extension limit
+            from api.system.models import AppConfig
+            max_extensions = int(AppConfig.objects.filter(
+                key='MAX_RENTAL_EXTENSIONS', is_active=True
+            ).values_list('value', flat=True).first() or 3)
+            
+            extension_count = rental.extensions.count()
+            if extension_count >= max_extensions:
+                raise ServiceException(
+                    detail=f"Maximum {max_extensions} extensions allowed per rental",
+                    code="max_extensions_reached"
                 )
             
             # Check payment for extension
@@ -314,11 +464,25 @@ class RentalService(CRUDService):
             )
             
             # Update rental due time
+            old_due_at = rental.due_at
             rental.due_at += timezone.timedelta(minutes=package.duration_minutes)
             rental.amount_paid += package.price
             rental.save(update_fields=['due_at', 'amount_paid'])
             
-            self.log_info(f"Rental extended: {rental.rental_code} by {package.duration_minutes} minutes")
+            # FIX #3: Send extension notification
+            from api.notifications.services import notify
+            notify(
+                user,
+                'rental_extended',
+                async_send=True,
+                rental_code=rental.rental_code,
+                extended_minutes=package.duration_minutes,
+                extension_cost=float(package.price),
+                old_due_time=old_due_at.strftime('%H:%M'),
+                new_due_time=rental.due_at.strftime('%H:%M')
+            )
+            
+            self.log_info(f"Rental extended: {rental.rental_code} by {package.duration_minutes} minutes (Extension #{extension_count + 1})")
             return extension
             
         except (Rental.DoesNotExist, RentalPackage.DoesNotExist):
@@ -334,7 +498,14 @@ class RentalService(CRUDService):
                          return_slot_number: int, battery_level: int = 50) -> Rental:
         """Return power bank to station (Internal use - triggered by hardware)"""
         try:
-            rental = Rental.objects.get(id=rental_id, status='ACTIVE')
+            # FIX #8: Idempotency check - if already processed, return existing result
+            rental = Rental.objects.select_for_update().get(id=rental_id)
+            
+            if rental.status != 'ACTIVE':
+                # Already processed - return idempotent response
+                self.log_warning(f"Return already processed for rental {rental.rental_code} (status: {rental.status})")
+                return rental
+            
             return_station = Station.objects.get(serial_number=return_station_sn)
             return_slot = return_station.slots.get(slot_number=return_slot_number)
             
@@ -357,24 +528,51 @@ class RentalService(CRUDService):
                 'overdue_amount', 'payment_status'
             ])
             
+            # FIXED: Auto-collect pending payments
+            if rental.payment_status == 'PENDING':
+                self._auto_collect_payment(rental)
+            
             # Return power bank to station
             from api.stations.services import PowerBankService
             powerbank_service = PowerBankService()
             powerbank_service.return_power_bank(
-                rental.power_bank, return_station, return_slot
+                rental.power_bank, return_station, return_slot, rental=rental
             )
             
             # Award completion points
             from api.points.services import award_points
+            from api.system.models import AppConfig
+            
+            # Standard completion points
+            completion_points = int(AppConfig.objects.filter(
+                key='POINTS_RENTAL_COMPLETE', is_active=True
+            ).values_list('value', flat=True).first() or 5)
+            
             award_points(
                 rental.user,
-                50,  # Standard rental completion points
+                completion_points,
                 'RENTAL',
                 'Rental completion reward',
                 async_send=True,
                 rental_id=str(rental.id),
                 on_time=rental.is_returned_on_time
             )
+            
+            # FIXED: Award timely return bonus
+            if rental.is_returned_on_time and not rental.timely_return_bonus_awarded:
+                timely_bonus = int(AppConfig.objects.filter(
+                    key='POINTS_TIMELY_RETURN', is_active=True
+                ).values_list('value', flat=True).first() or 50)
+                
+                award_points(
+                    rental.user,
+                    timely_bonus,
+                    'ON_TIME_RETURN',
+                    f'On-time return bonus for {rental.rental_code}',
+                    async_send=True
+                )
+                rental.timely_return_bonus_awarded = True
+                rental.save(update_fields=['timely_return_bonus_awarded'])
             
             # Send completion notification
             from api.notifications.services import notify
@@ -422,6 +620,83 @@ class RentalService(CRUDService):
         
         if rental.overdue_amount > 0:
             rental.payment_status = 'PENDING'
+    
+    def _auto_collect_payment(self, rental: Rental) -> None:
+        """
+        Automatically collect pending payments (POSTPAID charges or late fees).
+        Tries to deduct from user's points/wallet. If insufficient, sends notification.
+        """
+        try:
+            from api.payments.services import PaymentCalculationService, RentalPaymentService
+            
+            # Calculate total amount due
+            total_due = rental.amount_paid + rental.overdue_amount
+            
+            if total_due <= 0:
+                return
+            
+            # Calculate payment options (points first, then wallet)
+            calc_service = PaymentCalculationService()
+            payment_options = calc_service.calculate_payment_options(
+                user=rental.user,
+                scenario='post_payment',  # Use post_payment for dues settlement
+                rental_id=str(rental.id)
+            )
+            
+            if payment_options['is_sufficient']:
+                # User has sufficient balance - auto-collect
+                payment_service = RentalPaymentService()
+                try:
+                    payment_service.pay_rental_due(
+                        rental.user,
+                        rental,
+                        payment_options['payment_breakdown']
+                    )
+                    self.log_info(f"Auto-collected NPR {total_due} for rental {rental.rental_code}")
+                except Exception as e:
+                    # Payment failed - log and notify user
+                    self.log_warning(f"Auto-collection failed for {rental.rental_code}: {str(e)}")
+                    self._notify_payment_failed(rental, total_due)
+            else:
+                # Insufficient balance - notify user to pay manually
+                self.log_info(f"Insufficient balance for auto-collection: {rental.rental_code} (Need NPR {total_due})")
+                self._notify_payment_required(rental, total_due, payment_options['shortfall'])
+                
+        except Exception as e:
+            # Don't let auto-collection errors break the return process
+            self.log_error(f"Auto-collection error for {rental.rental_code}: {str(e)}")
+            self._notify_payment_required(rental, total_due, 0)
+    
+    def _notify_payment_failed(self, rental: Rental, amount: Decimal) -> None:
+        """Notify user that auto-payment failed"""
+        try:
+            from api.notifications.services import notify
+            notify(
+                rental.user,
+                'payment_failed',
+                async_send=True,
+                rental_code=rental.rental_code,
+                amount=float(amount),
+                reason='Auto-payment processing failed'
+            )
+        except Exception as e:
+            self.log_error(f"Failed to send payment failed notification: {str(e)}")
+    
+    def _notify_payment_required(self, rental: Rental, amount: Decimal, shortfall: Decimal) -> None:
+        """Notify user to pay manually"""
+        try:
+            from api.notifications.services import notify
+            notify(
+                rental.user,
+                'payment_due',
+                async_send=True,
+                rental_code=rental.rental_code,
+                amount=float(amount),
+                shortfall=float(shortfall),
+                message=f"Outstanding dues for rental {rental.rental_code}. Please add NPR {shortfall} to your account."
+            )
+        except Exception as e:
+            self.log_error(f"Failed to send payment required notification: {str(e)}")
     
     def get_user_rentals(self, user, filters: Dict[str, Any] = None) -> Dict[str, Any]:
         """Get user's rental history with filters"""

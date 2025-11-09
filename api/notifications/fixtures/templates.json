@@ -421,6 +421,34 @@
   },
   {
     "model": "notifications.notificationtemplate",
+    "pk": 49,
+    "fields": {
+      "name": "Payment Due",
+      "slug": "payment_due",
+      "notification_type": "payment",
+      "title_template": "Payment Required - Rs. {{amount}}",
+      "message_template": "Outstanding dues for rental {{rental_code}}. Total amount: Rs. {{amount}}. Please add Rs. {{shortfall}} to your account to complete payment. {{message}}",
+      "is_active": true,
+      "created_at": "2025-11-09T10:00:00Z",
+      "updated_at": "2025-11-09T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
+    "pk": 50,
+    "fields": {
+      "name": "Rental Extended",
+      "slug": "rental_extended",
+      "notification_type": "rental",
+      "title_template": "Rental Extended Successfully",
+      "message_template": "Your rental {{rental_code}} has been extended by {{extended_minutes}} minutes for Rs. {{extension_cost}}. Previous due time: {{old_due_time}}, New due time: {{new_due_time}}. Thank you for using ChargeGhar!",
+      "is_active": true,
+      "created_at": "2025-11-09T10:00:00Z",
+      "updated_at": "2025-11-09T10:00:00Z"
+    }
+  },
+  {
+    "model": "notifications.notificationtemplate",
     "pk": 31,
     "fields": {
       "name": "OTP Email",

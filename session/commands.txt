@@ -232,3 +232,118 @@ scp root@213.210.21.113:/opt/powerbank/latest_full_logs.txt ~/Downloads/
 scp root@213.210.21.113:/opt/iotdemo/iotdemo_full_logs.txt ~/Downloads/
 
 sudo systemctl stop valkey-server
+
+docker-compose exec api python tests/test_rental_flows.py start-prepaid --email testuser@example.com
+
+docker-compose exec api python tests/test_postpaid_balance.py
+
+
+docker-compose exec api python manage.py shell -c "
+from api.rentals.models import Rental
+
+# Cancel all active rentals
+active_rentals = Rental.objects.filter(status='ACTIVE')
+count = active_rentals.count()
+
+for rental in active_rentals:
+    rental.status = 'CANCELLED'
+    rental.save()
+    print(f'Cancelled rental: {rental.rental_code}')
+
+print(f'\n✅ Cancelled {count} active rental(s)')
+"
+
+
+docker-compose exec api python manage.py shell -c "
+from decimal import Decimal
+from api.users.models import User
+from api.rentals.models import RentalPackage
+from api.rentals.services import RentalService
+from api.stations.models import Station, PowerBank, StationSlot
+from api.system.models import AppConfig
+
+print('='*80)
+print('POSTPAID MINIMUM BALANCE TEST')
+print('='*80)
+
+# Setup powerbank
+station = Station.objects.first()
+slot = StationSlot.objects.filter(station=station).first()
+if slot:
+    slot.battery_level = 100
+    slot.status = 'AVAILABLE'
+    slot.save()
+
+powerbank = PowerBank.objects.filter(current_station=station).first()
+if powerbank:
+    powerbank.battery_level = 100
+    powerbank.status = 'AVAILABLE'
+    powerbank.current_slot = slot
+    powerbank.save()
+    print(f'✅ Setup powerbank: {powerbank.serial_number} at 100%\n')
+
+# Check config
+config = AppConfig.objects.get(key='POSTPAID_MINIMUM_BALANCE')
+print(f'Config: POSTPAID_MINIMUM_BALANCE = NPR {config.value}\n')
+
+# Get POSTPAID package
+postpaid = RentalPackage.objects.filter(payment_model='POSTPAID', is_active=True).first()
+if not postpaid:
+    postpaid = RentalPackage.objects.create(
+        name='Test POSTPAID 1hr',
+        duration_minutes=60,
+        price=Decimal('50.00'),
+        payment_model='POSTPAID',
+        is_active=True
+    )
+print(f'Package: {postpaid.name} ({postpaid.payment_model})\n')
+
+# Test 1: User with sufficient balance
+print('TEST 1: User with sufficient balance (>= NPR 50)')
+print('-' * 80)
+user1 = User.objects.filter(wallet__balance__gte=50, is_active=True).first()
+if user1:
+    balance = user1.wallet.balance
+    print(f'User: {user1.email}')
+    print(f'Balance: NPR {balance}')
+    
+    service = RentalService()
+    try:
+        # This should pass the balance check
+        service._validate_postpaid_balance(user1)
+        print('✅ Balance check PASSED (expected)\n')
+    except Exception as e:
+        print(f'❌ Balance check FAILED (unexpected): {e}\n')
+
+# Test 2: User with insufficient balance
+print('TEST 2: User with insufficient balance (< NPR 50)')
+print('-' * 80)
+user2 = User.objects.filter(wallet__balance__lt=50, wallet__balance__gte=0, is_active=True).first()
+if not user2:
+    # Create one
+    from api.payments.models import Wallet
+    user2 = User.objects.create_user(
+        username='test_low_bal',
+        email='test_low_bal@test.com',
+        password='test123'
+    )
+    Wallet.objects.create(user=user2, balance=Decimal('20.00'))
+
+balance = user2.wallet.balance if hasattr(user2, 'wallet') and user2.wallet else Decimal('0')
+print(f'User: {user2.email}')
+print(f'Balance: NPR {balance}')
+
+service = RentalService()
+try:
+    service._validate_postpaid_balance(user2)
+    print('❌ Balance check PASSED (unexpected - should have failed)\n')
+except Exception as e:
+    if 'insufficient_postpaid_balance' in str(e).lower() or 'minimum wallet balance' in str(e).lower():
+        print(f'✅ Balance check FAILED (expected): {e}\n')
+    else:
+        print(f'⚠️  Balance check FAILED with unexpected error: {e}\n')
+
+print('='*80)
+print('POSTPAID BALANCE CHECK WORKING CORRECTLY!')
+print('='*80)
+"

@@ -452,30 +452,39 @@ class StationSyncService(CRUDService):
         slot.save()
     
     def _process_rental_return(self, rental, station: Station, slot: StationSlot, powerbank: PowerBank, battery_level: int) -> Dict[str, Any]:
-        """Process the actual rental return"""
-        # Update rental
-        rental.status = 'COMPLETED'
-        rental.ended_at = timezone.now()
-        rental.return_station = station
-        
-        # Check if returned on time
-        if rental.ended_at <= rental.due_at:
-            rental.is_returned_on_time = True
-        
-        rental.save()
-        
-        # Update powerbank location
-        self._update_powerbank_location(powerbank, station, slot, battery_level)
-        
-        # TODO: Calculate charges and process payment
-        # This would normally integrate with the payment system
-        
-        return {
-            'rental_id': str(rental.id),
-            'rental_code': rental.rental_code,
-            'rental_status': rental.status,
-            'returned_on_time': rental.is_returned_on_time,
-            'power_bank_status': powerbank.status,
-            'station_serial': station.serial_number,
-            'slot_number': slot.slot_number
-        }
+        """
+        Process the actual rental return by delegating to RentalService
+        This ensures all payment logic, auto-collection, and bonus points are handled
+        """
+        try:
+            # CRITICAL FIX: Call RentalService to handle complete return logic
+            # This triggers: charge calculation, auto-collection, bonus points, notifications
+            from api.rentals.services import RentalService
+            
+            rental_service = RentalService()
+            completed_rental = rental_service.return_power_bank(
+                rental_id=str(rental.id),
+                return_station_sn=station.serial_number,
+                return_slot_number=slot.slot_number,
+                battery_level=battery_level
+            )
+            
+            return {
+                'rental_id': str(completed_rental.id),
+                'rental_code': completed_rental.rental_code,
+                'rental_status': completed_rental.status,
+                'returned_on_time': completed_rental.is_returned_on_time,
+                'power_bank_status': powerbank.status,
+                'station_serial': station.serial_number,
+                'slot_number': slot.slot_number,
+                'payment_status': completed_rental.payment_status,
+                'amount_paid': float(completed_rental.amount_paid),
+                'overdue_amount': float(completed_rental.overdue_amount)
+            }
+            
+        except Exception as e:
+            self.log_error(f"Error processing rental return: {str(e)}")
+            raise ServiceException(
+                detail=f"Failed to process rental return: {str(e)}",
+                code="rental_return_error"
+            )

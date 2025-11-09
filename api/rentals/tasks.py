@@ -82,8 +82,14 @@ def calculate_overdue_charges(self):
                 charged_count += 1
                 
                 # Send overdue charges notification using clean API
-                from api.notifications.services import notify_fines_dues
-                notify_fines_dues(rental.user, float(overdue_amount), f"Overdue charges for rental {rental.rental_code}")
+                from api.notifications.services import notify
+                notify(
+                    rental.user,
+                    'fines_dues',
+                    async_send=True,
+                    amount=float(overdue_amount),
+                    reason=f"Overdue charges for rental {rental.rental_code}"
+                )
                 
             except Exception as e:
                 self.logger.error(f"Failed to calculate charges for rental {rental.id}: {str(e)}")

@@ -127,6 +127,26 @@ class RentalDetailSerializer(serializers.ModelSerializer):
     time_remaining = serializers.SerializerMethodField()
     is_overdue = serializers.SerializerMethodField()
     
+    # REALTIME fields (calculate on-demand)
+    current_overdue_amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        read_only=True,
+        help_text="Current overdue amount (realtime calculation, updates with each request)"
+    )
+    estimated_total_cost = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        read_only=True,
+        help_text="Estimated total cost including current overdue amount"
+    )
+    minutes_overdue = serializers.IntegerField(
+        read_only=True,
+        help_text="Current minutes overdue (realtime)"
+    )
+    formatted_current_overdue = serializers.SerializerMethodField()
+    formatted_estimated_total = serializers.SerializerMethodField()
+    
     class Meta:
         model = Rental
         fields = [
@@ -143,11 +163,18 @@ class RentalDetailSerializer(serializers.ModelSerializer):
             'created_at', 
             'updated_at',
             
-            # Financial
+            # Financial (stored at return)
             'amount_paid', 
             'overdue_amount',
             'formatted_amount_paid',
             'formatted_overdue_amount',
+            
+            # Financial (realtime - calculated on demand)
+            'current_overdue_amount',
+            'estimated_total_cost',
+            'minutes_overdue',
+            'formatted_current_overdue',
+            'formatted_estimated_total',
             
             # Related data
             'station_name', 
@@ -184,8 +211,18 @@ class RentalDetailSerializer(serializers.ModelSerializer):
     
     @extend_schema_field(serializers.CharField)
     def get_formatted_overdue_amount(self, obj) -> str:
-        """Format overdue amount in Nepal Rupees"""
+        """Format overdue amount in Nepal Rupees (final amount at return)"""
         return f"NPR {obj.overdue_amount:,.2f}"
+    
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_current_overdue(self, obj) -> str:
+        """Format current overdue amount in Nepal Rupees (realtime)"""
+        return f"NPR {obj.current_overdue_amount:,.2f}"
+    
+    @extend_schema_field(serializers.CharField)
+    def get_formatted_estimated_total(self, obj) -> str:
+        """Format estimated total cost in Nepal Rupees (realtime)"""
+        return f"NPR {obj.estimated_total_cost:,.2f}"
     
     @extend_schema_field(serializers.CharField)
     def get_duration_used(self, obj) -> str:

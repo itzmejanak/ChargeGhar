@@ -70,9 +70,14 @@ class RentalPaymentService(BaseService):
     def pay_rental_due(self, user, rental, payment_breakdown: Dict[str, Any]) -> Transaction:
         """Pay outstanding rental dues"""
         try:
-            # Create transaction record
-            total_amount = payment_breakdown['total_amount']
-            payment_type = 'COMBINATION' if payment_breakdown['points_to_use'] > 0 and payment_breakdown['wallet_amount'] > 0 else 'POINTS' if payment_breakdown['points_to_use'] > 0 else 'WALLET'
+            # Get values with defaults to handle missing keys
+            points_amount = payment_breakdown.get('points_amount', Decimal('0'))
+            wallet_amount = payment_breakdown.get('wallet_amount', Decimal('0'))
+            points_to_use = payment_breakdown.get('points_to_use', 0)
+            
+            # Calculate total amount
+            total_amount = points_amount + wallet_amount
+            payment_type = 'COMBINATION' if points_to_use > 0 and wallet_amount > 0 else 'POINTS' if points_to_use > 0 else 'WALLET'
 
             transaction_obj = Transaction.objects.create(
                 user=user,
@@ -85,22 +90,22 @@ class RentalPaymentService(BaseService):
             )
 
             # Deduct points if used
-            if payment_breakdown['points_to_use'] > 0:
+            if points_to_use > 0:
                 from api.points.services import deduct_points
                 deduct_points(
                     user,
-                    payment_breakdown['points_to_use'],
+                    points_to_use,
                     'DUE_PAYMENT',
                     f"Due payment for rental {rental.rental_code}",
                     async_send=False  # Immediate for payment processing
                 )
 
             # Deduct wallet if used
-            if payment_breakdown['wallet_amount'] > 0:
+            if wallet_amount > 0:
                 wallet_service = WalletService()
                 wallet_service.deduct_balance(
                     user,
-                    payment_breakdown['wallet_amount'],
+                    wallet_amount,
                     f"Due payment for rental {rental.rental_code}",
                     transaction_obj
                 )
