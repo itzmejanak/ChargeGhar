@@ -22,6 +22,7 @@ from .admin_withdrawal_service import AdminWithdrawalService
 from .admin_profile_service import AdminProfileService
 from .admin_rental_service import AdminRentalService
 from .admin_payment_service import AdminPaymentService
+from .late_fee_service import LateFeeConfigurationService
 
 
 # Backward compatibility - all services available at package level
@@ -37,5 +38,6 @@ __all__ = [
     "AdminSystemService",
     "AdminUserService",
     "AdminWithdrawalService",
+    "LateFeeConfigurationService",
 ]
 

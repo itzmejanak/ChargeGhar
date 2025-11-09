@@ -23,6 +23,7 @@ from .rental_views import rental_router
 from .kyc_views import kyc_router
 from .amenity_views import amenity_admin_router
 from .analytics_views import analytics_router
+from .late_fee_views import late_fee_admin_router
 
 # Merge all sub-routers
 # IMPORTANT: Order matters! More specific routes must come before generic ones
@@ -46,7 +47,8 @@ for sub_router in [
     rental_router, 
     kyc_router, 
     amenity_admin_router,
-    analytics_router
+    analytics_router,
+    late_fee_admin_router
 ]:
     router._paths.extend(sub_router._paths)
     router._drf_router.registry.extend(sub_router._drf_router.registry)
