@@ -130,26 +130,36 @@ class AdminStationDetailView(GenericAPIView, BaseAPIView):
     @extend_schema(
         tags=["Admin - Stations"],
         summary="Update Station",
-        description="Update station details (Staff only)",
+        description="Update station details including amenities, media, and powerbank assignments (Staff only)",
         request=serializers.UpdateStationSerializer,
         responses={200: BaseResponseSerializer}
     )
     @log_api_call()
     def patch(self, request: Request, station_sn: str) -> Response:
-        """Update station details"""
+        """Update station details with amenities, media, and powerbank assignments"""
         def operation():
             serializer = serializers.UpdateStationSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             
+            validated_data = serializer.validated_data
+            
+            # Extract amenities, media, and powerbank assignments for separate processing
+            amenity_ids = validated_data.pop('amenity_ids', None)
+            media_uploads = validated_data.pop('media_uploads', None)
+            powerbank_assignments = validated_data.pop('powerbank_assignments', None)
+            
             service = AdminStationService()
-            station = service.update_station(
+            station = service.update_station_with_amenities_and_media(
                 station_sn=station_sn,
-                update_data=serializer.validated_data,
+                station_data=validated_data,
+                amenity_ids=amenity_ids,
+                media_uploads=media_uploads,
+                powerbank_assignments=powerbank_assignments,
                 admin_user=request.user,
                 request=request
             )
             
-            return serializers.AdminStationSerializer(station).data
+            return serializers.AdminStationDetailSerializer(station).data
         
         return self.handle_service_operation(
             operation,

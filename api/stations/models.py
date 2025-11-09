@@ -22,6 +22,7 @@ class Station(BaseModel):
     total_slots = models.IntegerField()
     status = models.CharField(max_length=50, choices=STATION_STATUS_CHOICES, default='OFFLINE')
     is_maintenance = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
     hardware_info = models.JSONField(default=dict)
     last_heartbeat = models.DateTimeField(null=True, blank=True)
 

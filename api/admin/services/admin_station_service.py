@@ -27,7 +27,8 @@ class AdminStationService(CRUDService):
     def get_stations_list(self, filters: Dict[str, Any] = None) -> Dict[str, Any]:
         """Get paginated list of stations with filters"""
         try:
-            queryset = Station.objects.prefetch_related('slots', 'issues')
+            # Exclude deleted stations by default
+            queryset = Station.objects.filter(is_deleted=False).prefetch_related('slots', 'issues')
             
             # Apply filters
             if filters:
@@ -358,13 +359,13 @@ class AdminStationService(CRUDService):
                 'issues__reported_by',                # Issues with reporter info
                 'issues__assigned_to',                # Issues with assignee info
                 'media__media_upload'                 # Media files
-            ).get(serial_number=station_sn)
+            ).get(serial_number=station_sn, is_deleted=False)
             
             return station
             
         except Station.DoesNotExist:
             raise ServiceException(
-                detail="Station not found",
+                detail="Station not found or has been deleted",
                 code="station_not_found"
             )
     
@@ -389,7 +390,7 @@ class AdminStationService(CRUDService):
             Updated Station instance
         """
         try:
-            station = Station.objects.get(serial_number=station_sn)
+            station = Station.objects.get(serial_number=station_sn, is_deleted=False)
             
             # Track changes for logging
             changes = {}
@@ -423,7 +424,208 @@ class AdminStationService(CRUDService):
             
         except Station.DoesNotExist:
             raise ServiceException(
-                detail="Station not found",
+                detail="Station not found or has been deleted",
+                code="station_not_found"
+            )
+    
+    @transaction.atomic
+    def update_station_with_amenities_and_media(
+        self,
+        station_sn: str,
+        station_data: Dict[str, Any],
+        amenity_ids: List[str] = None,
+        media_uploads: List[Dict[str, Any]] = None,
+        powerbank_assignments: List[Dict[str, Any]] = None,
+        admin_user = None,
+        request = None
+    ) -> Station:
+        """
+        Update station with amenities, media, and powerbank assignments
+        
+        Args:
+            station_sn: Station serial number
+            station_data: Station basic information to update
+            amenity_ids: List of amenity UUIDs to assign (replaces existing)
+            media_uploads: List of media objects with upload details (replaces existing)
+            powerbank_assignments: List of powerbank assignments 
+                [{'powerbank_serial': 'PB-001', 'slot_number': 1}, ...]
+            admin_user: Admin user updating the station
+            request: HTTP request for logging
+            
+        Returns:
+            Updated Station instance with all relationships
+        """
+        try:
+            from api.stations.models import PowerBank, StationSlot
+            from api.media.models import MediaUpload
+            
+            station = Station.objects.get(serial_number=station_sn, is_deleted=False)
+            
+            # Track changes for logging
+            changes = {}
+            
+            # Update basic station data
+            for field, value in station_data.items():
+                old_value = getattr(station, field)
+                if old_value != value:
+                    changes[field] = {
+                        'old': str(old_value),
+                        'new': str(value)
+                    }
+                    setattr(station, field, value)
+            
+            if changes:
+                station.save()
+            
+            # Update amenities if provided
+            if amenity_ids is not None:
+                # Remove existing amenities
+                old_amenities = list(station.amenity_mappings.values_list('amenity__name', flat=True))
+                station.amenity_mappings.all().delete()
+                
+                # Add new amenities
+                if amenity_ids:
+                    amenities = StationAmenity.objects.filter(
+                        id__in=amenity_ids,
+                        is_active=True
+                    )
+                    
+                    amenity_mappings = []
+                    for amenity in amenities:
+                        amenity_mappings.append(
+                            StationAmenityMapping(
+                                station=station,
+                                amenity=amenity,
+                                is_available=True
+                            )
+                        )
+                    
+                    StationAmenityMapping.objects.bulk_create(amenity_mappings)
+                    new_amenities = [a.name for a in amenities]
+                    changes['amenities'] = {
+                        'old': old_amenities,
+                        'new': new_amenities
+                    }
+                    self.log_info(f"Updated {len(amenity_mappings)} amenities for station {station.station_name}")
+            
+            # Update media if provided
+            if media_uploads is not None:
+                # Remove existing media
+                old_media_count = station.media.count()
+                station.media.all().delete()
+                
+                # Add new media
+                if media_uploads:
+                    media_objects = []
+                    for media_data in media_uploads:
+                        media_upload = MediaUpload.objects.get(id=media_data['media_upload_id'])
+                        media_objects.append(
+                            StationMedia(
+                                station=station,
+                                media_upload=media_upload,
+                                media_type=media_data['media_type'],
+                                title=media_data.get('title', ''),
+                                description=media_data.get('description', ''),
+                                is_primary=media_data.get('is_primary', False)
+                            )
+                        )
+                    
+                    StationMedia.objects.bulk_create(media_objects)
+                    changes['media_count'] = {
+                        'old': old_media_count,
+                        'new': len(media_objects)
+                    }
+                    self.log_info(f"Updated {len(media_objects)} media files for station {station.station_name}")
+            
+            # Update powerbank assignments if provided
+            if powerbank_assignments is not None:
+                assigned_count = 0
+                
+                for assignment in powerbank_assignments:
+                    powerbank_serial = assignment.get('powerbank_serial')
+                    slot_number = assignment.get('slot_number')
+                    
+                    if not powerbank_serial or slot_number is None:
+                        continue
+                    
+                    try:
+                        # Get powerbank
+                        powerbank = PowerBank.objects.get(serial_number=powerbank_serial)
+                        
+                        # Get slot
+                        slot = StationSlot.objects.get(
+                            station=station,
+                            slot_number=slot_number
+                        )
+                        
+                        # Check if powerbank is already in this slot
+                        if powerbank.current_slot == slot:
+                            continue
+                        
+                        # If powerbank was in another slot, clear that slot
+                        if powerbank.current_slot:
+                            old_slot = powerbank.current_slot
+                            old_slot.status = 'AVAILABLE'
+                            old_slot.battery_level = 0
+                            old_slot.save(update_fields=['status', 'battery_level', 'last_updated'])
+                        
+                        # If slot has another powerbank, clear that assignment
+                        if slot.status == 'OCCUPIED':
+                            PowerBank.objects.filter(current_slot=slot).update(
+                                current_station=None,
+                                current_slot=None
+                            )
+                        
+                        # Assign powerbank to station and slot
+                        powerbank.current_station = station
+                        powerbank.current_slot = slot
+                        powerbank.save(update_fields=['current_station', 'current_slot', 'updated_at'])
+                        
+                        # Update slot status
+                        slot.status = 'OCCUPIED'
+                        slot.battery_level = powerbank.battery_level
+                        slot.save(update_fields=['status', 'battery_level', 'last_updated'])
+                        
+                        assigned_count += 1
+                        
+                    except PowerBank.DoesNotExist:
+                        self.log_warning(f"PowerBank with serial {powerbank_serial} not found")
+                    except StationSlot.DoesNotExist:
+                        self.log_warning(f"Slot {slot_number} not found for station {station.station_name}")
+                    except Exception as e:
+                        self.log_error(f"Failed to assign powerbank {powerbank_serial} to slot {slot_number}: {str(e)}")
+                
+                if assigned_count > 0:
+                    changes['powerbanks_updated'] = assigned_count
+                    self.log_info(f"Updated {assigned_count} powerbank assignments for station {station.station_name}")
+            
+            self.log_info(f"Station updated successfully: {station.station_name}")
+            
+            # Reload with all relationships
+            station = Station.objects.prefetch_related(
+                'slots',
+                'amenity_mappings__amenity',
+                'media__media_upload',
+                'issues__reported_by'
+            ).get(id=station.id)
+            
+            # Log admin action after save completes
+            if admin_user and changes:
+                self._log_admin_action(
+                    admin_user=admin_user,
+                    action_type='UPDATE_STATION',
+                    target_model='Station',
+                    target_id=str(station.id),
+                    changes=changes,
+                    description=f"Updated station with amenities/media: {station.station_name}",
+                    request=request
+                )
+            
+            return station
+            
+        except Station.DoesNotExist:
+            raise ServiceException(
+                detail="Station not found or has been deleted",
                 code="station_not_found"
             )
     
@@ -448,7 +650,7 @@ class AdminStationService(CRUDService):
         try:
             from api.rentals.models import Rental
             
-            station = Station.objects.get(serial_number=station_sn)
+            station = Station.objects.get(serial_number=station_sn, is_deleted=False)
             
             # Check for active rentals
             active_rentals = Rental.objects.filter(
@@ -463,7 +665,7 @@ class AdminStationService(CRUDService):
                 )
             
             # Soft delete
-            station.is_active = False
+            station.is_deleted = True
             station.status = 'OFFLINE'
             station.save()
             
@@ -477,7 +679,7 @@ class AdminStationService(CRUDService):
                         action_type='DELETE_STATION',
                         target_model='Station',
                         target_id=str(station.id),
-                        changes={'is_active': {'old': True, 'new': False}},
+                        changes={'is_deleted': {'old': False, 'new': True}},
                         description=f"Deleted station: {station.station_name}",
                         request=request
                     )
@@ -487,7 +689,7 @@ class AdminStationService(CRUDService):
             
         except Station.DoesNotExist:
             raise ServiceException(
-                detail="Station not found",
+                detail="Station not found or already deleted",
                 code="station_not_found"
             )
 

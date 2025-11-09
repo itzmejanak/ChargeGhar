@@ -1074,7 +1074,7 @@ class AdminStationSerializer(serializers.Serializer):
 
 
 class AdminStationDetailSerializer(serializers.Serializer):
-    """Serializer for detailed station view - minimal, focused on slots and powerbanks"""
+    """Serializer for detailed station view - includes amenities, media, slots and powerbanks"""
     id = serializers.UUIDField(read_only=True)
     station_name = serializers.CharField(read_only=True)
     serial_number = serializers.CharField(read_only=True)
@@ -1086,14 +1086,51 @@ class AdminStationDetailSerializer(serializers.Serializer):
     total_slots = serializers.IntegerField(read_only=True)
     status = serializers.CharField(read_only=True)
     is_maintenance = serializers.BooleanField(read_only=True)
+    is_deleted = serializers.BooleanField(read_only=True)
     hardware_info = serializers.JSONField(read_only=True)
     last_heartbeat = serializers.DateTimeField(read_only=True, allow_null=True)
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
     
-    # Only slots and powerbanks in detail
+    # Include amenities, media, slots and powerbanks in detail
+    amenities = serializers.SerializerMethodField()
+    media = serializers.SerializerMethodField()
     slots = serializers.SerializerMethodField()
     powerbanks = serializers.SerializerMethodField()
+    
+    def get_amenities(self, obj):
+        """Get all amenities assigned to this station"""
+        amenity_mappings = obj.amenity_mappings.select_related('amenity').filter(amenity__is_active=True)
+        return [{
+            'id': str(mapping.amenity.id),
+            'name': mapping.amenity.name,
+            'icon': mapping.amenity.icon,
+            'description': mapping.amenity.description,
+            'is_active': mapping.amenity.is_active,
+            'is_available': mapping.is_available
+        } for mapping in amenity_mappings]
+    
+    def get_media(self, obj):
+        """Get all media/images for this station"""
+        from api.stations.models import StationMedia
+        station_media = StationMedia.objects.filter(
+            station=obj
+        ).select_related('media_upload').order_by('-is_primary', 'created_at')
+        
+        result = []
+        for sm in station_media:
+            result.append({
+                'id': str(sm.id),
+                'media_upload_id': str(sm.media_upload.id),
+                'media_type': sm.media_type,
+                'title': sm.title,
+                'description': sm.description,
+                'is_primary': sm.is_primary,
+                'file_url': sm.media_upload.file_url,
+                'thumbnail_url': sm.media_upload.thumbnail_url,
+                'created_at': sm.created_at
+            })
+        return result
     
     def get_slots(self, obj):
         """Get all slots with powerbank details"""
@@ -1288,7 +1325,7 @@ class CreateStationSerializer(serializers.Serializer):
 
 
 class UpdateStationSerializer(serializers.Serializer):
-    """Serializer for updating station details"""
+    """Serializer for updating station details - consistent with CreateStationSerializer"""
     station_name = serializers.CharField(max_length=100, required=False)
     latitude = serializers.DecimalField(max_digits=10, decimal_places=6, required=False)
     longitude = serializers.DecimalField(max_digits=10, decimal_places=6, required=False)
@@ -1301,6 +1338,30 @@ class UpdateStationSerializer(serializers.Serializer):
     is_maintenance = serializers.BooleanField(required=False)
     hardware_info = serializers.JSONField(required=False)
     
+    # Amenities configuration
+    amenity_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+        allow_empty=True,
+        help_text="List of amenity IDs to assign to this station (replaces existing)"
+    )
+    
+    # Media/Images configuration
+    media_uploads = serializers.ListField(
+        child=serializers.JSONField(),
+        required=False,
+        allow_empty=True,
+        help_text="List of media objects: [{'media_upload_id': 'uuid', 'media_type': 'IMAGE', 'title': 'Main Photo', 'is_primary': true}]"
+    )
+    
+    # PowerBank assignments configuration
+    powerbank_assignments = serializers.ListField(
+        child=serializers.JSONField(),
+        required=False,
+        allow_empty=True,
+        help_text="List of powerbank assignments: [{'powerbank_serial': 'PB-001', 'slot_number': 1}, ...]"
+    )
+    
     def validate_latitude(self, value):
         if value is not None and not -90 <= float(value) <= 90:
             raise serializers.ValidationError("Latitude must be between -90 and 90")
@@ -1309,6 +1370,107 @@ class UpdateStationSerializer(serializers.Serializer):
     def validate_longitude(self, value):
         if value is not None and not -180 <= float(value) <= 180:
             raise serializers.ValidationError("Longitude must be between -180 and 180")
+        return value
+    
+    def validate_amenity_ids(self, value):
+        """Validate amenity IDs exist"""
+        if value:
+            from api.stations.models import StationAmenity
+            existing_ids = set(StationAmenity.objects.filter(
+                id__in=value, 
+                is_active=True
+            ).values_list('id', flat=True))
+            
+            invalid_ids = set(value) - existing_ids
+            if invalid_ids:
+                raise serializers.ValidationError(
+                    f"Invalid or inactive amenity IDs: {', '.join(str(id) for id in invalid_ids)}"
+                )
+        return value
+    
+    def validate_media_uploads(self, value):
+        """Validate media upload objects"""
+        if value:
+            from api.media.models import MediaUpload
+            
+            for idx, media_obj in enumerate(value):
+                # Validate required fields
+                if 'media_upload_id' not in media_obj:
+                    raise serializers.ValidationError(
+                        f"Media object at index {idx} missing 'media_upload_id'"
+                    )
+                
+                if 'media_type' not in media_obj:
+                    raise serializers.ValidationError(
+                        f"Media object at index {idx} missing 'media_type'"
+                    )
+                
+                # Validate media_type
+                valid_types = ['IMAGE', 'VIDEO', '360_VIEW', 'FLOOR_PLAN']
+                if media_obj['media_type'] not in valid_types:
+                    raise serializers.ValidationError(
+                        f"Media object at index {idx} has invalid media_type. Must be one of: {', '.join(valid_types)}"
+                    )
+                
+                # Validate media upload exists
+                media_upload_id = media_obj['media_upload_id']
+                if not MediaUpload.objects.filter(id=media_upload_id).exists():
+                    raise serializers.ValidationError(
+                        f"MediaUpload with ID {media_upload_id} not found"
+                    )
+        
+        return value
+    
+    def validate_powerbank_assignments(self, value):
+        """Validate powerbank assignment objects"""
+        if value:
+            from api.stations.models import PowerBank
+            
+            # Validate unique slot assignments
+            slot_numbers = []
+            powerbank_serials = []
+            
+            for idx, assignment in enumerate(value):
+                # Validate required fields
+                if 'powerbank_serial' not in assignment:
+                    raise serializers.ValidationError(
+                        f"Assignment at index {idx} missing 'powerbank_serial'"
+                    )
+                
+                if 'slot_number' not in assignment:
+                    raise serializers.ValidationError(
+                        f"Assignment at index {idx} missing 'slot_number'"
+                    )
+                
+                powerbank_serial = assignment['powerbank_serial']
+                slot_number = assignment['slot_number']
+                
+                # Validate slot_number is positive integer
+                if not isinstance(slot_number, int) or slot_number < 1:
+                    raise serializers.ValidationError(
+                        f"Assignment at index {idx} has invalid slot_number. Must be a positive integer."
+                    )
+                
+                # Check for duplicate slot assignments
+                if slot_number in slot_numbers:
+                    raise serializers.ValidationError(
+                        f"Duplicate slot assignment: slot {slot_number} is assigned multiple times"
+                    )
+                slot_numbers.append(slot_number)
+                
+                # Check for duplicate powerbank assignments
+                if powerbank_serial in powerbank_serials:
+                    raise serializers.ValidationError(
+                        f"Duplicate powerbank assignment: powerbank {powerbank_serial} is assigned multiple times"
+                    )
+                powerbank_serials.append(powerbank_serial)
+                
+                # Validate powerbank exists
+                if not PowerBank.objects.filter(serial_number=powerbank_serial).exists():
+                    raise serializers.ValidationError(
+                        f"PowerBank with serial '{powerbank_serial}' not found"
+                    )
+        
         return value
 
 

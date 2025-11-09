@@ -25,8 +25,8 @@ class StationService(CRUDService):
     def get_stations_list(self, filters: Dict[str, Any] = None, user=None) -> Dict[str, Any]:
         """Get paginated list of stations with filters"""
         try:
-            # Base queryset with optimized joins
-            queryset = self.get_queryset().prefetch_related('slots').order_by('station_name')
+            # Base queryset with optimized joins - exclude deleted stations
+            queryset = self.get_queryset().filter(is_deleted=False).prefetch_related('slots').order_by('station_name')
             
             # Apply filters
             if filters:
@@ -78,7 +78,7 @@ class StationService(CRUDService):
         try:
             station = Station.objects.select_related().prefetch_related(
                 'slots', 'amenity_mappings__amenity', 'media__media_upload'
-            ).get(serial_number=station_sn)
+            ).filter(is_deleted=False).get(serial_number=station_sn)
             
             # Check if station is accessible
             if station.is_maintenance and not (user and user.is_staff):
@@ -114,10 +114,11 @@ class StationService(CRUDService):
                     code="invalid_coordinates"
                 )
             
-            # Get all active stations
+            # Get all active stations - exclude deleted
             stations = Station.objects.filter(
                 status__in=['ONLINE', 'OFFLINE'],
-                is_maintenance=False
+                is_maintenance=False,
+                is_deleted=False
             ).values('id', 'station_name', 'latitude', 'longitude', 'address')
             
             nearby_stations = []
