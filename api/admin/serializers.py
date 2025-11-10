@@ -1128,7 +1128,7 @@ class AdminStationDetailSerializer(serializers.Serializer):
                 'description': sm.description,
                 'is_primary': sm.is_primary,
                 'file_url': sm.media_upload.file_url,
-                'thumbnail_url': sm.media_upload.thumbnail_url,
+                'thumbnail_url': sm.media_upload.file_url,  # Use file_url as thumbnail (MediaUpload doesn't have separate thumbnail)
                 'created_at': sm.created_at
             })
         return result
