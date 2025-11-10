@@ -39,8 +39,7 @@ class AppConfigService(CRUDService):
                 }
             )
             
-            # Clear cache for this config
-            cache.delete(f"app_config_{key}")
+            # Cache is automatically cleared by post_save signal in models.py
             
             action = "created" if created else "updated"
             self.log_info(f"Configuration {key} {action}")
@@ -114,8 +113,7 @@ class AppConfigService(CRUDService):
                 is_active=is_active
             )
             
-            # Clear cache
-            cache.delete(f"app_config_{key}")
+            # Cache is automatically cleared by post_save signal in models.py
             
             # Log admin action
             if admin_user:
@@ -181,8 +179,7 @@ class AppConfigService(CRUDService):
             
             config.save()
             
-            # Clear cache
-            cache.delete(f"app_config_{config.key}")
+            # Cache is automatically cleared by post_save signal in models.py
             
             # Log admin action
             if admin_user:
@@ -242,8 +239,7 @@ class AppConfigService(CRUDService):
                     user_agent="Admin Panel"
                 )
             
-            # Clear cache
-            cache.delete(f"app_config_{config.key}")
+            # Cache is automatically cleared by post_delete signal in models.py
             
             config.delete()
             

@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 
 @profile_router.register(r"users/profile", name="user-profile")
 @extend_schema(
-    tags=["Authentication"],
+    tags=["User Profile"],
     summary="User Profile Management",
-    description="Get and update user profile with real-time data",
+    description="Get and update user profile with real-time data. Profile completion awards points.",
     responses={200: BaseResponseSerializer}
 )
 class UserProfileView(GenericAPIView, BaseAPIView):
@@ -33,13 +33,15 @@ class UserProfileView(GenericAPIView, BaseAPIView):
     
     @log_api_call()
     def get(self, request: Request) -> Response:
-        """Get user profile"""
+        """Get user profile - fresh from DB"""
         def operation():
             try:
-                profile = request.user.profile
+                # Get fresh profile data
+                from api.users.models import UserProfile
+                profile = UserProfile.objects.get(user=request.user)
                 serializer = self.get_serializer(profile)
                 return serializer.data
-            except:
+            except UserProfile.DoesNotExist:
                 # Return empty profile structure if not found
                 return {
                     'id': None,
@@ -47,7 +49,9 @@ class UserProfileView(GenericAPIView, BaseAPIView):
                     'date_of_birth': None,
                     'address': None,
                     'avatar_url': None,
-                    'is_profile_complete': False
+                    'is_profile_complete': False,
+                    'created_at': None,
+                    'updated_at': None
                 }
         
         return self.handle_service_operation(
@@ -58,7 +62,7 @@ class UserProfileView(GenericAPIView, BaseAPIView):
     
     @log_api_call()
     def put(self, request: Request) -> Response:
-        """Update user profile"""
+        """Update user profile (full update)"""
         def operation():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)

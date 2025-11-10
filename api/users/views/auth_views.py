@@ -233,20 +233,25 @@ class DeviceView(GenericAPIView, BaseAPIView):
 @auth_router.register(r"auth/me", name="auth-me")
 @extend_schema(
     tags=["Authentication"],
-    summary="Current User Info",
-    description="Returns authenticated user's real-time data",
+    summary="Current User Complete Info",
+    description="Returns authenticated user's complete real-time data including profile, KYC, wallet, points, and rental eligibility",
     responses={200: BaseResponseSerializer}
 )
 class MeView(GenericAPIView, BaseAPIView):
-    serializer_class = serializers.UserSerializer
+    serializer_class = serializers.UserDetailedProfileSerializer
     permission_classes = [IsAuthenticated]
 
     @log_api_call()
     def get(self, request: Request) -> Response:
-        """Get real-time user data - no caching for user profile"""
+        """Get comprehensive real-time user data - fresh from DB, no caching"""
         def operation():
-            # Get fresh user data with related objects
-            user = User.objects.select_related('profile', 'kyc').get(id=request.user.id)
+            # Get fresh user data with all related objects using select_related for efficiency
+            user = User.objects.select_related(
+                'profile', 
+                'kyc', 
+                'points'
+            ).get(id=request.user.id)
+            
             serializer = self.get_serializer(user)
             return serializer.data
         

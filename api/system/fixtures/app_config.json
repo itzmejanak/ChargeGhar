@@ -205,6 +205,28 @@
       "created_at": "2024-01-01T00:00:00Z",
       "updated_at": "2024-01-01T00:00:00Z"
     }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "NEED_RENTALS_PROFILE_COMPLETE",
+      "value": "true",
+      "description": "Whether users need to complete their profile before renting a power bank",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "NEED_RENTALS_KYC_VERIFIED",
+      "value": "true",
+      "description": "Whether users need to complete KYC verification before renting a power bank",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
   }
 ]
 

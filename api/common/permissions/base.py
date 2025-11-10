@@ -22,11 +22,29 @@ class IsOwnerOrReadOnly(BasePermission):
 class IsProfileComplete(BasePermission):
     """
     Permission to check if user profile is complete
+    Can be toggled via app config: NEED_RENTALS_PROFILE_COMPLETE
     """
     
     def has_permission(self, request: Request, view: APIView) -> bool:
         if not request.user or not request.user.is_authenticated:
             return False
+        
+        # Check if profile completion is required via app config
+        # Using get_config_cached() for performance - cache is auto-cleared by signals on config change
+        from api.system.services.app_config_service import AppConfigService
+        app_config_service = AppConfigService()
+        
+        need_profile_complete = app_config_service.get_config_cached(
+            'NEED_RENTALS_PROFILE_COMPLETE',
+            default='true'
+        )
+        
+        # Convert string to boolean
+        is_required = need_profile_complete.lower() in ['true', '1', 'yes']
+        
+        # If not required, allow access
+        if not is_required:
+            return True
         
         # Check if user has completed profile
         try:
@@ -39,11 +57,29 @@ class IsProfileComplete(BasePermission):
 class IsKYCVerified(BasePermission):
     """
     Permission to check if user KYC is verified
+    Can be toggled via app config: NEED_RENTALS_KYC_VERIFIED
     """
     
     def has_permission(self, request: Request, view: APIView) -> bool:
         if not request.user or not request.user.is_authenticated:
             return False
+        
+        # Check if KYC verification is required via app config
+        # Using get_config_cached() for performance - cache is auto-cleared by signals on config change
+        from api.system.services.app_config_service import AppConfigService
+        app_config_service = AppConfigService()
+        
+        need_kyc_verified = app_config_service.get_config_cached(
+            'NEED_RENTALS_KYC_VERIFIED',
+            default='true'
+        )
+        
+        # Convert string to boolean
+        is_required = need_kyc_verified.lower() in ['true', '1', 'yes']
+        
+        # If not required, allow access
+        if not is_required:
+            return True
         
         # Check if user KYC is approved
         try:

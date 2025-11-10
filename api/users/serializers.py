@@ -164,6 +164,167 @@ class UserSerializer(serializers.ModelSerializer):
             return 'NOT_SUBMITTED'
 
 
+class UserDetailedProfileSerializer(serializers.Serializer):
+    """Comprehensive serializer for /me endpoint with all user-related data"""
+    # User basic info
+    id = serializers.UUIDField()
+    username = serializers.CharField()
+    email = serializers.EmailField(allow_null=True)
+    phone_number = serializers.CharField(allow_null=True)
+    profile_picture = serializers.URLField(allow_null=True)
+    referral_code = serializers.CharField()
+    status = serializers.CharField()
+    social_provider = serializers.CharField()
+    date_joined = serializers.DateTimeField()
+    
+    # Profile data
+    profile = serializers.SerializerMethodField()
+    
+    # KYC data
+    kyc = serializers.SerializerMethodField()
+    
+    # Wallet data
+    wallet = serializers.SerializerMethodField()
+    
+    # Points data
+    points = serializers.SerializerMethodField()
+    
+    # Rental requirements status
+    rental_eligibility = serializers.SerializerMethodField()
+    
+    @extend_schema_field(serializers.DictField)
+    def get_profile(self, obj) -> Dict[str, Any]:
+        """Get profile data - compact format"""
+        try:
+            profile = obj.profile
+            return {
+                'full_name': profile.full_name,
+                'avatar_url': profile.avatar_url,
+                'completed': profile.is_profile_complete
+            }
+        except:
+            return {
+                'full_name': None,
+                'avatar_url': None,
+                'completed': False
+            }
+    
+    @extend_schema_field(serializers.DictField)
+    def get_kyc(self, obj) -> Dict[str, Any]:
+        """Get KYC data - compact format"""
+        try:
+            kyc = obj.kyc
+            return {
+                'status': kyc.status,
+                'verified': kyc.status == 'APPROVED'
+            }
+        except:
+            return {
+                'status': 'NOT_SUBMITTED',
+                'verified': False
+            }
+    
+    @extend_schema_field(serializers.DictField)
+    def get_wallet(self, obj) -> Dict[str, Any]:
+        """Get wallet data - fresh from DB, compact format"""
+        try:
+            from api.payments.models import Wallet, Transaction
+            from django.db.models import Sum
+            
+            wallet = Wallet.objects.get(user=obj)
+            
+            # Calculate total successful topups
+            total_topup = Transaction.objects.filter(
+                user=obj,
+                transaction_type='TOPUP',
+                status='SUCCESS'
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            
+            return {
+                'balance': str(wallet.balance),
+                'total_topup': str(total_topup),
+                'currency': wallet.currency
+            }
+        except:
+            return {
+                'balance': '0.00',
+                'total_topup': '0.00',
+                'currency': 'NPR'
+            }
+    
+    @extend_schema_field(serializers.DictField)
+    def get_points(self, obj) -> Dict[str, Any]:
+        """Get points data - fresh from DB, compact format"""
+        try:
+            points = obj.points
+            return {
+                'current': points.current_points,
+                'total_earned': points.total_points
+            }
+        except:
+            return {
+                'current': 0,
+                'total_earned': 0
+            }
+    
+    @extend_schema_field(serializers.DictField)
+    def get_rental_eligibility(self, obj) -> Dict[str, Any]:
+        """Check rental eligibility - compact format"""
+        from api.system.services.app_config_service import AppConfigService
+        
+        config_service = AppConfigService()
+        
+        # Check requirements from app config
+        need_profile = config_service.get_config_cached('NEED_RENTALS_PROFILE_COMPLETE', 'true').lower() in ['true', '1', 'yes']
+        need_kyc = config_service.get_config_cached('NEED_RENTALS_KYC_VERIFIED', 'true').lower() in ['true', '1', 'yes']
+        
+        # Get actual status
+        try:
+            profile_complete = obj.profile.is_profile_complete if hasattr(obj, 'profile') and obj.profile else False
+        except:
+            profile_complete = False
+        
+        try:
+            kyc_verified = obj.kyc.status == 'APPROVED' if hasattr(obj, 'kyc') and obj.kyc else False
+        except:
+            kyc_verified = False
+        
+        # Check if active
+        is_active = obj.status == 'ACTIVE'
+        
+        # Check for pending dues
+        from api.rentals.models import Rental
+        has_pending_dues = Rental.objects.filter(
+            user=obj,
+            payment_status='PENDING',
+            status__in=['OVERDUE', 'COMPLETED']
+        ).exists()
+        
+        # Determine eligibility
+        can_rent = (
+            is_active and
+            not has_pending_dues and
+            (not need_profile or profile_complete) and
+            (not need_kyc or kyc_verified)
+        )
+        
+        # Build blocking reasons
+        reasons = []
+        if not is_active:
+            reasons.append('Account not active')
+        if has_pending_dues:
+            reasons.append('Pending dues')
+        if need_profile and not profile_complete:
+            reasons.append('Complete profile')
+        if need_kyc and not kyc_verified:
+            reasons.append('Verify KYC')
+        
+        return {
+            'can_rent': can_rent,
+            'reasons': reasons
+        }
+
+
 class UserBasicSerializer(serializers.ModelSerializer):
     """Basic user info serializer"""
     

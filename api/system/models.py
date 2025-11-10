@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from django.db import models
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.core.cache import cache
 from api.common.models import BaseModel
 
 
@@ -87,3 +90,27 @@ class AppUpdate(BaseModel):
     
     def __str__(self):
         return f"{self.title} - v{self.version}"
+
+
+# ============================================================
+# Signal Handlers for Automatic Cache Invalidation
+# ============================================================
+
+@receiver(post_save, sender=AppConfig)
+def clear_appconfig_cache_on_save(sender, instance, **kwargs):
+    """
+    Automatically clear cache when AppConfig is created or updated.
+    This ensures cache is always in sync, regardless of how the config is modified
+    (via service, Django admin, direct SQL, etc.)
+    """
+    cache_key = f"app_config_{instance.key}"
+    cache.delete(cache_key)
+
+
+@receiver(post_delete, sender=AppConfig)
+def clear_appconfig_cache_on_delete(sender, instance, **kwargs):
+    """
+    Automatically clear cache when AppConfig is deleted.
+    """
+    cache_key = f"app_config_{instance.key}"
+    cache.delete(cache_key)
