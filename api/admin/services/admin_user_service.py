@@ -102,7 +102,7 @@ class AdminUserService(CRUDService):
                 from api.notifications.services import notify
                 notify(
                     user,
-                    'account_status_changed',
+                    'account_status_update',
                     async_send=True,
                     status=status,
                     reason=reason
