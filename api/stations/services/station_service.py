@@ -26,7 +26,10 @@ class StationService(CRUDService):
         """Get paginated list of stations with filters"""
         try:
             # Base queryset with optimized joins - exclude deleted stations
-            queryset = self.get_queryset().filter(is_deleted=False).prefetch_related('slots').order_by('station_name')
+            queryset = self.get_queryset().filter(is_deleted=False).prefetch_related(
+                'slots',
+                'media__media_upload'
+            ).order_by('station_name')
             
             # Apply filters
             if filters:

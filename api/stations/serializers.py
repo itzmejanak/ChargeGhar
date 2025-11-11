@@ -108,6 +108,7 @@ class StationListSerializer(serializers.ModelSerializer, StationLocationMixin):
     distance = serializers.SerializerMethodField()
     available_slots = serializers.SerializerMethodField()
     is_favorite = serializers.SerializerMethodField()
+    media = StationMediaSerializer(many=True, read_only=True)
     status = serializers.ChoiceField(
         choices=Station.STATION_STATUS_CHOICES,
         help_text="Station operational status"
@@ -118,7 +119,7 @@ class StationListSerializer(serializers.ModelSerializer, StationLocationMixin):
         fields = [
             'id', 'serial_number', 'station_name', 'latitude', 'longitude', 
             'address', 'status', 'total_slots', 'available_slots',
-            'distance', 'is_favorite'
+            'distance', 'is_favorite', 'media'
         ]
         read_only_fields = ['id']
 

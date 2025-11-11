@@ -126,7 +126,10 @@ class NearbyStationsView(GenericAPIView, BaseAPIView):
             
             # Get full station objects
             station_ids = [station['id'] for station in nearby_stations]
-            stations = Station.objects.filter(id__in=station_ids).prefetch_related('slots')
+            stations = Station.objects.filter(id__in=station_ids).prefetch_related(
+                'slots',
+                'media__media_upload'
+            )
             
             # Serialize results
             serializer = serializers.StationListSerializer(
