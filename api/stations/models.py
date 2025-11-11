@@ -19,6 +19,7 @@ class Station(BaseModel):
     longitude = models.DecimalField(max_digits=10, decimal_places=6)
     address = models.CharField(max_length=255)
     landmark = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True, help_text="Station description and additional information")
     total_slots = models.IntegerField()
     status = models.CharField(max_length=50, choices=STATION_STATUS_CHOICES, default='OFFLINE')
     is_maintenance = models.BooleanField(default=False)

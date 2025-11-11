@@ -46,17 +46,17 @@
       "serial_number": "PB003",
       "model": "PowerBank Pro 10000",
       "capacity_mah": 10000,
-      "status": "RENTED",
-      "battery_level": 100,
+      "status": "AVAILABLE",
+      "battery_level": 90,
       "hardware_info": {
         "version": "1.0",
         "manufacturer": "PowerTech"
       },
-      "current_station": null,
-      "current_slot": null,
-      "last_updated": "2024-01-01T10:00:00Z",
+      "current_station": "550e8400-e29b-41d4-a716-446655440001",
+      "current_slot": "550e8400-e29b-41d4-a716-446655440303",
+      "last_updated": "2024-01-01T12:00:00Z",
       "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T10:00:00Z"
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -67,12 +67,12 @@
       "model": "PowerBank Pro 10000",
       "capacity_mah": 10000,
       "status": "AVAILABLE",
-      "battery_level": 92,
+      "battery_level": 85,
       "hardware_info": {
         "version": "1.0",
         "manufacturer": "PowerTech"
       },
-      "current_station": "550e8400-e29b-41d4-a716-446655440002",
+      "current_station": "550e8400-e29b-41d4-a716-446655440001",
       "current_slot": "550e8400-e29b-41d4-a716-446655440304",
       "last_updated": "2024-01-01T12:00:00Z",
       "created_at": "2024-01-01T00:00:00Z",
@@ -87,13 +87,233 @@
       "model": "PowerBank Pro 10000",
       "capacity_mah": 10000,
       "status": "AVAILABLE",
-      "battery_level": 85,
+      "battery_level": 92,
       "hardware_info": {
         "version": "1.0",
         "manufacturer": "PowerTech"
       },
       "current_station": "550e8400-e29b-41d4-a716-446655440002",
       "current_slot": "550e8400-e29b-41d4-a716-446655440305",
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.powerbank",
+    "pk": "550e8400-e29b-41d4-a716-446655440406",
+    "fields": {
+      "serial_number": "PB006",
+      "model": "PowerBank Pro 10000",
+      "capacity_mah": 10000,
+      "status": "AVAILABLE",
+      "battery_level": 88,
+      "hardware_info": {
+        "version": "1.0",
+        "manufacturer": "PowerTech"
+      },
+      "current_station": "550e8400-e29b-41d4-a716-446655440002",
+      "current_slot": "550e8400-e29b-41d4-a716-446655440306",
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.powerbank",
+    "pk": "550e8400-e29b-41d4-a716-446655440407",
+    "fields": {
+      "serial_number": "PB007",
+      "model": "PowerBank Pro 10000",
+      "capacity_mah": 10000,
+      "status": "AVAILABLE",
+      "battery_level": 95,
+      "hardware_info": {
+        "version": "1.0",
+        "manufacturer": "PowerTech"
+      },
+      "current_station": "550e8400-e29b-41d4-a716-446655440002",
+      "current_slot": "550e8400-e29b-41d4-a716-446655440307",
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.powerbank",
+    "pk": "550e8400-e29b-41d4-a716-446655440408",
+    "fields": {
+      "serial_number": "PB008",
+      "model": "PowerBank Pro 10000",
+      "capacity_mah": 10000,
+      "status": "AVAILABLE",
+      "battery_level": 82,
+      "hardware_info": {
+        "version": "1.0",
+        "manufacturer": "PowerTech"
+      },
+      "current_station": "550e8400-e29b-41d4-a716-446655440002",
+      "current_slot": "550e8400-e29b-41d4-a716-446655440308",
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.powerbank",
+    "pk": "550e8400-e29b-41d4-a716-446655440409",
+    "fields": {
+      "serial_number": "PB009",
+      "model": "PowerBank Pro 10000",
+      "capacity_mah": 10000,
+      "status": "AVAILABLE",
+      "battery_level": 90,
+      "hardware_info": {
+        "version": "1.0",
+        "manufacturer": "PowerTech"
+      },
+      "current_station": "550e8400-e29b-41d4-a716-446655440301",
+      "current_slot": "550e8400-e29b-41d4-a716-446655440309",
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.powerbank",
+    "pk": "550e8400-e29b-41d4-a716-446655440410",
+    "fields": {
+      "serial_number": "PB010",
+      "model": "PowerBank Pro 10000",
+      "capacity_mah": 10000,
+      "status": "AVAILABLE",
+      "battery_level": 85,
+      "hardware_info": {
+        "version": "1.0",
+        "manufacturer": "PowerTech"
+      },
+      "current_station": "550e8400-e29b-41d4-a716-446655440301",
+      "current_slot": "550e8400-e29b-41d4-a716-446655440310",
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.powerbank",
+    "pk": "550e8400-e29b-41d4-a716-446655440411",
+    "fields": {
+      "serial_number": "PB011",
+      "model": "PowerBank Pro 10000",
+      "capacity_mah": 10000,
+      "status": "AVAILABLE",
+      "battery_level": 93,
+      "hardware_info": {
+        "version": "1.0",
+        "manufacturer": "PowerTech"
+      },
+      "current_station": "550e8400-e29b-41d4-a716-446655440301",
+      "current_slot": "550e8400-e29b-41d4-a716-446655440311",
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.powerbank",
+    "pk": "550e8400-e29b-41d4-a716-446655440412",
+    "fields": {
+      "serial_number": "PB012",
+      "model": "PowerBank Pro 10000",
+      "capacity_mah": 10000,
+      "status": "AVAILABLE",
+      "battery_level": 88,
+      "hardware_info": {
+        "version": "1.0",
+        "manufacturer": "PowerTech"
+      },
+      "current_station": "550e8400-e29b-41d4-a716-446655440301",
+      "current_slot": "550e8400-e29b-41d4-a716-446655440312",
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.powerbank",
+    "pk": "550e8400-e29b-41d4-a716-446655440413",
+    "fields": {
+      "serial_number": "PB013",
+      "model": "PowerBank Pro 10000",
+      "capacity_mah": 10000,
+      "status": "AVAILABLE",
+      "battery_level": 95,
+      "hardware_info": {
+        "version": "1.0",
+        "manufacturer": "PowerTech"
+      },
+      "current_station": "550e8400-e29b-41d4-a716-446655440302",
+      "current_slot": "550e8400-e29b-41d4-a716-446655440313",
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.powerbank",
+    "pk": "550e8400-e29b-41d4-a716-446655440414",
+    "fields": {
+      "serial_number": "PB014",
+      "model": "PowerBank Pro 10000",
+      "capacity_mah": 10000,
+      "status": "AVAILABLE",
+      "battery_level": 92,
+      "hardware_info": {
+        "version": "1.0",
+        "manufacturer": "PowerTech"
+      },
+      "current_station": "550e8400-e29b-41d4-a716-446655440302",
+      "current_slot": "550e8400-e29b-41d4-a716-446655440314",
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.powerbank",
+    "pk": "550e8400-e29b-41d4-a716-446655440415",
+    "fields": {
+      "serial_number": "PB015",
+      "model": "PowerBank Pro 10000",
+      "capacity_mah": 10000,
+      "status": "AVAILABLE",
+      "battery_level": 87,
+      "hardware_info": {
+        "version": "1.0",
+        "manufacturer": "PowerTech"
+      },
+      "current_station": "550e8400-e29b-41d4-a716-446655440302",
+      "current_slot": "550e8400-e29b-41d4-a716-446655440315",
+      "last_updated": "2024-01-01T12:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.powerbank",
+    "pk": "550e8400-e29b-41d4-a716-446655440416",
+    "fields": {
+      "serial_number": "PB016",
+      "model": "PowerBank Pro 10000",
+      "capacity_mah": 10000,
+      "status": "AVAILABLE",
+      "battery_level": 90,
+      "hardware_info": {
+        "version": "1.0",
+        "manufacturer": "PowerTech"
+      },
+      "current_station": "550e8400-e29b-41d4-a716-446655440302",
+      "current_slot": "550e8400-e29b-41d4-a716-446655440316",
       "last_updated": "2024-01-01T12:00:00Z",
       "created_at": "2024-01-01T00:00:00Z",
       "updated_at": "2024-01-01T00:00:00Z"

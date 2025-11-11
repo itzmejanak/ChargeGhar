@@ -1084,6 +1084,7 @@ class AdminStationDetailSerializer(serializers.Serializer):
     longitude = serializers.DecimalField(max_digits=10, decimal_places=6, read_only=True)
     address = serializers.CharField(read_only=True)
     landmark = serializers.CharField(read_only=True, allow_null=True)
+    description = serializers.CharField(read_only=True, allow_null=True)
     total_slots = serializers.IntegerField(read_only=True)
     status = serializers.CharField(read_only=True)
     is_maintenance = serializers.BooleanField(read_only=True)
@@ -1169,6 +1170,7 @@ class CreateStationSerializer(serializers.Serializer):
     longitude = serializers.DecimalField(max_digits=10, decimal_places=6)
     address = serializers.CharField(max_length=255)
     landmark = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True, allow_null=True, help_text="Station description and additional information")
     total_slots = serializers.IntegerField(min_value=1, max_value=50)
     status = serializers.ChoiceField(
         choices=['ONLINE', 'OFFLINE', 'MAINTENANCE'],
@@ -1336,6 +1338,7 @@ class UpdateStationSerializer(serializers.Serializer):
     longitude = serializers.DecimalField(max_digits=10, decimal_places=6, required=False)
     address = serializers.CharField(max_length=255, required=False)
     landmark = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True, allow_null=True, help_text="Station description and additional information")
     status = serializers.ChoiceField(
         choices=['ONLINE', 'OFFLINE', 'MAINTENANCE'],
         required=False

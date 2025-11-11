@@ -141,7 +141,7 @@ class StationDetailSerializer(serializers.ModelSerializer, StationLocationMixin)
         model = Station
         fields = [
             'id', 'station_name', 'serial_number', 'latitude', 'longitude',
-            'address', 'landmark', 'total_slots', 'status', 'is_maintenance',
+            'address', 'landmark', 'description', 'total_slots', 'status', 'is_maintenance',
             'slots', 'amenities', 'media', 'distance', 'available_slots',
             'is_favorite', 'hardware_info', 'opening_time', 'closing_time'
         ]

@@ -27,10 +27,118 @@
     "model": "stations.stationamenitymapping",
     "pk": "550e8400-e29b-41d4-a716-446655440203",
     "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440001",
+      "amenity": "550e8400-e29b-41d4-a716-446655440103",
+      "is_available": true,
+      "notes": "Open during mall hours",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationamenitymapping",
+    "pk": "550e8400-e29b-41d4-a716-446655440204",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440002",
+      "amenity": "550e8400-e29b-41d4-a716-446655440101",
+      "is_available": true,
+      "notes": "Airport WiFi available",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationamenitymapping",
+    "pk": "550e8400-e29b-41d4-a716-446655440205",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440002",
+      "amenity": "550e8400-e29b-41d4-a716-446655440102",
+      "is_available": true,
+      "notes": "Airport parking available",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationamenitymapping",
+    "pk": "550e8400-e29b-41d4-a716-446655440206",
+    "fields": {
       "station": "550e8400-e29b-41d4-a716-446655440002",
       "amenity": "550e8400-e29b-41d4-a716-446655440103",
       "is_available": true,
       "notes": "Airport operates 24/7",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationamenitymapping",
+    "pk": "550e8400-e29b-41d4-a716-446655440207",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440301",
+      "amenity": "550e8400-e29b-41d4-a716-446655440101",
+      "is_available": true,
+      "notes": "Free WiFi in mall",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationamenitymapping",
+    "pk": "550e8400-e29b-41d4-a716-446655440208",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440301",
+      "amenity": "550e8400-e29b-41d4-a716-446655440102",
+      "is_available": true,
+      "notes": "Mall parking facilities",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationamenitymapping",
+    "pk": "550e8400-e29b-41d4-a716-446655440209",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440301",
+      "amenity": "550e8400-e29b-41d4-a716-446655440103",
+      "is_available": true,
+      "notes": "Extended mall hours",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationamenitymapping",
+    "pk": "550e8400-e29b-41d4-a716-446655440210",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440302",
+      "amenity": "550e8400-e29b-41d4-a716-446655440101",
+      "is_available": true,
+      "notes": "High-speed WiFi for tech professionals",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationamenitymapping",
+    "pk": "550e8400-e29b-41d4-a716-446655440211",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440302",
+      "amenity": "550e8400-e29b-41d4-a716-446655440102",
+      "is_available": true,
+      "notes": "Tech Hub parking area",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationamenitymapping",
+    "pk": "550e8400-e29b-41d4-a716-446655440212",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440302",
+      "amenity": "550e8400-e29b-41d4-a716-446655440103",
+      "is_available": true,
+      "notes": "Business hours access",
       "created_at": "2024-01-01T00:00:00Z",
       "updated_at": "2024-01-01T00:00:00Z"
     }
