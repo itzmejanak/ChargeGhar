@@ -10,14 +10,13 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
 from api.common.decorators import log_api_call
 from api.common.serializers import BaseResponseSerializer, PaginatedResponseSerializer
 from api.users.permissions import IsStaffPermission
-from api.system.services import AppVersionService, AppUpdateService
+from api.system.services import AppVersionService
 from api.system.serializers import AppVersionSerializer, AppUpdateSerializer
 
 app_admin_router = CustomViewRouter()

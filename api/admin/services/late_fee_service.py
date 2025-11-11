@@ -9,7 +9,6 @@ from __future__ import annotations
 from typing import Dict, Any, Optional, List
 from decimal import Decimal
 from django.db import transaction
-from django.utils import timezone
 
 from api.common.services.base import CRUDService, ServiceException
 from api.common.models import LateFeeConfiguration

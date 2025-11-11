@@ -14,7 +14,6 @@ from api.common.decorators import log_api_call
 from api.common.mixins import BaseAPIView
 from api.common.routers import CustomViewRouter
 from api.common.serializers import BaseResponseSerializer
-from api.stations.serializers import StationListSerializer
 from api.users.permissions import IsStaffPermission
 
 station_router = CustomViewRouter()

@@ -116,7 +116,7 @@ class AdminWithdrawalService(CRUDService):
         """Get withdrawal analytics for admin dashboard"""
         try:
             from django.db.models import Count, Sum
-            from datetime import datetime, timedelta
+            from datetime import datetime
             
             # Get analytics data
             total_withdrawals = WithdrawalRequest.objects.count()

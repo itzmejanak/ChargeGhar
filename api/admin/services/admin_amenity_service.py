@@ -5,7 +5,7 @@ Service for admin station amenity management
 This module contains service classes for managing station amenities.
 """
 from __future__ import annotations
-from typing import Dict, Any, List
+from typing import Dict, Any
 from django.db import transaction
 from django.db.models import Q, Count
 from api.common.services.base import CRUDService, ServiceException

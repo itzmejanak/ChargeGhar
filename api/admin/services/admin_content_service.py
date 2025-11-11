@@ -15,7 +15,7 @@ from typing import Dict, Any, List
 from django.db import transaction
 
 from api.admin.models import AdminActionLog
-from api.common.services.base import BaseService, ServiceException
+from api.common.services.base import BaseService
 from api.content.models import ContentPage, FAQ, ContactInfo, Banner
 from api.content.services import (
     ContentPageService,

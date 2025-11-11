@@ -10,7 +10,6 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
@@ -21,8 +20,7 @@ from api.system.services import AppConfigService
 from api.system.serializers import (
     AppConfigAdminSerializer,
     CreateAppConfigSerializer,
-    UpdateAppConfigSerializer,
-    DeleteAppConfigSerializer
+    UpdateAppConfigSerializer
 )
 
 config_admin_router = CustomViewRouter()

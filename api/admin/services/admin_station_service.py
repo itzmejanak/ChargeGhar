@@ -797,7 +797,6 @@ class AdminStationService(CRUDService):
         Returns:
             Updated StationIssue instance
         """
-        from api.stations.models import StationIssue
         from django.contrib.auth import get_user_model
         
         User = get_user_model()
@@ -975,7 +974,6 @@ class AdminStationService(CRUDService):
         try:
             from api.admin.models import AdminActionLog
             from decimal import Decimal
-            import json
             
             # Convert Decimal values to strings for JSON serialization
             def convert_decimals(obj):

@@ -266,7 +266,7 @@ class AdminCouponDetailView(GenericAPIView, BaseAPIView):
             
             coupon = Coupon.objects.get(code=coupon_code.upper())
             coupon_id = str(coupon.id)
-            coupon_name = coupon.name
+            coupon.name
             
             # Soft delete by setting status to inactive
             coupon.status = Coupon.StatusChoices.INACTIVE

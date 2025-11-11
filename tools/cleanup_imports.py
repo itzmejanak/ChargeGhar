@@ -3,7 +3,7 @@
 Import Cleanup Script - Using autoflake
 ========================================
 
-This script uses autoflake to clean up imports in views and services directories.
+This script uses autoflake to clean up imports in views, services, and serializers directories.
 
 Features:
 - Removes unused imports (including third-party)
@@ -143,7 +143,7 @@ class ImportCleanup:
         print(f"🧹 Cleaning app: {app_name}")
         print(f"{'='*70}")
         
-        results = {'app': app_name, 'views': None, 'services': None}
+        results = {'app': app_name, 'views': None, 'services': None, 'serializers': None}
         
         # Process views directory
         views_dir = app_path / 'views'
@@ -180,6 +180,24 @@ class ImportCleanup:
                 print(f"  ❌ Error: {result['error']}")
         else:
             print(f"  ℹ️  No services directory")
+        
+        # Process serializers directory
+        serializers_dir = app_path / 'serializers'
+        if serializers_dir.exists() and serializers_dir.is_dir():
+            print(f"\n📂 Processing serializers...")
+            
+            if not self.preview:
+                self.backup_directory(serializers_dir)
+            
+            result = self.run_autoflake(serializers_dir)
+            results['serializers'] = result
+            
+            if 'error' not in result:
+                print(f"  ✅ Serializers cleaned")
+            else:
+                print(f"  ❌ Error: {result['error']}")
+        else:
+            print(f"  ℹ️  No serializers directory")
         
         return results
     
@@ -246,6 +264,7 @@ What it does:
   - Removes duplicate keys in dicts
   - Keeps __init__.py imports (safe)
   - Creates automatic backups (unless --preview)
+  - Processes views, services, and serializers directories
 
 Available apps:
   users, stations, payments, rentals, notifications, points,
