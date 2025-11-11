@@ -8,7 +8,7 @@ from drf_spectacular.utils import extend_schema_field
 
 from api.stations.models import (
     Station, StationSlot, StationAmenity, StationAmenityMapping,
-    StationIssue, StationMedia, UserStationFavorite, PowerBank
+    StationIssue, StationMedia, UserStationFavorite
 )
 from api.common.utils.helpers import calculate_distance
 from api.common.serializers import BaseResponseSerializer
@@ -62,44 +62,20 @@ class StationAmenitySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'icon', 'description', 'is_active']
 
 
-class PowerBankSerializer(serializers.ModelSerializer):
-    """Serializer for power bank details"""
-    class Meta:
-        model = PowerBank
-        fields = [
-            'id', 'serial_number', 'model', 'capacity_mah', 
-            'status', 'battery_level'
-        ]
-        read_only_fields = ['id']
-
-
 class StationSlotSerializer(serializers.ModelSerializer):
     """Serializer for station slots"""
     status = serializers.ChoiceField(
         choices=StationSlot.SLOT_STATUS_CHOICES,
         help_text="Slot status"
     )
-    powerbank = serializers.SerializerMethodField()
     
     class Meta:
         model = StationSlot
         fields = [
             'id', 'slot_number', 'status', 'battery_level', 
-            'last_updated', 'current_rental', 'powerbank'
+            'last_updated', 'current_rental'
         ]
         read_only_fields = ['id', 'last_updated']
-    
-    @extend_schema_field(PowerBankSerializer(allow_null=True))
-    def get_powerbank(self, obj) -> Optional[dict]:
-        """Get powerbank details if assigned to this slot"""
-        try:
-            from api.stations.models import PowerBank
-            powerbank = PowerBank.objects.filter(current_slot=obj).first()
-            if powerbank:
-                return PowerBankSerializer(powerbank).data
-        except Exception:
-            pass
-        return None
 
 
 class StationMediaSerializer(serializers.ModelSerializer):
