@@ -119,7 +119,7 @@ class StationListSerializer(serializers.ModelSerializer, StationLocationMixin):
         fields = [
             'id', 'serial_number', 'station_name', 'latitude', 'longitude', 
             'address', 'status', 'total_slots', 'available_slots',
-            'distance', 'is_favorite', 'media'
+            'distance', 'is_favorite', 'media', 'opening_time', 'closing_time'
         ]
         read_only_fields = ['id']
 
@@ -143,7 +143,7 @@ class StationDetailSerializer(serializers.ModelSerializer, StationLocationMixin)
             'id', 'station_name', 'serial_number', 'latitude', 'longitude',
             'address', 'landmark', 'total_slots', 'status', 'is_maintenance',
             'slots', 'amenities', 'media', 'distance', 'available_slots',
-            'is_favorite', 'hardware_info'
+            'is_favorite', 'hardware_info', 'opening_time', 'closing_time'
         ]
         read_only_fields = ['id']
     

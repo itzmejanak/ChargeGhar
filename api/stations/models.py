@@ -25,6 +25,8 @@ class Station(BaseModel):
     is_deleted = models.BooleanField(default=False)
     hardware_info = models.JSONField(default=dict)
     last_heartbeat = models.DateTimeField(null=True, blank=True)
+    opening_time = models.TimeField(null=True, blank=True, help_text="Station opening time (e.g., 09:00)")
+    closing_time = models.TimeField(null=True, blank=True, help_text="Station closing time (e.g., 21:00)")
 
     class Meta:
         db_table = "stations"

@@ -1,0 +1,274 @@
+[
+  {
+    "model": "media.mediaupload",
+    "pk": "10000000-0000-0000-0000-000000000001",
+    "fields": {
+      "file_url": "https://res.cloudinary.com/demo/image/upload/v1234567890/stations/kathmandu_mall_main.jpg",
+      "file_type": "IMAGE",
+      "original_name": "kathmandu_mall_main.jpg",
+      "file_size": 245678,
+      "uploaded_by": null,
+      "cloud_provider": "cloudinary",
+      "public_id": "stations/kathmandu_mall_main",
+      "metadata": {
+        "width": 1920,
+        "height": 1080,
+        "format": "jpg"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "media.mediaupload",
+    "pk": "10000000-0000-0000-0000-000000000002",
+    "fields": {
+      "file_url": "https://res.cloudinary.com/demo/image/upload/v1234567890/stations/kathmandu_mall_entrance.jpg",
+      "file_type": "IMAGE",
+      "original_name": "kathmandu_mall_entrance.jpg",
+      "file_size": 198765,
+      "uploaded_by": null,
+      "cloud_provider": "cloudinary",
+      "public_id": "stations/kathmandu_mall_entrance",
+      "metadata": {
+        "width": 1920,
+        "height": 1080,
+        "format": "jpg"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "media.mediaupload",
+    "pk": "10000000-0000-0000-0000-000000000003",
+    "fields": {
+      "file_url": "https://res.cloudinary.com/demo/image/upload/v1234567890/stations/pokhara_airport_main.jpg",
+      "file_type": "IMAGE",
+      "original_name": "pokhara_airport_main.jpg",
+      "file_size": 312456,
+      "uploaded_by": null,
+      "cloud_provider": "cloudinary",
+      "public_id": "stations/pokhara_airport_main",
+      "metadata": {
+        "width": 1920,
+        "height": 1080,
+        "format": "jpg"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "media.mediaupload",
+    "pk": "10000000-0000-0000-0000-000000000004",
+    "fields": {
+      "file_url": "https://res.cloudinary.com/demo/image/upload/v1234567890/stations/pokhara_airport_terminal.jpg",
+      "file_type": "IMAGE",
+      "original_name": "pokhara_airport_terminal.jpg",
+      "file_size": 287654,
+      "uploaded_by": null,
+      "cloud_provider": "cloudinary",
+      "public_id": "stations/pokhara_airport_terminal",
+      "metadata": {
+        "width": 1920,
+        "height": 1080,
+        "format": "jpg"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "media.mediaupload",
+    "pk": "10000000-0000-0000-0000-000000000005",
+    "fields": {
+      "file_url": "https://res.cloudinary.com/demo/image/upload/v1234567890/stations/chitwan_mall_main.jpg",
+      "file_type": "IMAGE",
+      "original_name": "chitwan_mall_main.jpg",
+      "file_size": 223456,
+      "uploaded_by": null,
+      "cloud_provider": "cloudinary",
+      "public_id": "stations/chitwan_mall_main",
+      "metadata": {
+        "width": 1920,
+        "height": 1080,
+        "format": "jpg"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "media.mediaupload",
+    "pk": "10000000-0000-0000-0000-000000000006",
+    "fields": {
+      "file_url": "https://res.cloudinary.com/demo/image/upload/v1234567890/stations/chitwan_mall_foodcourt.jpg",
+      "file_type": "IMAGE",
+      "original_name": "chitwan_mall_foodcourt.jpg",
+      "file_size": 256789,
+      "uploaded_by": null,
+      "cloud_provider": "cloudinary",
+      "public_id": "stations/chitwan_mall_foodcourt",
+      "metadata": {
+        "width": 1920,
+        "height": 1080,
+        "format": "jpg"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "media.mediaupload",
+    "pk": "10000000-0000-0000-0000-000000000007",
+    "fields": {
+      "file_url": "https://res.cloudinary.com/demo/image/upload/v1234567890/stations/lalitpur_tech_hub_main.jpg",
+      "file_type": "IMAGE",
+      "original_name": "lalitpur_tech_hub_main.jpg",
+      "file_size": 267890,
+      "uploaded_by": null,
+      "cloud_provider": "cloudinary",
+      "public_id": "stations/lalitpur_tech_hub_main",
+      "metadata": {
+        "width": 1920,
+        "height": 1080,
+        "format": "jpg"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "media.mediaupload",
+    "pk": "10000000-0000-0000-0000-000000000008",
+    "fields": {
+      "file_url": "https://res.cloudinary.com/demo/image/upload/v1234567890/stations/lalitpur_tech_hub_office.jpg",
+      "file_type": "IMAGE",
+      "original_name": "lalitpur_tech_hub_office.jpg",
+      "file_size": 234567,
+      "uploaded_by": null,
+      "cloud_provider": "cloudinary",
+      "public_id": "stations/lalitpur_tech_hub_office",
+      "metadata": {
+        "width": 1920,
+        "height": 1080,
+        "format": "jpg"
+      },
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationmedia",
+    "pk": "20000000-0000-0000-0000-000000000001",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440001",
+      "media_upload": "10000000-0000-0000-0000-000000000001",
+      "media_type": "IMAGE",
+      "title": "Kathmandu Mall Station - Main View",
+      "description": "Main entrance view of the power bank station",
+      "is_primary": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationmedia",
+    "pk": "20000000-0000-0000-0000-000000000002",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440001",
+      "media_upload": "10000000-0000-0000-0000-000000000002",
+      "media_type": "IMAGE",
+      "title": "Kathmandu Mall Station - Entrance",
+      "description": "Station located near main entrance",
+      "is_primary": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationmedia",
+    "pk": "20000000-0000-0000-0000-000000000003",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440002",
+      "media_upload": "10000000-0000-0000-0000-000000000003",
+      "media_type": "IMAGE",
+      "title": "Pokhara Airport Station - Main View",
+      "description": "Power bank station in airport terminal",
+      "is_primary": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationmedia",
+    "pk": "20000000-0000-0000-0000-000000000004",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440002",
+      "media_upload": "10000000-0000-0000-0000-000000000004",
+      "media_type": "IMAGE",
+      "title": "Pokhara Airport Station - Terminal View",
+      "description": "Terminal building Level 1 location",
+      "is_primary": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationmedia",
+    "pk": "20000000-0000-0000-0000-000000000005",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440301",
+      "media_upload": "10000000-0000-0000-0000-000000000005",
+      "media_type": "IMAGE",
+      "title": "Chitwan Mall Station - Main View",
+      "description": "Power bank station in Chitwan Mall",
+      "is_primary": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationmedia",
+    "pk": "20000000-0000-0000-0000-000000000006",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440301",
+      "media_upload": "10000000-0000-0000-0000-000000000006",
+      "media_type": "IMAGE",
+      "title": "Chitwan Mall Station - Food Court",
+      "description": "Station near food court area",
+      "is_primary": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationmedia",
+    "pk": "20000000-0000-0000-0000-000000000007",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440302",
+      "media_upload": "10000000-0000-0000-0000-000000000007",
+      "media_type": "IMAGE",
+      "title": "Lalitpur Tech Hub Station - Main View",
+      "description": "Power bank station in Tech Hub",
+      "is_primary": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "stations.stationmedia",
+    "pk": "20000000-0000-0000-0000-000000000008",
+    "fields": {
+      "station": "550e8400-e29b-41d4-a716-446655440302",
+      "media_upload": "10000000-0000-0000-0000-000000000008",
+      "media_type": "IMAGE",
+      "title": "Lalitpur Tech Hub Station - Office Area",
+      "description": "Station near IT companies area",
+      "is_primary": false,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

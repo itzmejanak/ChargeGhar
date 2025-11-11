@@ -1090,6 +1090,8 @@ class AdminStationDetailSerializer(serializers.Serializer):
     is_deleted = serializers.BooleanField(read_only=True)
     hardware_info = serializers.JSONField(read_only=True)
     last_heartbeat = serializers.DateTimeField(read_only=True, allow_null=True)
+    opening_time = serializers.TimeField(read_only=True, allow_null=True)
+    closing_time = serializers.TimeField(read_only=True, allow_null=True)
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
     
@@ -1174,6 +1176,8 @@ class CreateStationSerializer(serializers.Serializer):
     )
     is_maintenance = serializers.BooleanField(default=False)
     hardware_info = serializers.JSONField(default=dict, required=False)
+    opening_time = serializers.TimeField(required=False, allow_null=True, help_text="Opening time (e.g., 09:00:00)")
+    closing_time = serializers.TimeField(required=False, allow_null=True, help_text="Closing time (e.g., 21:00:00)")
     
     # Amenities configuration
     amenity_ids = serializers.ListField(
@@ -1338,6 +1342,8 @@ class UpdateStationSerializer(serializers.Serializer):
     )
     is_maintenance = serializers.BooleanField(required=False)
     hardware_info = serializers.JSONField(required=False)
+    opening_time = serializers.TimeField(required=False, allow_null=True, help_text="Opening time (e.g., 09:00:00)")
+    closing_time = serializers.TimeField(required=False, allow_null=True, help_text="Closing time (e.g., 21:00:00)")
     
     # Amenities configuration
     amenity_ids = serializers.ListField(
