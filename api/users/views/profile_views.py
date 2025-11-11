@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 @profile_router.register(r"users/profile", name="user-profile")
 @extend_schema(
-    tags=["Authentication"],
+    tags=["User Profile"],
     summary="User Profile Management",
     description="Get and update user profile with real-time data. Profile completion awards points.",
     responses={200: BaseResponseSerializer}
