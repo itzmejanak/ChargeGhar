@@ -6,6 +6,19 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 api/admin/views/
 ├── __init__.py                # Router merge
+├── amenity_views.py           # Admin station amenity management views (2 classes)
+│   ├── AdminAmenityListView
+│   └── AdminAmenityDetailView
+├── analytics_views.py         # Admin Analytics Views
+============================================================
+
+This module contains views for analytics endpoints including:
+- Rentals over time (charts)
+- Revenue over time (charts)
+
+Created: 2025-11-07 (2 classes)
+│   ├── RentalsOverTimeView
+│   └── RevenueOverTimeView
 ├── app_admin_views.py         # Admin app management views - versions and updates (3 classes)
 │   ├── AdminAppVersionsView
 │   ├── AdminAppVersionDetailView
@@ -40,6 +53,24 @@ Created: 2025-11-05 (4 classes)
 │   ├── AdminCouponBulkView
 │   ├── AdminCouponDetailView
 │   └── AdminCouponUsageView
+├── kyc_views.py               # Admin KYC management views
+============================================================
+
+This module contains views for admin KYC verification operations.
+
+Created: 2025-11-06 (2 classes)
+│   ├── AdminKYCListView
+│   └── AdminKYCStatusUpdateView
+├── late_fee_views.py          # Late Fee Configuration Admin Views
+============================================================
+
+Admin endpoints for managing late fee configurations. (6 classes)
+│   ├── LateFeeConfigurationListView
+│   ├── LateFeeConfigurationDetailView
+│   ├── LateFeeConfigurationActivateView
+│   ├── LateFeeConfigurationDeactivateView
+│   ├── LateFeeCalculationTestView
+│   └── ActiveLateFeeConfigurationView
 ├── media_admin_views.py       # Admin media management views (3 classes)
 │   ├── AdminMediaUploadsView
 │   ├── AdminMediaUploadDetailView
@@ -51,11 +82,25 @@ Created: 2025-11-05 (4 classes)
 │   └── SystemHealthView
 ├── notification_views.py      # Notification and broadcast management - send system-wide and targeted notifications (1 classes)
 │   └── BroadcastMessageView
-├── payment_views.py           # Payment and refund administration - handle refund requests and payment operations (2 classes)
+├── payment_views.py           # Payment and refund administration - handle refund requests, payment methods, and rental packages (7 classes)
 │   ├── AdminRefundsView
-│   └── ProcessRefundView
-├── station_views.py           # Station operations and management - control station maintenance, commands and configurations (3 classes)
-│   ├── AdminStationsView
+│   ├── ProcessRefundView
+│   ├── AdminPaymentMethodListView
+│   ├── AdminPaymentMethodDetailView
+│   ├── AdminRentalPackageListView
+│   ├── AdminRentalPackageDetailView
+│   └── AdminTransactionsView
+├── rental_views.py            # Admin Rental Views - Rental management and issue operations (4 classes)
+│   ├── AdminRentalsListView
+│   ├── AdminRentalIssuesView
+│   ├── AdminRentalIssueDetailView
+│   └── AdminRentalDetailView
+├── station_issue_views.py     # Admin Station Issue Management Views (2 classes)
+│   ├── AdminStationIssuesView
+│   └── AdminStationIssueDetailView
+├── station_views.py           # Station operations and management - control station maintenance, commands and configurations (4 classes)
+│   ├── AdminStationListView
+│   ├── AdminStationDetailView
 │   ├── ToggleMaintenanceView
 │   └── SendRemoteCommandView
 ├── user_management_views.py   # User administration operations - manage user accounts, status, and wallet operations (4 classes)
@@ -69,12 +114,24 @@ Created: 2025-11-05 (4 classes)
     ├── ProcessWithdrawalView
     └── AdminWithdrawalDetailView
 
-Total: 12 files, 41 view classes
+Total: 18 files, 65 view classes
 
 ⚙️  SERVICES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 api/admin/services/
 ├── __init__.py                    # Exports
+├── admin_amenity_service.py       # Service for admin station amenity management
+============================================================
+
+This module contains service classes for managing station amenities.
+│   └── AdminAmenityService
+│       ├── get_amenities_list()
+│       ├── get_amenity_detail()
+│       ├── create_amenity()
+│       ├── update_amenity()
+│       ├── delete_amenity()
+│       ├── _log_admin_action()
+│       └── _get_client_ip()
 ├── admin_analytics_service.py     # Service for admin analytics
 ============================================================
 
@@ -82,9 +139,14 @@ This module contains service classes for service for admin analytics.
 
 Auto-generated by Service Separator
 Date: 2025-10-18 23:39:20
+Updated: 2025-11-07 - Added rentals & revenue over time analytics
 │   └── AdminAnalyticsService
 │       ├── get_dashboard_analytics()
-│       └── _get_system_health()
+│       ├── _get_system_health()
+│       ├── get_rentals_over_time()
+│       ├── get_revenue_over_time()
+│       ├── _generate_date_range()
+│       └── _format_period_label()
 ├── admin_content_service.py       # Admin Content Service - Wrapper for content operations with admin audit
 ========================================================================
 
@@ -123,6 +185,25 @@ Date: 2025-10-18 23:39:20
 │   └── AdminNotificationService
 │       ├── send_broadcast_message()
 │       └── _get_target_users()
+├── admin_payment_service.py       # Admin Payment Service
+============================================================
+
+Service for managing payment methods, rental packages, and transactions.
+
+Created: 2025-11-06
+Updated: 2025-11-08 - Added transactions list with PointsTransaction
+│   └── AdminPaymentService
+│       ├── get_payment_methods()
+│       ├── get_payment_method()
+│       ├── create_payment_method()
+│       ├── update_payment_method()
+│       ├── delete_payment_method()
+│       ├── get_rental_packages()
+│       ├── get_rental_package()
+│       ├── create_rental_package()
+│       ├── update_rental_package()
+│       ├── delete_rental_package()
+│       └── get_transactions()
 ├── admin_profile_service.py       # Service for admin profile management
 ============================================================
 
@@ -160,6 +241,23 @@ Date: 2025-10-18 23:39:20
 │       ├── _send_refund_notification()
 │       ├── get_refund_details()
 │       └── get_refunds_by_status()
+├── admin_rental_service.py        # Admin Rental Service
+============================================================
+
+This module contains service classes for admin rental issue management operations.
+
+Created: 2025-11-06
+│   └── AdminRentalService
+│       ├── get_rental_issues()
+│       ├── get_rental_issue()
+│       ├── update_rental_issue_status()
+│       ├── delete_rental_issue()
+│       ├── _send_issue_resolved_notification()
+│       ├── _log_admin_action()
+│       ├── _get_client_ip()
+│       ├── get_rentals_list()
+│       ├── get_rental_detail()
+│       └── _get_base_rental_queryset()
 ├── admin_station_service.py       # Service for admin station management
 ============================================================
 
@@ -171,7 +269,19 @@ Date: 2025-10-18 23:39:20
 │       ├── get_stations_list()
 │       ├── toggle_maintenance_mode()
 │       ├── send_remote_command()
-│       └── _send_mqtt_command()
+│       ├── _send_mqtt_command()
+│       ├── create_station_with_amenities_and_media()
+│       ├── get_station_detail()
+│       ├── update_station()
+│       ├── update_station_with_amenities_and_media()
+│       ├── delete_station()
+│       ├── get_station_issues()
+│       ├── get_station_issue()
+│       ├── update_station_issue()
+│       ├── delete_station_issue()
+│       ├── _send_issue_resolved_notification()
+│       ├── _log_admin_action()
+│       └── _get_client_ip()
 ├── admin_system_service.py        # Service for admin system management
 ============================================================
 
@@ -194,8 +304,10 @@ Date: 2025-10-18 23:39:20
 │       ├── get_user_detail()
 │       ├── update_user_status()
 │       ├── add_user_balance()
+│       ├── get_kyc_submissions()
+│       ├── update_kyc_status()
 │       └── _log_admin_action()
-└── admin_withdrawal_service.py    # Service for admin withdrawal management
+├── admin_withdrawal_service.py    # Service for admin withdrawal management
 ============================================================
 
 This module contains service classes for admin withdrawal management operations.
@@ -203,54 +315,37 @@ Delegates core withdrawal logic to the payments WithdrawalService for consistenc
 
 Auto-generated by Service Separator
 Date: 2025-10-22 02:05:00
-    └── AdminWithdrawalService
-        ├── __init__()
-        ├── get_pending_withdrawals()
-        ├── process_withdrawal()
-        ├── _log_admin_action()
-        ├── _send_withdrawal_notification()
-        ├── get_withdrawal_details()
-        ├── get_withdrawals_by_status()
-        └── get_withdrawal_analytics()
+│   └── AdminWithdrawalService
+│       ├── __init__()
+│       ├── get_withdrawals()
+│       ├── get_pending_withdrawals()
+│       ├── process_withdrawal()
+│       ├── _log_admin_action()
+│       ├── _send_withdrawal_notification()
+│       ├── get_withdrawal_details()
+│       ├── get_withdrawals_by_status()
+│       └── get_withdrawal_analytics()
+└── late_fee_service.py            # Late Fee Configuration Service
+============================================================
 
-Total: 9 files, 9 service classes, 61 methods
+Service for managing late fee configurations in admin panel.
+    └── LateFeeConfigurationService
+        ├── get_all_configurations()
+        ├── get_configuration_by_id()
+        ├── get_active_configuration()
+        ├── create_configuration()
+        ├── update_configuration()
+        ├── activate_configuration()
+        ├── deactivate_configuration()
+        ├── delete_configuration()
+        ├── test_calculation()
+        ├── _deactivate_all_configurations()
+        └── _log_admin_action()
+
+Total: 13 files, 13 service classes, 119 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/admin/serializers.py          # Single file (360 lines)
-├── Authentication Serializers
-│   ├── AdminLoginSerializer
-│   └── AdminPasswordUpdateSerializer
-├── Profile Serializers
-│   ├── AdminProfileSerializer
-│   ├── AdminProfileCreateSerializer
-│   ├── AdminProfileUpdateSerializer
-│   └── AdminProfileActionSerializer
-├── User Serializers
-│   ├── AdminUserListSerializer
-│   ├── UpdateUserStatusSerializer
-│   └── AddUserBalanceSerializer
-├── Payment Serializers
-│   ├── RefundFiltersSerializer
-│   └── ProcessRefundSerializer
-├── Station Serializers
-│   └── StationFiltersSerializer
-├── Admin Serializers
-│   └── AdminActionLogSerializer
-├── Utility Serializers
-│   ├── DashboardAnalyticsSerializer
-│   ├── SystemLogFiltersSerializer
-│   ├── WithdrawalFiltersSerializer
-│   └── CouponListSerializer
-└── Other Serializers
-    ├── SystemLogSerializer
-    ├── ToggleMaintenanceSerializer
-    ├── RemoteCommandSerializer
-    ├── BroadcastMessageSerializer
-    ├── SystemHealthSerializer
-    ├── ProcessWithdrawalSerializer
-    ├── CreateCouponSerializer
-    ├── BulkCreateCouponSerializer
-    └── UpdateCouponStatusSerializer
+api/admin/serializers.py
+└── ✗ No serializers found
 
-Total: 1 file, 26 serializers (8 categories)

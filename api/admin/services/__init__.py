@@ -23,15 +23,23 @@ from .admin_profile_service import AdminProfileService
 from .admin_rental_service import AdminRentalService
 from .admin_payment_service import AdminPaymentService
 from .late_fee_service import LateFeeConfigurationService
+from .admin_points_service import AdminPointsService
+from .admin_achievement_service import AdminAchievementService
+from .admin_referral_service import AdminReferralService
+from .admin_leaderboard_service import AdminLeaderboardService
 
 
 # Backward compatibility - all services available at package level
 __all__ = [
+    "AdminAchievementService",
     "AdminAnalyticsService",
     "AdminContentService",
+    "AdminLeaderboardService",
     "AdminNotificationService",
     "AdminPaymentService",
+    "AdminPointsService",
     "AdminProfileService",
+    "AdminReferralService",
     "AdminRefundService",
     "AdminRentalService",
     "AdminStationService",

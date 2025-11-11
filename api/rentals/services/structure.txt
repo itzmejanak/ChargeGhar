@@ -62,6 +62,7 @@ Date: 2025-10-17
         ├── start_rental()
         ├── _validate_rental_prerequisites()
         ├── _validate_station_availability()
+        ├── _validate_postpaid_balance()
         ├── _get_available_power_bank_and_slot()
         ├── _process_prepayment()
         ├── cancel_rental()
@@ -69,8 +70,11 @@ Date: 2025-10-17
         ├── return_power_bank()
         ├── _calculate_postpayment_charges()
         ├── _calculate_overdue_charges()
+        ├── _auto_collect_payment()
+        ├── _notify_payment_failed()
+        ├── _notify_payment_required()
         ├── get_user_rentals()
         ├── get_active_rental()
         └── get_rental_stats()
 
-Total: 4 files, 4 service classes, 22 methods
+Total: 4 files, 4 service classes, 26 methods

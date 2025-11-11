@@ -24,6 +24,9 @@ from .kyc_views import kyc_router
 from .amenity_views import amenity_admin_router
 from .analytics_views import analytics_router
 from .late_fee_views import late_fee_admin_router
+from .points_admin_views import points_admin_router
+from .achievement_admin_views import achievement_admin_router
+from .referral_admin_views import referral_admin_router
 
 # Merge all sub-routers
 # IMPORTANT: Order matters! More specific routes must come before generic ones
@@ -31,7 +34,8 @@ router = CustomViewRouter()
 
 for sub_router in [
     auth_router, 
-    monitoring_router, 
+    monitoring_router,
+    referral_admin_router,  # MUST come before user_management_router (contains /admin/users/leaderboard)
     user_management_router, 
     payment_router, 
     station_issue_router,  # MUST come before station_router (specific before generic)
@@ -47,7 +51,9 @@ for sub_router in [
     kyc_router, 
     amenity_admin_router,
     analytics_router,
-    late_fee_admin_router
+    late_fee_admin_router,
+    points_admin_router,
+    achievement_admin_router
 ]:
     router._paths.extend(sub_router._paths)
     router._drf_router.registry.extend(sub_router._drf_router.registry)
