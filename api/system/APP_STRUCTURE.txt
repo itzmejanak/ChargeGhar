@@ -89,7 +89,7 @@ Total: 5 files, 5 service classes, 24 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/system/serializers.py          # Single file (240 lines)
+api/system/serializers.py          # Single file (159 lines)
 ├── Admin Serializers
 │   └── AppConfigAdminSerializer
 ├── Utility Serializers
@@ -99,12 +99,9 @@ api/system/serializers.py          # Single file (240 lines)
 └── Other Serializers
     ├── CountrySerializer
     ├── AppConfigSerializer
-    ├── CreateAppConfigSerializer
-    ├── UpdateAppConfigSerializer
-    ├── DeleteAppConfigSerializer
     ├── AppVersionSerializer
     ├── AppVersionCheckSerializer
     ├── AppUpdateSerializer
     └── AppHealthSerializer
 
-Total: 1 file, 13 serializers (3 categories)
+Total: 1 file, 10 serializers (3 categories)

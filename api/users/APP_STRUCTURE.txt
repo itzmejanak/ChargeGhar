@@ -90,7 +90,7 @@ Total: 4 files, 4 service classes, 20 methods
 
 📋 SERIALIZERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-api/users/serializers.py          # Single file (376 lines)
+api/users/serializers.py          # Single file (215 lines)
 ├── Authentication Serializers
 │   ├── OTPRequestSerializer
 │   ├── OTPVerificationSerializer
@@ -98,8 +98,7 @@ api/users/serializers.py          # Single file (376 lines)
 ├── Profile Serializers
 │   ├── UserProfileSerializer
 │   ├── UserKYCSerializer
-│   ├── UserDeviceSerializer
-│   └── UserDetailedProfileSerializer
+│   └── UserDeviceSerializer
 ├── User Serializers
 │   ├── UserSerializer
 │   ├── UserBasicSerializer
@@ -109,4 +108,4 @@ api/users/serializers.py          # Single file (376 lines)
 └── Other Serializers
     └── LogoutSerializer
 
-Total: 1 file, 13 serializers (4 categories)
+Total: 1 file, 12 serializers (4 categories)

@@ -1,10 +1,9 @@
-api/stations/serializers.py          # Single file (307 lines)
+api/stations/serializers.py          # Single file (282 lines)
 ├── User Serializers
 │   ├── UserFavoriteStationsResponseSerializer
 │   └── UserStationReportsResponseSerializer
 └── Station Serializers
     ├── StationAmenitySerializer
-    ├── PowerBankSerializer
     ├── StationSlotSerializer
     ├── StationMediaSerializer
     ├── StationAmenityMappingSerializer
@@ -19,4 +18,4 @@ api/stations/serializers.py          # Single file (307 lines)
     ├── StationFavoriteResponseSerializer
     └── StationIssueResponseSerializer
 
-Total: 1 file, 17 serializers (2 categories)
+Total: 1 file, 16 serializers (2 categories)

@@ -65,9 +65,8 @@ api/payments/services/
         ├── _update_withdrawal_limits()
         ├── _reverse_withdrawal_limits()
         ├── _process_withdrawal_payment()
-        ├── get_withdrawals()
         ├── get_pending_withdrawals()
         ├── get_withdrawal_by_id()
         └── get_withdrawals_by_status()
 
-Total: 8 files, 8 service classes, 53 methods
+Total: 8 files, 8 service classes, 52 methods
