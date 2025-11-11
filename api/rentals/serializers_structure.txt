@@ -1,4 +1,4 @@
-api/rentals/serializers.py          # Single file (612 lines)
+api/rentals/serializers.py          # Single file (649 lines)
 └── Rental Serializers
     ├── RentalPackageListSerializer
     ├── RentalListSerializer
