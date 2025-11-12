@@ -1,11 +1,48 @@
 
 from __future__ import annotations
 from rest_framework import serializers
+from api.social.models import Achievement
 
 
 # ============================================================
 # Achievement Management Serializers
 # ============================================================
+
+class AdminAchievementSerializer(serializers.ModelSerializer):
+    """Admin serializer for achievements with statistics"""
+    
+    total_unlocked = serializers.IntegerField(
+        read_only=True,
+        help_text="Total number of users who unlocked this achievement"
+    )
+    total_claimed = serializers.IntegerField(
+        read_only=True,
+        help_text="Total number of users who claimed this achievement"
+    )
+    total_users_progress = serializers.IntegerField(
+        read_only=True,
+        help_text="Total number of users with progress on this achievement"
+    )
+    
+    class Meta:
+        model = Achievement
+        fields = [
+            'id',
+            'name',
+            'description',
+            'criteria_type',
+            'criteria_value',
+            'reward_type',
+            'reward_value',
+            'is_active',
+            'created_at',
+            'updated_at',
+            'total_unlocked',
+            'total_claimed',
+            'total_users_progress',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
 
 class CreateAchievementSerializer(serializers.Serializer):
     """Serializer for creating achievements"""

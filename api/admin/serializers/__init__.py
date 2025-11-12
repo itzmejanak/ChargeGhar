@@ -128,6 +128,7 @@ from .admin_points_serializers import (
 
 # From admin_achivements_serializers.py
 from .admin_achivements_serializers import (
+    AdminAchievementSerializer,
     CreateAchievementSerializer,
     UpdateAchievementSerializer,
     AchievementFiltersSerializer,
@@ -146,6 +147,7 @@ __all__ = [
     "ActivateLateFeeConfigurationSerializer",
     "AddUserBalanceSerializer",
     "AdjustUserPointsSerializer",
+    "AdminAchievementSerializer",
     "AdminActionLogSerializer",
     "AdminKYCListSerializer",
     "AdminKYCSerializer",

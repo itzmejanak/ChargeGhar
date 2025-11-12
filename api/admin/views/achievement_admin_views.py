@@ -23,7 +23,6 @@ from api.common.mixins import BaseAPIView
 from api.common.routers import CustomViewRouter
 from api.common.serializers import BaseResponseSerializer
 from api.users.permissions import IsStaffPermission
-from api.social.serializers import AchievementSerializer
 
 achievement_admin_router = CustomViewRouter()
 logger = logging.getLogger(__name__)
@@ -104,8 +103,8 @@ class AdminAchievementsView(GenericAPIView, BaseAPIView):
             service = AdminAchievementService()
             paginated_result = service.get_all_achievements(filters)
             
-            # Serialize the achievements
-            achievement_serializer = AchievementSerializer(
+            # Serialize the achievements with admin statistics
+            achievement_serializer = serializers.AdminAchievementSerializer(
                 paginated_result['results'],
                 many=True
             )
@@ -145,7 +144,22 @@ class AdminAchievementsView(GenericAPIView, BaseAPIView):
                 admin_user=request.user
             )
             
-            achievement_serializer = AchievementSerializer(achievement)
+            # Reload with statistics
+            from api.social.models import Achievement
+            from django.db.models import Count, Q
+            achievement = Achievement.objects.annotate(
+                total_unlocked=Count(
+                    'userachievement',
+                    filter=Q(userachievement__is_unlocked=True)
+                ),
+                total_claimed=Count(
+                    'userachievement',
+                    filter=Q(userachievement__is_claimed=True)
+                ),
+                total_users_progress=Count('userachievement', distinct=True)
+            ).get(id=achievement.id)
+            
+            achievement_serializer = serializers.AdminAchievementSerializer(achievement)
             return achievement_serializer.data
         
         result = self.handle_service_operation(
@@ -181,9 +195,21 @@ class AdminAchievementDetailView(GenericAPIView, BaseAPIView):
         """Get achievement details"""
         def operation():
             from api.social.models import Achievement
+            from django.db.models import Count, Q
             
-            achievement = Achievement.objects.get(id=achievement_id)
-            achievement_serializer = AchievementSerializer(achievement)
+            achievement = Achievement.objects.annotate(
+                total_unlocked=Count(
+                    'userachievement',
+                    filter=Q(userachievement__is_unlocked=True)
+                ),
+                total_claimed=Count(
+                    'userachievement',
+                    filter=Q(userachievement__is_claimed=True)
+                ),
+                total_users_progress=Count('userachievement', distinct=True)
+            ).get(id=achievement_id)
+            
+            achievement_serializer = serializers.AdminAchievementSerializer(achievement)
             
             return achievement_serializer.data
         
@@ -215,7 +241,22 @@ class AdminAchievementDetailView(GenericAPIView, BaseAPIView):
                 admin_user=request.user
             )
             
-            achievement_serializer = AchievementSerializer(achievement)
+            # Reload with statistics
+            from api.social.models import Achievement
+            from django.db.models import Count, Q
+            achievement = Achievement.objects.annotate(
+                total_unlocked=Count(
+                    'userachievement',
+                    filter=Q(userachievement__is_unlocked=True)
+                ),
+                total_claimed=Count(
+                    'userachievement',
+                    filter=Q(userachievement__is_claimed=True)
+                ),
+                total_users_progress=Count('userachievement', distinct=True)
+            ).get(id=achievement.id)
+            
+            achievement_serializer = serializers.AdminAchievementSerializer(achievement)
             return achievement_serializer.data
         
         return self.handle_service_operation(
