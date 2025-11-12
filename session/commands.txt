@@ -347,3 +347,6 @@ print('='*80)
 print('POSTPAID BALANCE CHECK WORKING CORRECTLY!')
 print('='*80)
 "
+
+
+docker exec -it powerbank_production-powerbank_api-1 python manage.py shell -c "from axes.models import AccessAttempt; AccessAttempt.objects.all().delete(); print('✅ All login lockouts cleared.')"

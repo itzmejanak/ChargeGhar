@@ -98,7 +98,9 @@ class AchievementFiltersSerializer(serializers.Serializer):
     )
     is_active = serializers.BooleanField(
         required=False,
-        help_text="Filter by active status"
+        allow_null=True,
+        default=None,
+        help_text="Filter by active status (true=active only, false=inactive only, null/omit=all)"
     )
     search = serializers.CharField(
         required=False,
