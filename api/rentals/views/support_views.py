@@ -4,7 +4,7 @@ Support operations - issues, location tracking, and payments
 
 import logging
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiParameter
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.generics import GenericAPIView
@@ -30,22 +30,26 @@ logger = logging.getLogger(__name__)
     responses={200: BaseResponseSerializer}
 )
 class RentalPayDueView(GenericAPIView, BaseAPIView):
-    serializer_class = serializers.RentalPayDueSerializer
+    # serializer_class = serializers.RentalPayDueSerializer  # Not needed since no request body
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
         summary="Settle Rental Dues",
         description="Settle outstanding rental dues using points and wallet combination",
-        request=serializers.RentalPayDueSerializer,
+        parameters=[
+            OpenApiParameter(
+                name="rental_id",
+                type=str,
+                location=OpenApiParameter.PATH,
+                description="Rental ID with outstanding dues"
+            )
+        ],
         responses={200: BaseResponseSerializer}
     )
     @log_api_call()
     def post(self, request: Request, rental_id: str) -> Response:
         """Settle rental dues"""
         def operation():
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-
             # Get rental
             rental = Rental.objects.get(id=rental_id, user=request.user)
 
@@ -54,9 +58,8 @@ class RentalPayDueView(GenericAPIView, BaseAPIView):
             calc_service = PaymentCalculationService()
             payment_options = calc_service.calculate_payment_options(
                 user=request.user,
-                scenario='settle_dues',
-                package_id=serializer.validated_data['package_id'],
-                rental_id=serializer.validated_data['rental_id']
+                scenario='post_payment',
+                rental_id=rental_id
             )
 
             if not payment_options['is_sufficient']:
@@ -81,9 +84,7 @@ class RentalPayDueView(GenericAPIView, BaseAPIView):
                 }
             )
 
-            # Update rental status
-            rental.payment_status = 'PAID'
-            rental.save(update_fields=['payment_status'])
+            # Note: Rental status and overdue_amount are already updated by the payment service
 
             return {
                 'transaction_id': transaction.transaction_id,
@@ -94,7 +95,7 @@ class RentalPayDueView(GenericAPIView, BaseAPIView):
                     'points_amount': float(payment_options['payment_breakdown']['points_amount']),
                     'wallet_used': float(payment_options['payment_breakdown']['wallet_used'])
                 },
-                'rental_status': rental.status,
+                'payment_status': rental.payment_status,
                 'account_unblocked': True
             }
         

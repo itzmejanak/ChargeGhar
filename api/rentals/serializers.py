@@ -444,25 +444,27 @@ class RentalPayDueSerializer(serializers.Serializer):
     """
     Request serializer for paying rental dues.
     Used in: POST /api/rentals/pay-due
-    Note: Same structure as calculate-options for settle_dues scenario
+    Note: Same structure as calculate-options for post_payment scenario
     """
     scenario = serializers.ChoiceField(
-        choices=['settle_dues'], 
+        choices=['pre_payment', 'post_payment'], 
         required=True,
-        help_text="Payment scenario (only settle_dues supported)"
+        help_text="Payment scenario (pre_payment for package cost, post_payment for settling dues)"
     )
     package_id = serializers.UUIDField(
-        help_text="Package ID for settlement"
+        required=False,
+        allow_null=True,
+        help_text="Package ID (required for pre_payment scenario, optional for post_payment)"
     )
     rental_id = serializers.UUIDField(
         help_text="Rental ID with outstanding dues"
     )
 
     def validate_scenario(self, value):
-        """Ensure only settle_dues scenario is used"""
-        if value != 'settle_dues':
+        """Ensure valid scenario is used"""
+        if value not in ['pre_payment', 'post_payment']:
             raise serializers.ValidationError(
-                "Only settle_dues scenario is allowed for paying dues"
+                "Invalid scenario. Supported scenarios: pre_payment, post_payment"
             )
         return value
 
