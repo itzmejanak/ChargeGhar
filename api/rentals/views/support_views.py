@@ -53,6 +53,15 @@ class RentalPayDueView(GenericAPIView, BaseAPIView):
             # Get rental
             rental = Rental.objects.get(id=rental_id, user=request.user)
 
+            # Check if dues are already paid
+            if rental.payment_status == 'PAID':
+                from api.common.services.base import ServiceException
+                raise ServiceException(
+                    detail="Rental dues have already been settled",
+                    code="dues_already_paid",
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+
             # Calculate payment options first
             from api.payments.services import PaymentCalculationService
             calc_service = PaymentCalculationService()
