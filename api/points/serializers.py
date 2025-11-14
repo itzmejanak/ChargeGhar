@@ -145,35 +145,7 @@ ReferralSerializer = ReferralDetailSerializer
 
 class ReferralClaimSerializer(serializers.Serializer):
     """Serializer for claiming referral rewards"""
-    referral_id = serializers.UUIDField()
-    
-    def validate_referral_id(self, value):
-        request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
-            raise serializers.ValidationError("Authentication required")
-        
-        try:
-            referral = Referral.objects.get(id=value)
-            
-            # Check if user is the invitee
-            if referral.invitee != request.user:
-                raise serializers.ValidationError("You are not authorized to claim this referral")
-            
-            # Check if referral is still pending
-            if referral.status != 'PENDING':
-                raise serializers.ValidationError("Referral has already been processed")
-            
-            # Check if referral has expired
-            if timezone.now() > referral.expires_at:
-                raise serializers.ValidationError("Referral has expired")
-            
-            # Check if first rental is completed
-            if not referral.first_rental_completed:
-                raise serializers.ValidationError("First rental must be completed to claim referral rewards")
-            
-            return value
-        except Referral.DoesNotExist:
-            raise serializers.ValidationError("Invalid referral")
+    referral_code = serializers.CharField(required=True)
 
 
 class PointsHistoryFilterSerializer(serializers.Serializer):
@@ -226,12 +198,6 @@ class PointsSummarySerializer(serializers.Serializer):
     successful_referrals = serializers.IntegerField()
     pending_referrals = serializers.IntegerField()
     referral_points_earned = serializers.IntegerField()
-
-
-
-
-
-
 
 
 class PointsLeaderboardListSerializer(serializers.Serializer):
@@ -296,6 +262,7 @@ class ReferralClaimResponseSerializer(BaseResponseSerializer):
         points_awarded = serializers.IntegerField()
         referral_id = serializers.UUIDField()
         completed_at = serializers.DateTimeField()
+        validation_passed = serializers.BooleanField()
     
     data = ClaimDataSerializer()
 

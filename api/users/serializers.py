@@ -43,6 +43,12 @@ class AuthCompleteSerializer(serializers.Serializer):
         required=False,
         help_text="Required only for new user registration"
     )
+    referral_code = serializers.CharField(
+        max_length=10,
+        required=False,
+        allow_blank=True,
+        help_text="Referral code from another user (optional)"
+    )
     
     def validate_username(self, value):
         """Validate username format and uniqueness"""

@@ -173,7 +173,7 @@ class AuthService(BaseService):
         token_data = cache.get(token_key)
         return token_data and token_data['identifier'] == identifier
     
-    def complete_auth(self, identifier: str, verification_token: str, username: str = None, request=None) -> Dict[str, Any]:
+    def complete_auth(self, identifier: str, verification_token: str, username: str = None, referral_code: str = None, request=None) -> Dict[str, Any]:
         """NEW: Unified authentication completion - handles both login and registration"""
         try:
             # Get verification data from unified token
@@ -198,7 +198,7 @@ class AuthService(BaseService):
             purpose = token_data['purpose']
             
             if purpose == 'REGISTER':
-                return self._handle_unified_registration(identifier, username, verification_token, request)
+                return self._handle_unified_registration(identifier, username, verification_token, referral_code, request)
             else:  # LOGIN
                 return self._handle_unified_login(identifier, verification_token, request)
                 
@@ -213,7 +213,7 @@ class AuthService(BaseService):
             )
     
     @transaction.atomic
-    def _handle_unified_registration(self, identifier: str, username: str, verification_token: str, request=None) -> Dict[str, Any]:
+    def _handle_unified_registration(self, identifier: str, username: str, verification_token: str, referral_code: str = None, request=None) -> Dict[str, Any]:
         """Handle unified registration"""
         if not username:
             raise ServiceException(
@@ -254,9 +254,13 @@ class AuthService(BaseService):
         user.referral_code = generate_unique_code("REF", 6)
         user.save()
         
+        # Process referral code if provided
+        if referral_code:
+            self._process_referral(user, referral_code)
+        
         # Create related objects
         UserProfile.objects.create(user=user)
-        UserPoints.objects.create(user=user)
+        UserPoints.objects.get_or_create(user=user, defaults={'current_points': 0, 'total_points': 0})
         Wallet.objects.create(user=user)
         
         # Award signup points (after transaction commits)
@@ -513,19 +517,33 @@ class AuthService(BaseService):
             )
     
     def _process_referral(self, user: User, referral_code: str) -> None:
-        """Process referral code"""
+        """Process referral code during registration"""
         try:
-            referrer = User.objects.get(referral_code=referral_code)
-            user.referred_by = referrer
-            user.save(update_fields=['referred_by'])
-            
-            # Award referral points (will be handled by Celery task after first rental)
+            from api.points.services.referral_service import ReferralService
             from api.points.services import complete_referral
-            complete_referral(user, referrer, async_send=True)
-            
-        except User.DoesNotExist:
-            # Invalid referral code - log but don't fail registration
-            self.log_warning(f"Invalid referral code used: {referral_code}")
+
+            # Validate referral code and get referrer
+            referral_service = ReferralService()
+            validation_result = referral_service.validate_referral_code(referral_code, user)
+
+            if validation_result['valid']:
+                referrer = User.objects.get(id=validation_result['inviter_id'])
+
+                # Set referred_by relationship
+                user.referred_by = referrer
+                user.save(update_fields=['referred_by'])
+
+                # Create referral record
+                referral = referral_service.create_referral(referrer, user, referral_code)
+
+                # Complete referral immediately (award points)
+                complete_referral(str(referral.id), async_send=False)
+
+                self.log_info(f"Referral processed and completed: {user.username} referred by {referrer.username}")
+
+        except Exception as e:
+            # Log error but don't fail registration
+            self.log_error(f"Failed to process referral for user {user.username}: {str(e)}")
     
     def _log_user_audit(self, user: User, action: str, entity_type: str, entity_id: str, request, additional_data: Dict[str, Any] = None) -> None:
         """Log user audit trail"""
@@ -634,7 +652,7 @@ class AuthService(BaseService):
                 full_name=name,
                 avatar_url=picture
             )
-            UserPoints.objects.create(user=user)
+            UserPoints.objects.get_or_create(user=user, defaults={'current_points': 0, 'total_points': 0})
             Wallet.objects.create(user=user)
             
             # Award signup points (after transaction commits)

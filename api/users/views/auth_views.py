@@ -112,6 +112,7 @@ class AuthCompleteView(GenericAPIView, BaseAPIView):
                 identifier=serializer.validated_data['identifier'],
                 verification_token=str(serializer.validated_data['verification_token']),
                 username=serializer.validated_data.get('username'),
+                referral_code=serializer.validated_data.get('referral_code'),
                 request=request
             )
         

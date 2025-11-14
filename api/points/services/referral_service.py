@@ -77,7 +77,7 @@ class ReferralService(CRUDService):
             self.handle_service_error(e, "Failed to create referral")
     
     @transaction.atomic
-    def complete_referral(self, referral_id: str, rental=None) -> Dict[str, Any]:
+    def complete_referral(self, referral_id: str, rental=False) -> Dict[str, Any]:
         """Complete referral after first rental"""
         try:
             referral = Referral.objects.get(id=referral_id)
@@ -97,7 +97,7 @@ class ReferralService(CRUDService):
                 )
             
             # Mark first rental as completed
-            referral.first_rental_completed = True
+            referral.first_rental_completed = rental
             
             # Award points to both users using universal API
             from api.points.services.points_api import award_points
@@ -140,8 +140,8 @@ class ReferralService(CRUDService):
             ])
             
             # Send notifications
-            from api.notifications.tasks import send_referral_completion_notification
-            send_referral_completion_notification.delay(referral.id)
+            # from api.notifications.tasks import send_referral_completion_notification
+            # send_referral_completion_notification.delay(referral.id)
             
             self.log_info(f"Referral completed: {referral.inviter.username} -> {referral.invitee.username}")
             
