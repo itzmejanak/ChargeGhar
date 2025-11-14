@@ -217,16 +217,28 @@ class UserDetailedProfileSerializer(serializers.Serializer):
     
     @extend_schema_field(serializers.DictField)
     def get_kyc(self, obj) -> Dict[str, Any]:
-        """Get KYC data - compact format"""
+        """Get KYC data - detailed format with all KYC fields"""
         try:
             kyc = obj.kyc
             return {
+                'document_number': kyc.document_number,
+                'document_front_url': kyc.document_front_url,
+                'document_back_url': kyc.document_back_url,
+                'document_type': kyc.document_type,
                 'status': kyc.status,
+                'verified_at': kyc.verified_at,
+                'rejection_reason': kyc.rejection_reason,
                 'verified': kyc.status == 'APPROVED'
             }
         except:
             return {
+                'document_number': None,
+                'document_front_url': None,
+                'document_back_url': None,
+                'document_type': None,
                 'status': 'NOT_SUBMITTED',
+                'verified_at': None,
+                'rejection_reason': None,
                 'verified': False
             }
     
