@@ -173,6 +173,11 @@ class RentalActiveView(GenericAPIView, BaseAPIView):
             rental = service.get_active_rental(request.user)
             
             if rental:
+                # Real-time status check: Update to OVERDUE if past due
+                from django.utils import timezone
+                if rental.status == 'ACTIVE' and rental.due_at and timezone.now() > rental.due_at:
+                    rental.status = 'OVERDUE'
+                    rental.save(update_fields=['status', 'updated_at'])
                 serializer = self.get_serializer(rental)
                 return serializer.data
             return None

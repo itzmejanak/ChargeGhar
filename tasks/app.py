@@ -61,7 +61,7 @@ app.conf.beat_schedule = {
     # Critical system tasks (every minute)
     "check-overdue-rentals": {
         "task": "api.rentals.tasks.check_overdue_rentals",
-        "schedule": 300.0,  # Every 5 minutes (reduced from 1 minute)
+        "schedule": 60.0,  # Every 1 minute (increased frequency for real-time updates)
     },
     "check-offline-stations": {
         "task": "api.stations.tasks.check_offline_stations",
