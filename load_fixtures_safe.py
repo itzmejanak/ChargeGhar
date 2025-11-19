@@ -98,9 +98,6 @@ def load_fixture_file_safe(path: str) -> None:
 
 def main() -> None:
     env = os.getenv("ENVIRONMENT", "local").lower()
-    if env not in {"local", "development", "dev"}:
-        print(f"ENVIRONMENT={env!r} is not local/development. Aborting safe fixture load.")
-        return
 
     print("🚀 Starting safe fixture loading (idempotent)...")
     print(f"ENVIRONMENT={env}")
