@@ -227,6 +227,39 @@
       "created_at": "2024-01-01T00:00:00Z",
       "updated_at": "2024-01-01T00:00:00Z"
     }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "MASTER_OTP_ENABLED",
+      "value": "false",
+      "description": "Enable master OTP for development/testing (true/false)",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "MASTER_OTP_NUMBERS",
+      "value": "9869251732",
+      "description": "Comma-separated list of phone numbers/emails allowed to use master OTP",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "system.appconfig",
+    "fields": {
+      "key": "MASTER_OTP",
+      "value": "123456",
+      "description": "Master OTP code for development/testing",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
   }
 ]
 

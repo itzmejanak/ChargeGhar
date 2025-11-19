@@ -100,27 +100,74 @@ class NotificationService(BaseService):
     def get_notification_stats(self, user) -> Dict[str, Any]:
         """Get notification statistics for user"""
         try:
-            stats = Notification.objects.filter(user=user).aggregate(
-                total_count=Count('id'),
+            queryset = Notification.objects.filter(user=user)
+
+            # Overall read/unread stats
+            aggregate_stats = queryset.aggregate(
+                total_notifications=Count('id'),
                 unread_count=Count('id', filter=Q(is_read=False)),
-                read_count=Count('id', filter=Q(is_read=True))
+                read_count=Count('id', filter=Q(is_read=True)),
             )
-            
-            # Get counts by type
-            type_stats = {}
-            for notification_type in ['rental', 'payment', 'promotion', 'system', 'achievement']:
-                type_stats[notification_type] = Notification.objects.filter(
-                    user=user, 
-                    notification_type=notification_type
-                ).count()
-            
+
+            # Time-based stats
+            now = timezone.now()
+            start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            start_of_week = start_of_today - timezone.timedelta(days=now.weekday())
+            start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+            notifications_today = queryset.filter(created_at__gte=start_of_today).count()
+            notifications_this_week = queryset.filter(created_at__gte=start_of_week).count()
+            notifications_this_month = queryset.filter(created_at__gte=start_of_month).count()
+
+            # Breakdown by type
+            rental_notifications = queryset.filter(
+                notification_type=Notification.NotificationTypeChoices.RENTAL
+            ).count()
+            payment_notifications = queryset.filter(
+                notification_type=Notification.NotificationTypeChoices.PAYMENT
+            ).count()
+            promotion_notifications = queryset.filter(
+                notification_type=Notification.NotificationTypeChoices.PROMOTION
+            ).count()
+            system_notifications = queryset.filter(
+                notification_type=Notification.NotificationTypeChoices.SYSTEM
+            ).count()
+            achievement_notifications = queryset.filter(
+                notification_type=Notification.NotificationTypeChoices.ACHIEVEMENT
+            ).count()
+
+            # Breakdown by channel
+            in_app_notifications = queryset.filter(
+                channel=Notification.ChannelChoices.IN_APP
+            ).count()
+            push_notifications = queryset.filter(
+                channel=Notification.ChannelChoices.PUSH
+            ).count()
+            sms_notifications = queryset.filter(
+                channel=Notification.ChannelChoices.SMS
+            ).count()
+            email_notifications = queryset.filter(
+                channel=Notification.ChannelChoices.EMAIL
+            ).count()
+
             return {
-                'total_notifications': stats['total_count'],
-                'unread_notifications': stats['unread_count'],
-                'read_notifications': stats['read_count'],
-                'notifications_by_type': type_stats
+                'total_notifications': aggregate_stats['total_notifications'] or 0,
+                'unread_count': aggregate_stats['unread_count'] or 0,
+                'read_count': aggregate_stats['read_count'] or 0,
+                'notifications_today': notifications_today,
+                'notifications_this_week': notifications_this_week,
+                'notifications_this_month': notifications_this_month,
+                'rental_notifications': rental_notifications,
+                'payment_notifications': payment_notifications,
+                'promotion_notifications': promotion_notifications,
+                'system_notifications': system_notifications,
+                'achievement_notifications': achievement_notifications,
+                'in_app_notifications': in_app_notifications,
+                'push_notifications': push_notifications,
+                'sms_notifications': sms_notifications,
+                'email_notifications': email_notifications,
             }
-            
+        
         except Exception as e:
             self.handle_service_error(e, "Failed to get notification stats")
     
