@@ -9,7 +9,7 @@ class OTPHandler:
     """Handles OTP generation, validation, and caching"""
     
     OTP_EXPIRY_MINUTES = 5
-    MAX_OTP_ATTEMPTS = 3
+    MAX_OTP_ATTEMPTS = 999
     
     @staticmethod
     def generate_otp() -> str:
