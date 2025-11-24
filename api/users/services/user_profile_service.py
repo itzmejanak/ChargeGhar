@@ -22,9 +22,12 @@ class UserProfileService(BaseService):
         try:
             profile, created = UserProfile.objects.get_or_create(user=user)
             
-            # Update profile fields
+            # Update profile fields - filter out null values to prevent accidental clearing
             for field, value in validated_data.items():
-                setattr(profile, field, value)
+                # Only update fields with non-null values
+                # This prevents frontend from accidentally clearing fields by sending null
+                if value is not None:
+                    setattr(profile, field, value)
             
             # Check if profile is complete
             required_fields = ['full_name', 'date_of_birth', 'address']

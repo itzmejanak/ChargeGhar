@@ -241,14 +241,45 @@ else
     fi
 fi
 
-# Auto-load fixtures
+# Auto-load fixtures (smart selection based on deployment state)
 print_step "Loading fixtures..."
-if [[ -f "load-fixtures.sh" ]]; then
+if [[ -f "load-fixtures-safe.sh" ]] && [[ -f "load-fixtures.sh" ]]; then
+    # Check if database already has data (indicating existing deployment)
+    DB_HAS_DATA=$(docker-compose -f "$DOCKER_COMPOSE_FILE" exec -T powerbank_api python manage.py shell -c "
+from django.contrib.auth import get_user_model
+from api.stations.models import Station
+User = get_user_model()
+user_count = User.objects.count()
+station_count = Station.objects.count()
+if user_count > 0 or station_count > 0:
+    print('EXISTING')
+else:
+    print('NEW')
+" 2>/dev/null | tr -d '\r' | tail -1)
+
+    if [[ "$DB_HAS_DATA" == "EXISTING" ]]; then
+        print_status "Existing deployment detected, using safe fixtures loader..."
+        chmod +x load-fixtures-safe.sh
+        ./load-fixtures-safe.sh
+        print_status "Fixtures loaded safely (existing deployment)"
+    else
+        print_status "New deployment detected, using full fixtures loader..."
+        chmod +x load-fixtures.sh
+        ./load-fixtures.sh
+        print_status "Fixtures loaded (new deployment)"
+    fi
+elif [[ -f "load-fixtures-safe.sh" ]]; then
+    print_warning "Only safe fixtures loader available, using it..."
+    chmod +x load-fixtures-safe.sh
+    ./load-fixtures-safe.sh
+    print_status "Fixtures loaded safely"
+elif [[ -f "load-fixtures.sh" ]]; then
+    print_warning "Only regular fixtures loader available, using it..."
     chmod +x load-fixtures.sh
     ./load-fixtures.sh
     print_status "Fixtures loaded"
 else
-    print_error "load-fixtures.sh not found, skipping fixture loading"
+    print_error "No fixtures loader found, skipping fixture loading"
 fi
 
 # Final status
