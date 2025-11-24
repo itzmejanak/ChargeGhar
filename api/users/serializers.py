@@ -205,12 +205,16 @@ class UserDetailedProfileSerializer(serializers.Serializer):
             profile = obj.profile
             return {
                 'full_name': profile.full_name,
+                'date_of_birth': profile.date_of_birth,
+                'address': profile.address,
                 'avatar_url': profile.avatar_url,
                 'completed': profile.is_profile_complete
             }
         except:
             return {
                 'full_name': None,
+                'date_of_birth': None,
+                'address': None,
                 'avatar_url': None,
                 'completed': False
             }

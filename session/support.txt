@@ -130,7 +130,7 @@ if admin and not admin.has_usable_password():
 
 curl -X POST http://localhost:8010/api/admin/login \
   -H "Content-Type: application/json" \
-  -d '{"email": "admin@test.com", "password": "admin123"}' \
+  -d '{"email": "janak@powerbank.com", "password": "5060"}' \
   -w "\nStatus: %{http_code}\n"
 
 

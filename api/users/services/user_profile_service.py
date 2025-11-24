@@ -52,11 +52,17 @@ class UserProfileService(BaseService):
             # Send profile completion reminder if still incomplete (async)
             elif not profile.is_profile_complete:
                 from api.notifications.services import notify
+                
+                # Calculate completion percentage
+                required_fields = ['full_name', 'date_of_birth', 'address']
+                filled_fields = sum(1 for field in required_fields if getattr(profile, field))
+                completion_percentage = int((filled_fields / len(required_fields)) * 100)
+                
                 notify(
                     user,
                     'profile_completion_reminder',
                     async_send=True,
-                    completion_percentage=profile.completion_percentage
+                    completion_percentage=completion_percentage
                 )
             
             self.log_info(f"Profile updated for user: {user.username}")
