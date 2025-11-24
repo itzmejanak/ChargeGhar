@@ -29,9 +29,10 @@ class StationDataInternalView(APIView, BaseAPIView):
     
     POST /api/internal/stations/data
     
-    Handles two types of data:
+    Handles three types of data:
     - type=full: Complete station synchronization (device upload)
     - type=returned: PowerBank return event notification
+    - type=status: Device status change (online/offline)
     """
     
     permission_classes = [ IsStaffPermission ]
@@ -47,7 +48,7 @@ class StationDataInternalView(APIView, BaseAPIView):
                 'properties': {
                     'type': {
                         'type': 'string',
-                        'enum': ['full', 'returned'],
+                        'enum': ['full', 'returned', 'status'],
                         'description': 'Type of data sync operation'
                     },
                     'timestamp': {
@@ -126,9 +127,11 @@ class StationDataInternalView(APIView, BaseAPIView):
                 return self._handle_full_sync(data)
             elif data_type == 'returned':
                 return self._handle_return_event(data)
+            elif data_type == 'status':
+                return self._handle_status(data)
             else:
                 raise ServiceException(
-                    detail=f'Invalid data type: {data_type}. Must be "full" or "returned"',
+                    detail=f'Invalid data type: {data_type}. Must be "full", "returned", or "status"',
                     code="invalid_type"
                 )
         
@@ -235,4 +238,27 @@ class StationDataInternalView(APIView, BaseAPIView):
             raise ServiceException(
                 detail=f'Return processing failed: {str(e)}',
                 code="return_error"
+            )
+    
+    def _handle_status(self, data):
+        """
+        Handle device status change (online/offline/maintenance)
+        """
+        try:
+            service = StationSyncService()
+            
+            with transaction.atomic():
+                result = service.update_station_status(data)
+            
+            logger.info(f"Status update processed: {result}")
+            return result
+            
+        except ServiceException:
+            # Re-raise service exceptions to be handled by parent
+            raise
+        except Exception as e:
+            logger.error(f"Error processing status update: {str(e)}", exc_info=True)
+            raise ServiceException(
+                detail=f'Status update failed: {str(e)}',
+                code="status_update_error"
             )

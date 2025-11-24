@@ -155,11 +155,6 @@ app.conf.beat_schedule = {
         "schedule": 86400.0,  # Daily
         "options": {"eta": "02:00"},
     },
-    "generate-payment-analytics": {
-        "task": "api.payments.tasks.generate_payment_analytics",
-        "schedule": 86400.0,  # Daily
-        "options": {"eta": "02:30"},
-    },
     "generate-admin-dashboard-report": {
         "task": "api.admin.tasks.generate_admin_dashboard_report",
         "schedule": 1800.0,  # Every 30 minutes (reduced from 5 minutes)
