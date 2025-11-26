@@ -147,7 +147,7 @@ sed -i 's|REDIS_HOST=redis|REDIS_HOST=powerbank_redis|' .env
 sed -i 's|RABBITMQ_HOST=rabbitmq|RABBITMQ_HOST=powerbank_rabbitmq|' .env
 sed -i 's|BASE_URL=http://localhost:8010|BASE_URL=https://main.chargeghar.com|' .env
 # Update frontend URL for production redirects
-sed -i 's|FRONTEND_URL=.*|FRONTEND_URL=https://app.chargeghar.com|' .env
+sed -i 's|FRONTEND_URL=.*|FRONTEND_URL=https://chargeghar.app|' .env
 # Update CORS and CSRF origins for production
 sed -i 's|CORS_ALLOWED_ORIGINS=.*|CORS_ALLOWED_ORIGINS=https://main.chargeghar.com,https://chargeghar.app,https://app.chargeghar.com,http://localhost,http://213.210.21.113:8081|' .env
 sed -i 's|CSRF_TRUSTED_ORIGINS=.*|CSRF_TRUSTED_ORIGINS=https://main.chargeghar.com,https://chargeghar.app,https://app.chargeghar.com,http://localhost,http://213.210.21.113:8081|' .env

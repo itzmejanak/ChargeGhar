@@ -43,7 +43,7 @@ class PaymentCallbackMixin:
     @staticmethod
     def get_frontend_url() -> str:
         """Get frontend URL from environment"""
-        return os.getenv('FRONTEND_URL', 'https://app.chargeghar.com')
+        return os.getenv('FRONTEND_URL', 'https://chargeghar.app')
     
     @staticmethod
     def build_payment_redirect(status: str, provider: str, **params) -> Response:
