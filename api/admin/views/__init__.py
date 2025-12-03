@@ -12,6 +12,7 @@ from .user_management_views import user_management_router
 from .payment_views import payment_router
 from .station_views import station_router
 from .station_issue_views import station_issue_router
+from .powerbank_views import powerbank_router
 from .notification_views import notification_router
 from .content_admin_views import content_admin_router
 from .config_admin_views import config_admin_router
@@ -40,6 +41,7 @@ for sub_router in [
     payment_router, 
     station_issue_router,  # MUST come before station_router (specific before generic)
     station_router,        # Generic route with <station_sn> parameter
+    powerbank_router,
     notification_router, 
     content_admin_router, 
     config_admin_router, 

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from .admin_user_service import AdminUserService
 from .admin_station_service import AdminStationService
+from .admin_powerbank_service import AdminPowerBankService
 from .admin_analytics_service import AdminAnalyticsService
 from .admin_refund_service import AdminRefundService
 from .admin_notification_service import AdminNotificationService
@@ -38,6 +39,7 @@ __all__ = [
     "AdminNotificationService",
     "AdminPaymentService",
     "AdminPointsService",
+    "AdminPowerBankService",
     "AdminProfileService",
     "AdminReferralService",
     "AdminRefundService",

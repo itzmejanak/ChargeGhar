@@ -135,13 +135,14 @@ class UserSerializer(serializers.ModelSerializer):
     """Standard user serializer with essential real-time data"""
     profile_complete = serializers.SerializerMethodField()
     kyc_status = serializers.SerializerMethodField()
+    profile = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = [
-            'id', 'username', 'profile_picture', 'referral_code', 
-            'status', 'date_joined', 'profile_complete', 'kyc_status',
-            'social_provider'
+            'id', 'email', 'phone_number', 'username', 'profile_picture', 'referral_code', 
+            'status', 'is_active', 'date_joined', 'last_login', 
+            'profile_complete', 'kyc_status', 'profile', 'social_provider'
         ]
         read_only_fields = [
             'id', 'referral_code', 'status', 'date_joined'
@@ -168,6 +169,26 @@ class UserSerializer(serializers.ModelSerializer):
             return obj.kyc.status if hasattr(obj, 'kyc') and obj.kyc else 'NOT_SUBMITTED'
         except:
             return 'NOT_SUBMITTED'
+    
+    @extend_schema_field(serializers.DictField)
+    def get_profile(self, obj) -> dict:
+        """Get profile data"""
+        try:
+            if hasattr(obj, 'profile') and obj.profile:
+                return {
+                    'full_name': obj.profile.full_name,
+                    'date_of_birth': obj.profile.date_of_birth,
+                    'address': obj.profile.address,
+                    'is_profile_complete': obj.profile.is_profile_complete
+                }
+        except:
+            pass
+        return {
+            'full_name': None,
+            'date_of_birth': None,
+            'address': None,
+            'is_profile_complete': False
+        }
 
 
 class UserDetailedProfileSerializer(serializers.Serializer):

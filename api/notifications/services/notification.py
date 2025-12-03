@@ -98,74 +98,57 @@ class NotificationService(BaseService):
             self.handle_service_error(e, "Failed to get user notifications")
     
     def get_notification_stats(self, user) -> Dict[str, Any]:
-        """Get notification statistics for user"""
+        """Get notification statistics for user - OPTIMIZED to use single query"""
         try:
-            queryset = Notification.objects.filter(user=user)
-
-            # Overall read/unread stats
-            aggregate_stats = queryset.aggregate(
-                total_notifications=Count('id'),
-                unread_count=Count('id', filter=Q(is_read=False)),
-                read_count=Count('id', filter=Q(is_read=True)),
-            )
-
-            # Time-based stats
+            # Time calculations
             now = timezone.now()
             start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
             start_of_week = start_of_today - timezone.timedelta(days=now.weekday())
             start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-            notifications_today = queryset.filter(created_at__gte=start_of_today).count()
-            notifications_this_week = queryset.filter(created_at__gte=start_of_week).count()
-            notifications_this_month = queryset.filter(created_at__gte=start_of_month).count()
+            # Single optimized query with all aggregations
+            stats = Notification.objects.filter(user=user).aggregate(
+                # Overall counts
+                total_notifications=Count('id'),
+                unread_count=Count('id', filter=Q(is_read=False)),
+                read_count=Count('id', filter=Q(is_read=True)),
+                
+                # Time-based counts
+                notifications_today=Count('id', filter=Q(created_at__gte=start_of_today)),
+                notifications_this_week=Count('id', filter=Q(created_at__gte=start_of_week)),
+                notifications_this_month=Count('id', filter=Q(created_at__gte=start_of_month)),
+                
+                # Type breakdown
+                rental_notifications=Count('id', filter=Q(notification_type=Notification.NotificationTypeChoices.RENTAL)),
+                payment_notifications=Count('id', filter=Q(notification_type=Notification.NotificationTypeChoices.PAYMENT)),
+                promotion_notifications=Count('id', filter=Q(notification_type=Notification.NotificationTypeChoices.PROMOTION)),
+                system_notifications=Count('id', filter=Q(notification_type=Notification.NotificationTypeChoices.SYSTEM)),
+                achievement_notifications=Count('id', filter=Q(notification_type=Notification.NotificationTypeChoices.ACHIEVEMENT)),
+                
+                # Channel breakdown
+                in_app_notifications=Count('id', filter=Q(channel=Notification.ChannelChoices.IN_APP)),
+                push_notifications=Count('id', filter=Q(channel=Notification.ChannelChoices.PUSH)),
+                sms_notifications=Count('id', filter=Q(channel=Notification.ChannelChoices.SMS)),
+                email_notifications=Count('id', filter=Q(channel=Notification.ChannelChoices.EMAIL)),
+            )
 
-            # Breakdown by type
-            rental_notifications = queryset.filter(
-                notification_type=Notification.NotificationTypeChoices.RENTAL
-            ).count()
-            payment_notifications = queryset.filter(
-                notification_type=Notification.NotificationTypeChoices.PAYMENT
-            ).count()
-            promotion_notifications = queryset.filter(
-                notification_type=Notification.NotificationTypeChoices.PROMOTION
-            ).count()
-            system_notifications = queryset.filter(
-                notification_type=Notification.NotificationTypeChoices.SYSTEM
-            ).count()
-            achievement_notifications = queryset.filter(
-                notification_type=Notification.NotificationTypeChoices.ACHIEVEMENT
-            ).count()
-
-            # Breakdown by channel
-            in_app_notifications = queryset.filter(
-                channel=Notification.ChannelChoices.IN_APP
-            ).count()
-            push_notifications = queryset.filter(
-                channel=Notification.ChannelChoices.PUSH
-            ).count()
-            sms_notifications = queryset.filter(
-                channel=Notification.ChannelChoices.SMS
-            ).count()
-            email_notifications = queryset.filter(
-                channel=Notification.ChannelChoices.EMAIL
-            ).count()
-
+            # Return with None coalescing
             return {
-                'total_notifications': aggregate_stats['total_notifications'] or 0,
-                'unread_count': aggregate_stats['unread_count'] or 0,
-                'read_count': aggregate_stats['read_count'] or 0,
-                'notifications_today': notifications_today,
-                'notifications_this_week': notifications_this_week,
-                'notifications_this_month': notifications_this_month,
-                'rental_notifications': rental_notifications,
-                'payment_notifications': payment_notifications,
-                'promotion_notifications': promotion_notifications,
-                'system_notifications': system_notifications,
-                'achievement_notifications': achievement_notifications,
-                'in_app_notifications': in_app_notifications,
-                'push_notifications': push_notifications,
-                'sms_notifications': sms_notifications,
-                'email_notifications': email_notifications,
+                'total_notifications': stats['total_notifications'] or 0,
+                'unread_count': stats['unread_count'] or 0,
+                'read_count': stats['read_count'] or 0,
+                'notifications_today': stats['notifications_today'] or 0,
+                'notifications_this_week': stats['notifications_this_week'] or 0,
+                'notifications_this_month': stats['notifications_this_month'] or 0,
+                'rental_notifications': stats['rental_notifications'] or 0,
+                'payment_notifications': stats['payment_notifications'] or 0,
+                'promotion_notifications': stats['promotion_notifications'] or 0,
+                'system_notifications': stats['system_notifications'] or 0,
+                'achievement_notifications': stats['achievement_notifications'] or 0,
+                'in_app_notifications': stats['in_app_notifications'] or 0,
+                'push_notifications': stats['push_notifications'] or 0,
+                'sms_notifications': stats['sms_notifications'] or 0,
+                'email_notifications': stats['email_notifications'] or 0,
             }
         
         except Exception as e:
@@ -183,14 +166,20 @@ class NotificationService(BaseService):
     
     @transaction.atomic
     def mark_as_read(self, notification_id: str, user) -> Notification:
-        """Mark notification as read"""
+        """Mark notification as read - optimized with direct update"""
         try:
-            notification = Notification.objects.get(id=notification_id, user=user)
+            # Use direct update query for better performance
+            updated_count = Notification.objects.filter(
+                id=notification_id,
+                user=user,
+                is_read=False  # Only update if not already read
+            ).update(
+                is_read=True,
+                read_at=timezone.now()
+            )
             
-            if not notification.is_read:
-                notification.is_read = True
-                notification.read_at = timezone.now()
-                notification.save(update_fields=['is_read', 'read_at'])
+            # Fetch the notification for response (already in cache after update)
+            notification = Notification.objects.get(id=notification_id, user=user)
             
             return notification
             

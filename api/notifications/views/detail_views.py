@@ -12,7 +12,7 @@ from rest_framework.request import Request
 
 from api.common.routers import CustomViewRouter
 from api.common.mixins import BaseAPIView
-from api.common.decorators import log_api_call
+from api.common.decorators import log_api_call, rate_limit
 from api.notifications import serializers
 from api.notifications.services.notification import NotificationService
 
@@ -77,6 +77,7 @@ class NotificationDetailView(GenericAPIView, BaseAPIView):
             )
         ]
     )
+    @rate_limit(max_requests=30, window_seconds=60)
     @log_api_call()
     def post(self, request: Request, notification_id: str) -> Response:
         """Mark notification as read - REAL-TIME (user action)"""

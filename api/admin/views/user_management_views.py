@@ -74,16 +74,9 @@ class AdminUserDetailView(GenericAPIView, BaseAPIView):
             service = AdminUserService()
             user = service.get_user_detail(user_id)
             
-            # Return basic user info
-            return {
-                'id': str(user.id),
-                'email': user.email,
-                'username': user.username,
-                'status': user.status,
-                'is_active': user.is_active,
-                'date_joined': user.date_joined,
-                'last_login': user.last_login,
-            }
+            # Serialize user with profile data
+            serializer = UserSerializer(user)
+            return serializer.data
         
         return self.handle_service_operation(
             operation,

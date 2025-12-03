@@ -141,6 +141,13 @@ from .admin_ref_leaderboard_serializers import (
     LeaderboardFiltersSerializer,
 )
 
+# From powerbank_serializers.py
+from .powerbank_serializers import (
+    AdminPowerBankListSerializer,
+    AdminPowerBankHistorySerializer,
+    UpdatePowerBankStatusSerializer,
+)
+
 
 __all__ = [
     "AchievementFiltersSerializer",
@@ -159,6 +166,8 @@ __all__ = [
     "AdminProfileCreateSerializer",
     "AdminProfileSerializer",
     "AdminProfileUpdateSerializer",
+    "AdminPowerBankHistorySerializer",
+    "AdminPowerBankListSerializer",
     "AdminRentalDetailSerializer",
     "AdminRentalIssueDetailSerializer",
     "AdminRentalIssueSerializer",
@@ -217,6 +226,7 @@ __all__ = [
     "UpdateLateFeeConfigurationSerializer",
     "UpdatePaymentMethodSerializer",
     "UpdateRentalIssueSerializer",
+    "UpdatePowerBankStatusSerializer",
     "UpdateRentalPackageSerializer",
     "UpdateStationAmenitySerializer",
     "UpdateStationIssueSerializer",

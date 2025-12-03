@@ -119,9 +119,8 @@ class NotificationStatsView(GenericAPIView, BaseAPIView):
         responses={200: serializers.NotificationStatsResponseSerializer}
     )
     @log_api_call()
-    @cached_response(timeout=300)  # Cache for 5 minutes - stats change slowly
     def get(self, request: Request) -> Response:
-        """Get notification statistics - CACHED for performance"""
+        """Get notification statistics - REAL-TIME (updates immediately after user actions)"""
         def operation():
             service = NotificationService()
             stats = service.get_notification_stats(request.user)
